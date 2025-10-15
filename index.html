@@ -1,17 +1,17 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Artesanal Blend - Cardápio</title>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css" />
   <script src="https://kit.fontawesome.com/a2d04d6c3f.js" crossorigin="anonymous"></script>
 </head>
-<body>
 
+<body>
   <!-- Cabeçalho -->
   <header class="header">
-    <img src="logo.jpg" alt="Logo" class="logo">
+    <img src="logo.jpg" alt="Logo" class="logo" />
     <h1>Artesanal Blend</h1>
   </header>
 
@@ -40,88 +40,97 @@
     🛒 <span id="cartCount" class="cart-count">0</span>
   </button>
 
-  <!-- Carrinho lateral -->
-  <section id="cart" class="cart" style="display:none;">
-  <div class="cart-header">
-    <h3>🛒 Seu Pedido</h3>
-    <button id="closeCartBtn" class="btn close-cart">✖ Fechar</button>
-  </div>
-
-  <div id="cart-items" class="cart-items"></div>
-
-  <p id="cart-total">Total: R$ 0,00</p>
-
-  <!-- Informações do Cliente -->
-  <div class="cliente-info">
-    <h4>🧾 Informações do Cliente</h4>
-
-    <input type="text" id="clienteNome" placeholder="Nome completo">
-    <input type="text" id="clienteTelefone" placeholder="Telefone (WhatsApp)">
-    <input type="text" id="clienteEndereco" placeholder="Endereço para entrega">
-
-    <select id="clienteRegiao" onchange="atualizarTaxa()">
-      <option value="">Selecione sua região</option>
-      <option value="Jardim Canadá">Jardim Canadá - R$ 6,00</option>
-      <option value="Retiro das Pedras">Retiro das Pedras - R$ 10,00</option>
-      <option value="Serra do Manacás">Serra do Manacás - R$ 10,00</option>
-      <option value="Vale do Sol">Vale do Sol - R$ 12,00</option>
-      <option value="Alphaville">Alphaville - R$ 15,00</option>
-    </select>
-
-    <label for="pagamento">💳 Forma de Pagamento:</label>
-    <select id="pagamento" onchange="mostrarTroco()">
-      <option value="">Selecione</option>
-      <option value="Pix">Pix</option>
-      <option value="Cartão de Crédito">Cartão de Crédito</option>
-      <option value="Cartão de Débito">Cartão de Débito</option>
-      <option value="Dinheiro">Dinheiro</option>
-    </select>
-
-    <div id="campoTroco" style="display:none;">
-      <input type="number" id="troco" placeholder="Troco para quanto?">
+  <!-- Carrinho com animação -->
+  <section id="cart" class="cart">
+    <div class="cart-header">
+      <h3>🛒 Seu Pedido</h3>
+      <button id="closeCartBtn" class="btn close-cart">✖ Fechar</button>
     </div>
 
-    <textarea id="obsCliente" rows="2" placeholder="Observações (ex: tirar cebola, ponto da carne...)"></textarea>
-  </div>
+    <div id="cart-items" class="cart-items"></div>
 
-  <button id="checkoutBtn" class="btn primary" disabled>📩 Enviar pedido pelo WhatsApp</button>
-  <small class="muted">O pedido será enviado para: <strong>(31) 99212-8891</strong></small>
-</section>
+    <p id="cart-total">Total: R$ 0,00</p>
 
+    <!-- Informações do Cliente -->
+    <div class="cliente-info">
+      <h4>🧾 Informações do Cliente</h4>
+
+      <input type="text" id="clienteNome" placeholder="Nome completo" />
+      <input type="text" id="clienteTelefone" placeholder="Telefone (WhatsApp)" />
+      <input type="text" id="clienteEndereco" placeholder="Endereço para entrega" />
+
+      <select id="clienteRegiao" onchange="atualizarTaxa()">
+        <option value="">Selecione sua região</option>
+        <option value="Jardim Canadá">Jardim Canadá - R$ 6,00</option>
+        <option value="Retiro das Pedras">Retiro das Pedras - R$ 10,00</option>
+        <option value="Serra do Manacás">Serra do Manacás - R$ 10,00</option>
+        <option value="Vale do Sol">Vale do Sol - R$ 12,00</option>
+        <option value="Alphaville">Alphaville - R$ 15,00</option>
+      </select>
+
+      <label for="pagamento">💳 Forma de Pagamento:</label>
+      <select id="pagamento" onchange="mostrarTroco()">
+        <option value="">Selecione</option>
+        <option value="Pix">Pix</option>
+        <option value="Cartão de Crédito">Cartão de Crédito</option>
+        <option value="Cartão de Débito">Cartão de Débito</option>
+        <option value="Dinheiro">Dinheiro</option>
+      </select>
+
+      <div id="campoTroco" style="display: none">
+        <input type="number" id="troco" placeholder="Troco para quanto?" />
+      </div>
+
+      <textarea id="obsCliente" rows="2" placeholder="Observações (ex: tirar cebola, ponto da carne...)"></textarea>
+    </div>
+
+    <button id="checkoutBtn" class="btn primary" disabled>📩 Enviar pedido pelo WhatsApp</button>
+    <small class="muted">O pedido será enviado para: <strong>(31) 99212-8891</strong></small>
+  </section>
+
+  <!-- Rodapé -->
   <footer>
     <p>🍔 Artesanal Blend - Todos os direitos reservados</p>
   </footer>
 
+  <!-- Scripts -->
   <script src="script.js"></script>
 
   <script>
-    // Lógica de abrir/fechar carrinho
-    const openCartBtn = document.getElementById("openCartBtn");
-    const closeCartBtn = document.getElementById("closeCartBtn");
-    const cartSection = document.getElementById("cart");
-    const cartCount = document.getElementById("cartCount");
+    // Controle suave de abrir/fechar carrinho
+    document.addEventListener("DOMContentLoaded", () => {
+      const openCartBtn = document.getElementById("openCartBtn");
+      const closeCartBtn = document.getElementById("closeCartBtn");
+      const cart = document.getElementById("cart");
+      const cartCount = document.getElementById("cartCount");
 
-    openCartBtn.addEventListener("click", () => {
-      cartSection.style.display = "block";
+      if (openCartBtn && cart) {
+        openCartBtn.addEventListener("click", () => {
+          cart.classList.add("show");
+        });
+      }
+
+      if (closeCartBtn && cart) {
+        closeCartBtn.addEventListener("click", () => {
+          cart.classList.remove("show");
+        });
+      }
+
+      // Atualizar contador do carrinho
+      function atualizarContador() {
+        const totalItens = carrinho?.reduce((acc, item) => acc + item.qtd, 0) || 0;
+        cartCount.textContent = totalItens;
+      }
+
+      // Se o renderCarrinho existir, sobrescreve para atualizar o contador
+      if (typeof renderCarrinho === "function") {
+        const oldRender = renderCarrinho;
+        renderCarrinho = function () {
+          oldRender();
+          atualizarContador();
+        };
+      }
     });
-
-    closeCartBtn.addEventListener("click", () => {
-      cartSection.style.display = "none";
-    });
-
-    // Atualiza contador do carrinho dinamicamente
-    function atualizarContador() {
-      const totalItens = carrinho.reduce((acc, item) => acc + item.qtd, 0);
-      cartCount.textContent = totalItens;
-    }
-
-    // Substitui a função renderCarrinho() para atualizar contador automaticamente
-    const oldRender = renderCarrinho;
-    renderCarrinho = function() {
-      oldRender();
-      atualizarContador();
-    };
   </script>
 </body>
 </html>
-
