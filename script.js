@@ -1,46 +1,38 @@
 // ===============================
-// ARTESANAL BLEND - CARDÁPIO ONLINE
+// ARTESANAL BLEND - SCRIPT COMPLETO
 // ===============================
 
-// Carrinho
 let carrinho = [];
+let taxaEntrega = 0;
 
 // ===============================
-// Função principal - Carregar Menu
+// Carregar o Cardápio do Servidor
 // ===============================
 async function carregarMenu() {
   try {
     const response = await fetch("/api/menu");
     if (!response.ok) throw new Error("Erro ao carregar cardápio.");
-
     const data = await response.json();
 
-    // Limpa todas as categorias antes de carregar
     const categorias = ["Hambúrgueres", "Combos", "Acompanhamentos", "Adicionais", "Bebidas"];
     categorias.forEach(cat => {
       const container = document.getElementById(`cat-${cat}`);
       if (container) container.innerHTML = "";
     });
 
-    // Cria os cards dos produtos
     data.forEach(item => {
       const container = document.getElementById(`cat-${item.cat}`);
-      if (!container) {
-        console.warn(`⚠️ Categoria não encontrada para: ${item.cat}`);
-        return;
-      }
+      if (!container) return;
 
       const card = document.createElement("div");
       card.classList.add("menu-item");
       card.innerHTML = `
-        <img src="${item.imgUrl}" alt="${item.name}" class="menu-img">
-        <div class="info">
-          <h3>${item.name}</h3>
-          <p>${item.desc}</p>
-          <div class="price-line">
-            <span class="price">R$ ${item.price.toFixed(2)}</span>
-            <button class="add-btn" onclick="addToCart(${item.id})">+</button>
-          </div>
+        <img src="${item.imgUrl}" alt="${item.name}">
+        <h3>${item.name}</h3>
+        <p>${item.desc}</p>
+        <div class="price-line">
+          <span class="price">R$ ${item.price.toFixed(2)}</span>
+          <button class="add-btn" onclick="addToCart(${item.id})">+</button>
         </div>
       `;
       container.appendChild(card);
@@ -48,7 +40,7 @@ async function carregarMenu() {
 
   } catch (error) {
     console.error("❌ Erro ao carregar cardápio:", error);
-    alert("⚠️ Erro ao carregar cardápio. Verifique o servidor Render.");
+    alert("⚠️ Não foi possível carregar o cardápio. Tente novamente.");
   }
 }
 
@@ -82,18 +74,22 @@ function removeFromCart(id) {
   renderCarrinho();
 }
 
+function calcularSubtotal() {
+  return carrinho.reduce((acc, item) => acc + item.price * item.qtd, 0);
+}
+
 function renderCarrinho() {
   const container = document.getElementById("cart-items");
   const totalElem = document.getElementById("cart-total");
   const checkoutBtn = document.getElementById("checkoutBtn");
+  const cartCount = document.getElementById("cartCount");
 
-  if (!container || !totalElem || !checkoutBtn) return;
+  if (!container) return;
 
   container.innerHTML = "";
-  let total = 0;
+  let subtotal = calcularSubtotal();
 
   carrinho.forEach(item => {
-    total += item.price * item.qtd;
     const div = document.createElement("div");
     div.classList.add("cart-item");
     div.innerHTML = `
@@ -102,32 +98,76 @@ function renderCarrinho() {
         <button onclick="removeFromCart(${item.id})">-</button>
         <span>${item.qtd}</span>
         <button onclick="addToCart(${item.id})">+</button>
-        <span>R$ ${(item.price * item.qtd).toFixed(2)}</span>
       </div>
+      <span>R$ ${(item.price * item.qtd).toFixed(2)}</span>
     `;
     container.appendChild(div);
   });
 
-  totalElem.textContent = `Total: R$ ${total.toFixed(2)}`;
+  const totalFinal = subtotal + taxaEntrega;
+  totalElem.textContent = `Total: R$ ${totalFinal.toFixed(2)}`;
+
   checkoutBtn.disabled = carrinho.length === 0;
+  cartCount.textContent = carrinho.reduce((acc, p) => acc + p.qtd, 0);
 }
 
 // ===============================
-// Enviar pedido via WhatsApp
+// Região e Taxa de Entrega
+// ===============================
+function atualizarTaxa() {
+  const regiao = document.getElementById("clienteRegiao").value;
+
+  switch (regiao) {
+    case "Jardim Canadá":
+      taxaEntrega = 6.00;
+      break;
+    case "Retiro das Pedras":
+      taxaEntrega = 10.00;
+      break;
+    case "Serra do Manacás":
+      taxaEntrega = 10.00;
+      break;
+    case "Vale do Sol":
+      taxaEntrega = 12.00;
+      break;
+    case "Alphaville":
+      taxaEntrega = 15.00;
+      break;
+    default:
+      taxaEntrega = 0;
+  }
+
+  renderCarrinho();
+}
+
+// ===============================
+// Enviar Pedido pelo WhatsApp
 // ===============================
 function enviarPedido() {
   if (carrinho.length === 0) return;
 
-  let mensagem = "🍔 *Pedido Artesanal Blend*%0A%0A";
+  const nome = document.getElementById("clienteNome").value || "Cliente";
+  const endereco = document.getElementById("clienteEndereco").value || "Endereço não informado";
+  const regiao = document.getElementById("clienteRegiao").value || "Região não selecionada";
+
+  let mensagem = `🍔 *Pedido - Artesanal Blend*%0A%0A`;
+
   carrinho.forEach(item => {
     mensagem += `• ${item.name} (x${item.qtd}) - R$ ${(item.price * item.qtd).toFixed(2)}%0A`;
   });
 
-  const total = carrinho.reduce((acc, p) => acc + p.price * p.qtd, 0);
-  mensagem += `%0A💰 *Total:* R$ ${total.toFixed(2)}%0A`;
-  mensagem += `%0A📍 Enviar para: *Artesanal Blend*`;
+  const subtotal = calcularSubtotal();
+  const totalFinal = subtotal + taxaEntrega;
 
-  const numero = "5531992128891"; // seu WhatsApp
+  mensagem += `%0A💰 *Subtotal:* R$ ${subtotal.toFixed(2)}`;
+  mensagem += `%0A🚚 *Taxa de entrega:* R$ ${taxaEntrega.toFixed(2)}`;
+  mensagem += `%0A💵 *Total:* R$ ${totalFinal.toFixed(2)}`;
+  mensagem += `%0A%0A📍 *Endereço:* ${endereco}`;
+  mensagem += `%0A🏙️ *Região:* ${regiao}`;
+  mensagem += `%0A👤 *Cliente:* ${nome}`;
+  mensagem += `%0A%0A✅ *Agradecemos seu pedido!*`;
+
+  const numero = "5531992128891";
   const url = `https://wa.me/${numero}?text=${mensagem}`;
   window.open(url, "_blank");
 }
@@ -137,7 +177,11 @@ function enviarPedido() {
 // ===============================
 document.addEventListener("DOMContentLoaded", () => {
   carregarMenu();
+  renderCarrinho();
 
   const checkoutBtn = document.getElementById("checkoutBtn");
+  const regiaoSelect = document.getElementById("clienteRegiao");
+
   if (checkoutBtn) checkoutBtn.addEventListener("click", enviarPedido);
+  if (regiaoSelect) regiaoSelect.addEventListener("change", atualizarTaxa);
 });
