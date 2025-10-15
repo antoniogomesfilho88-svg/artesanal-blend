@@ -1,128 +1,143 @@
-// ==============================
-//  Artesanal Blend - Cardápio Online
-//  script.js — versão com integração Node.js
-// ==============================
+// ===============================
+// ARTESANAL BLEND - CARDÁPIO ONLINE
+// ===============================
 
-let menuData = [];
-let cart = [];
+// Carrinho
+let carrinho = [];
 
-// ========== Carregar o cardápio ==========
+// ===============================
+// Função principal - Carregar Menu
+// ===============================
 async function carregarMenu() {
   try {
-    const resp = await fetch("menu.json");
-    menuData = await resp.json();
-    renderMenu(menuData);
-  } catch (err) {
-    document.getElementById("menu").innerHTML = "<p>Erro ao carregar cardápio.</p>";
-    console.error(err);
+    const response = await fetch("/api/menu");
+    if (!response.ok) throw new Error("Erro ao carregar cardápio.");
+
+    const data = await response.json();
+
+    // Limpa todas as categorias antes de carregar
+    const categorias = ["Hambúrgueres", "Combos", "Acompanhamentos", "Adicionais", "Bebidas"];
+    categorias.forEach(cat => {
+      const container = document.getElementById(`cat-${cat}`);
+      if (container) container.innerHTML = "";
+    });
+
+    // Cria os cards dos produtos
+    data.forEach(item => {
+      const container = document.getElementById(`cat-${item.cat}`);
+      if (!container) {
+        console.warn(`⚠️ Categoria não encontrada para: ${item.cat}`);
+        return;
+      }
+
+      const card = document.createElement("div");
+      card.classList.add("menu-item");
+      card.innerHTML = `
+        <img src="${item.imgUrl}" alt="${item.name}" class="menu-img">
+        <div class="info">
+          <h3>${item.name}</h3>
+          <p>${item.desc}</p>
+          <div class="price-line">
+            <span class="price">R$ ${item.price.toFixed(2)}</span>
+            <button class="add-btn" onclick="addToCart(${item.id})">+</button>
+          </div>
+        </div>
+      `;
+      container.appendChild(card);
+    });
+
+  } catch (error) {
+    console.error("❌ Erro ao carregar cardápio:", error);
+    alert("⚠️ Erro ao carregar cardápio. Verifique o servidor Render.");
   }
 }
 
-// ========== Renderizar o cardápio ==========
-function renderMenu(menu) {
-  const container = document.getElementById("menu");
-  container.innerHTML = "";
-
-  menu.forEach(item => {
-    const card = document.createElement("div");
-    card.classList.add("menu-item");
-    card.innerHTML = `
-      <img src="${item.imgUrl}" alt="${item.name}">
-      <div class="info">
-        <h3>${item.name}</h3>
-        <p>${item.desc}</p>
-        <div class="bottom">
-          <span class="price">R$ ${item.price.toFixed(2)}</span>
-          <button class="add-btn" onclick="addToCart(${item.id})">+</button>
-        </div>
-      </div>
-    `;
-    container.appendChild(card);
-  });
-}
-
-// ========== Carrinho ==========
+// ===============================
+// Funções do Carrinho
+// ===============================
 function addToCart(id) {
-  const item = menuData.find(p => p.id === id);
-  if (!item) return;
-  const existing = cart.find(c => c.id === id);
-  if (existing) existing.qtd++;
-  else cart.push({ ...item, qtd: 1 });
-  updateCart();
+  fetch("/api/menu")
+    .then(res => res.json())
+    .then(menu => {
+      const produto = menu.find(p => p.id === id);
+      if (!produto) return alert("Produto não encontrado!");
+
+      const existente = carrinho.find(p => p.id === id);
+      if (existente) {
+        existente.qtd += 1;
+      } else {
+        carrinho.push({ ...produto, qtd: 1 });
+      }
+      renderCarrinho();
+    })
+    .catch(err => console.error("Erro ao adicionar produto:", err));
 }
 
 function removeFromCart(id) {
-  cart = cart.filter(item => item.id !== id);
-  updateCart();
+  const index = carrinho.findIndex(p => p.id === id);
+  if (index !== -1) {
+    carrinho[index].qtd -= 1;
+    if (carrinho[index].qtd <= 0) carrinho.splice(index, 1);
+  }
+  renderCarrinho();
 }
 
-function updateCart() {
+function renderCarrinho() {
   const container = document.getElementById("cart-items");
+  const totalElem = document.getElementById("cart-total");
   const checkoutBtn = document.getElementById("checkoutBtn");
-  const subtotalElem = document.getElementById("subtotal");
+
+  if (!container || !totalElem || !checkoutBtn) return;
 
   container.innerHTML = "";
-  let subtotal = 0;
+  let total = 0;
 
-  cart.forEach(item => {
-    subtotal += item.qtd * item.price;
-    const li = document.createElement("li");
-    li.innerHTML = `
-      ${item.qtd}x ${item.name} - R$ ${(item.qtd * item.price).toFixed(2)}
-      <button class="remove" onclick="removeFromCart(${item.id})">x</button>
+  carrinho.forEach(item => {
+    total += item.price * item.qtd;
+    const div = document.createElement("div");
+    div.classList.add("cart-item");
+    div.innerHTML = `
+      <span>${item.name}</span>
+      <div>
+        <button onclick="removeFromCart(${item.id})">-</button>
+        <span>${item.qtd}</span>
+        <button onclick="addToCart(${item.id})">+</button>
+        <span>R$ ${(item.price * item.qtd).toFixed(2)}</span>
+      </div>
     `;
-    container.appendChild(li);
+    container.appendChild(div);
   });
 
-  subtotalElem.textContent = subtotal.toFixed(2);
-  checkoutBtn.disabled = cart.length === 0;
+  totalElem.textContent = `Total: R$ ${total.toFixed(2)}`;
+  checkoutBtn.disabled = carrinho.length === 0;
 }
 
-// ========== Enviar Pedido ==========
-async function enviarPedidoServidor(pedido) {
-  try {
-    await fetch("http://localhost:3000/order", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(pedido),
-    });
-    console.log("✅ Pedido enviado ao servidor com sucesso!");
-  } catch (err) {
-    console.error("⚠️ Erro ao enviar pedido:", err);
-  }
+// ===============================
+// Enviar pedido via WhatsApp
+// ===============================
+function enviarPedido() {
+  if (carrinho.length === 0) return;
+
+  let mensagem = "🍔 *Pedido Artesanal Blend*%0A%0A";
+  carrinho.forEach(item => {
+    mensagem += `• ${item.name} (x${item.qtd}) - R$ ${(item.price * item.qtd).toFixed(2)}%0A`;
+  });
+
+  const total = carrinho.reduce((acc, p) => acc + p.price * p.qtd, 0);
+  mensagem += `%0A💰 *Total:* R$ ${total.toFixed(2)}%0A`;
+  mensagem += `%0A📍 Enviar para: *Artesanal Blend*`;
+
+  const numero = "5531992128891"; // seu WhatsApp
+  const url = `https://wa.me/${numero}?text=${mensagem}`;
+  window.open(url, "_blank");
 }
 
-document.getElementById("checkoutBtn").addEventListener("click", async () => {
-  if (cart.length === 0) return;
+// ===============================
+// Inicialização
+// ===============================
+document.addEventListener("DOMContentLoaded", () => {
+  carregarMenu();
 
-  const region = document.getElementById("region")?.value || "Cliente Online";
-  const total = cart.reduce((sum, item) => sum + item.qtd * item.price, 0);
-
-  const pedido = {
-    itens: cart.map(item => ({
-      nome: item.name,
-      quantidade: item.qtd,
-      preco: item.price,
-    })),
-    total,
-    cliente: region,
-  };
-
-  // Envia pedido para servidor
-  await enviarPedidoServidor(pedido);
-
-  // Envia mensagem para WhatsApp
-  const msg = encodeURIComponent(
-    `*Artesanal Blend - Novo Pedido*\n\n${pedido.itens
-      .map(i => `${i.quantidade}x ${i.nome} - R$ ${(i.preco * i.quantidade).toFixed(2)}`)
-      .join("\n")}\n\n*Total:* R$ ${total.toFixed(2)}\n*Endereço:* ${region}`
-  );
-  window.open(`https://wa.me/5531992128891?text=${msg}`, "_blank");
-
-  // Limpa carrinho
-  cart = [];
-  updateCart();
+  const checkoutBtn = document.getElementById("checkoutBtn");
+  if (checkoutBtn) checkoutBtn.addEventListener("click", enviarPedido);
 });
-
-// Iniciar
-carregarMenu();
