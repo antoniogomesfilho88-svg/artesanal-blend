@@ -42,19 +42,51 @@
 
   <!-- Carrinho lateral -->
   <section id="cart" class="cart" style="display:none;">
-    <div class="cart-header">
-      <h3>🛒 Seu Pedido</h3>
-      <button id="closeCartBtn" class="btn close-cart">✖ Fechar</button>
+  <div class="cart-header">
+    <h3>🛒 Seu Pedido</h3>
+    <button id="closeCartBtn" class="btn close-cart">✖ Fechar</button>
+  </div>
+
+  <div id="cart-items" class="cart-items"></div>
+
+  <p id="cart-total">Total: R$ 0,00</p>
+
+  <!-- Informações do Cliente -->
+  <div class="cliente-info">
+    <h4>🧾 Informações do Cliente</h4>
+
+    <input type="text" id="clienteNome" placeholder="Nome completo">
+    <input type="text" id="clienteTelefone" placeholder="Telefone (WhatsApp)">
+    <input type="text" id="clienteEndereco" placeholder="Endereço para entrega">
+
+    <select id="clienteRegiao" onchange="atualizarTaxa()">
+      <option value="">Selecione sua região</option>
+      <option value="Jardim Canadá">Jardim Canadá - R$ 6,00</option>
+      <option value="Retiro das Pedras">Retiro das Pedras - R$ 10,00</option>
+      <option value="Serra do Manacás">Serra do Manacás - R$ 10,00</option>
+      <option value="Vale do Sol">Vale do Sol - R$ 12,00</option>
+      <option value="Alphaville">Alphaville - R$ 15,00</option>
+    </select>
+
+    <label for="pagamento">💳 Forma de Pagamento:</label>
+    <select id="pagamento" onchange="mostrarTroco()">
+      <option value="">Selecione</option>
+      <option value="Pix">Pix</option>
+      <option value="Cartão de Crédito">Cartão de Crédito</option>
+      <option value="Cartão de Débito">Cartão de Débito</option>
+      <option value="Dinheiro">Dinheiro</option>
+    </select>
+
+    <div id="campoTroco" style="display:none;">
+      <input type="number" id="troco" placeholder="Troco para quanto?">
     </div>
 
-    <div id="cart-items" class="cart-items"></div>
-    <p id="cart-total">Total: R$ 0,00</p>
+    <textarea id="obsCliente" rows="2" placeholder="Observações (ex: tirar cebola, ponto da carne...)"></textarea>
+  </div>
 
-    <button id="checkoutBtn" class="btn primary" disabled>📩 Enviar pedido pelo WhatsApp</button>
-    <small class="muted">
-      O pedido será enviado para: <strong>(31) 99212-8891</strong>
-    </small>
-  </section>
+  <button id="checkoutBtn" class="btn primary" disabled>📩 Enviar pedido pelo WhatsApp</button>
+  <small class="muted">O pedido será enviado para: <strong>(31) 99212-8891</strong></small>
+</section>
 
   <footer>
     <p>🍔 Artesanal Blend - Todos os direitos reservados</p>
@@ -92,3 +124,4 @@
   </script>
 </body>
 </html>
+
