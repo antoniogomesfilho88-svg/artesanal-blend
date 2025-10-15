@@ -136,7 +136,7 @@ header h1 {
 }
 
 /* ===========================
-   CARRINHO (MOBILE FIRST)
+   CARRINHO (MOBILE FIRST + ANIMAÇÃO)
 =========================== */
 .cart {
   position: fixed;
@@ -147,14 +147,23 @@ header h1 {
   background: #202020;
   border-top: 3px solid var(--red);
   padding: 10px;
-  display: none;
+  display: flex;
   flex-direction: column;
   z-index: 200;
+  transform: translateY(100%);
+  opacity: 0;
+  transition: transform 0.35s ease, opacity 0.3s ease;
 
   /* ✅ Rolagem funcional */
   overflow-y: scroll;
   -webkit-overflow-scrolling: touch;
   scroll-behavior: smooth;
+}
+
+/* Quando aberto */
+.cart.show {
+  transform: translateY(0);
+  opacity: 1;
 }
 
 .cart-header {
@@ -337,5 +346,10 @@ footer {
     right: 0;
     left: auto;
     border-radius: 10px 0 0 10px;
+    height: 100vh;
+  }
+
+  .cart.show {
+    transform: translateY(0);
   }
 }
