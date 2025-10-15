@@ -1,10 +1,11 @@
 {
   "name": "artesanal-blend",
   "version": "1.0.0",
+  "type": "module",
   "description": "Sistema completo Artesanal Blend - Cardápio Online + Dashboard + Servidor Node.js",
-  "main": "server.js",
+  "main": "servidor.js",
   "scripts": {
-    "start": "node server.js"
+    "start": "node servidor.js"
   },
   "dependencies": {
     "express": "^4.18.2",
