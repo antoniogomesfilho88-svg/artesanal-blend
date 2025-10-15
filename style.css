@@ -1,26 +1,31 @@
 /* ===========================
-   ARTESANAL BLEND - ESTILO GERAL
+   ARTESANAL BLEND - ESTILO RESPONSIVO VERMELHO SUAVE
 =========================== */
+
 :root {
-  --bg-dark: #1b1b1b;
-  --bg-card: #292929;
-  --text-light: #f5f5f5;
-  --accent: #e65c5c;  /* 🔴 vermelho suave */
-  --accent-hover: #ff7b7b;
-  --gray: #999;
-  --radius: 12px;
+  --fundo-escuro: #1b1b1b;
+  --fundo-card: #2a2a2a;
+  --texto-claro: #f5f5f5;
+  --vermelho: #e14b4b;
+  --vermelho-claro: #ff6d6d;
+  --cinza: #aaa;
+  --radius: 14px;
+  --fonte: "Poppins", sans-serif;
 }
 
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+  font-family: var(--fonte);
 }
 
+/* ===========================
+   BASE
+=========================== */
 body {
-  background-color: var(--bg-dark);
-  color: var(--text-light);
-  font-family: "Poppins", sans-serif;
+  background-color: var(--fundo-escuro);
+  color: var(--texto-claro);
   line-height: 1.6;
   overflow-x: hidden;
 }
@@ -28,131 +33,157 @@ body {
 /* ===========================
    CABEÇALHO
 =========================== */
-.header {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  padding: 15px;
+header {
+  text-align: center;
+  padding: 15px 10px;
   background: #111;
-  border-bottom: 2px solid var(--accent);
+  border-bottom: 2px solid var(--vermelho);
 }
 
-.logo {
-  width: 55px;
-  height: 55px;
+header img {
+  width: 70px;
+  height: 70px;
   border-radius: 50%;
-  object-fit: cover;
 }
 
-.header h1 {
-  font-size: 1.5rem;
-  color: var(--accent);
+header h1 {
+  color: var(--vermelho);
+  font-size: 1.8rem;
+  margin-top: 8px;
 }
 
 /* ===========================
-   SEÇÕES DO MENU
+   SEÇÕES DO CARDÁPIO
 =========================== */
 .menu-section {
-  padding: 20px 10px;
+  padding: 20px 12px;
 }
 
 .menu-section h2 {
-  color: var(--accent);
-  font-size: 1.2rem;
+  color: var(--vermelho);
+  font-size: 1.1rem;
+  border-left: 4px solid var(--vermelho);
+  padding-left: 8px;
   margin-bottom: 10px;
   text-transform: uppercase;
-  border-left: 4px solid var(--accent);
-  padding-left: 8px;
 }
 
 .menu-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
   gap: 15px;
 }
 
 /* ===========================
-   ITENS DO CARDÁPIO
+   ITEM DO CARDÁPIO
 =========================== */
 .menu-item {
-  background: var(--bg-card);
+  background: var(--fundo-card);
   border-radius: var(--radius);
   padding: 10px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  transition: transform 0.2s;
+  transition: 0.2s;
 }
 
 .menu-item:hover {
   transform: scale(1.02);
 }
 
-.menu-img {
+.menu-item img {
   width: 100%;
-  height: 130px;
+  height: 140px;
   object-fit: cover;
   border-radius: var(--radius);
 }
 
-.info {
-  padding-top: 8px;
-}
-
-.info h3 {
+.menu-item h3 {
   font-size: 1rem;
-  color: var(--text-light);
+  margin: 6px 0;
+  color: var(--texto-claro);
 }
 
-.info p {
+.menu-item p {
   font-size: 0.85rem;
-  color: var(--gray);
-  margin: 4px 0;
+  color: var(--cinza);
+  margin-bottom: 5px;
 }
 
 .price-line {
   display: flex;
-  align-items: center;
   justify-content: space-between;
+  align-items: center;
 }
 
 .price {
-  color: var(--accent);
+  color: var(--vermelho);
   font-weight: bold;
 }
 
 .add-btn {
-  background: var(--accent);
-  color: #fff;
+  background: var(--vermelho);
   border: none;
   border-radius: 6px;
-  width: 30px;
-  height: 30px;
+  color: #fff;
+  font-size: 1rem;
+  width: 32px;
+  height: 32px;
   cursor: pointer;
-  font-weight: bold;
 }
 
 .add-btn:hover {
-  background: var(--accent-hover);
+  background: var(--vermelho-claro);
 }
 
 /* ===========================
-   CARRINHO LATERAL
+   BOTÃO FLUTUANTE CARRINHO
+=========================== */
+.cart-toggle {
+  position: fixed;
+  bottom: 15px;
+  right: 15px;
+  background: var(--vermelho);
+  color: #fff;
+  border: none;
+  border-radius: 50%;
+  width: 60px;
+  height: 60px;
+  font-size: 1.6rem;
+  font-weight: bold;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.6);
+  cursor: pointer;
+  z-index: 200;
+}
+
+.cart-count {
+  position: absolute;
+  top: 6px;
+  right: 10px;
+  background: #fff;
+  color: var(--vermelho);
+  border-radius: 50%;
+  font-size: 0.8rem;
+  padding: 3px 6px;
+  font-weight: bold;
+}
+
+/* ===========================
+   CARRINHO LATERAL / MOBILE
 =========================== */
 .cart {
   position: fixed;
   top: 0;
   right: 0;
-  width: 340px;
+  width: 350px;
   height: 100%;
   background: #202020;
   box-shadow: -3px 0 8px rgba(0, 0, 0, 0.6);
   padding: 20px;
   display: flex;
   flex-direction: column;
-  z-index: 100;
-  border-left: 2px solid var(--accent);
+  z-index: 300;
+  border-left: 3px solid var(--vermelho);
 }
 
 .cart-header {
@@ -161,49 +192,50 @@ body {
   align-items: center;
 }
 
+.cart-header h3 {
+  color: var(--vermelho);
+}
+
 .cart-items {
   flex-grow: 1;
   overflow-y: auto;
-  margin-top: 15px;
-  margin-bottom: 10px;
+  margin: 15px 0;
 }
 
 .cart-item {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: var(--bg-card);
+  background: var(--fundo-card);
   border-radius: var(--radius);
-  padding: 6px 10px;
-  margin-bottom: 8px;
+  padding: 8px 10px;
+  margin-bottom: 10px;
 }
 
 .cart-item button {
-  background: var(--accent);
+  background: var(--vermelho);
   border: none;
+  border-radius: 5px;
   width: 25px;
   height: 25px;
-  border-radius: 5px;
   color: #fff;
   font-weight: bold;
   cursor: pointer;
-}
-
-.cart p {
-  font-weight: bold;
-  text-align: right;
-  color: var(--accent);
-  margin-bottom: 10px;
 }
 
 /* ===========================
    FORMULÁRIO CLIENTE
 =========================== */
 .cliente-info {
-  background: var(--bg-card);
+  background: var(--fundo-card);
   padding: 10px;
   border-radius: var(--radius);
-  margin-bottom: 10px;
+  margin-bottom: 12px;
+}
+
+.cliente-info h4 {
+  color: var(--vermelho);
+  margin-bottom: 5px;
 }
 
 .cliente-info input,
@@ -214,55 +246,32 @@ body {
   border-radius: 6px;
   border: none;
   background: #333;
-  color: var(--text-light);
+  color: var(--texto-claro);
   font-size: 0.9rem;
 }
 
-.primary {
-  background: var(--accent);
+/* ===========================
+   BOTÕES E TOTAL
+=========================== */
+#cart-total {
+  text-align: right;
+  color: var(--vermelho);
+  font-weight: bold;
+  margin-bottom: 10px;
+}
+
+button.primary {
+  background: var(--vermelho);
   color: #fff;
-  padding: 10px;
   border: none;
   border-radius: var(--radius);
+  padding: 12px;
+  font-weight: bold;
   cursor: pointer;
-  font-weight: bold;
 }
 
-.primary:disabled {
-  background: #555;
-  cursor: not-allowed;
-}
-
-/* ===========================
-   BOTÃO FLUTUANTE
-=========================== */
-.cart-toggle {
-  position: fixed;
-  bottom: 20px;
-  right: 20px;
-  background: var(--accent);
-  color: #fff;
-  border: none;
-  border-radius: 50%;
-  width: 60px;
-  height: 60px;
-  font-size: 1.5rem;
-  font-weight: bold;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.6);
-  cursor: pointer;
-  z-index: 200;
-}
-
-.cart-count {
-  position: absolute;
-  top: 8px;
-  right: 10px;
-  background: #ff3b3b;
-  color: white;
-  font-size: 0.75rem;
-  font-weight: bold;
-  border-radius: 50%;
-  padding: 3px 6px;
+button.primary:hover {
+  background: var(--vermelho-claro);
 }
 
 /* ===========================
@@ -272,17 +281,60 @@ footer {
   text-align: center;
   font-size: 0.8rem;
   padding: 15px;
-  color: var(--gray);
+  color: var(--cinza);
 }
 
 /* ===========================
-   🔹 RESPONSIVIDADE
+   🔹 RESPONSIVIDADE MOBILE
 =========================== */
 @media (max-width: 768px) {
+  header img {
+    width: 60px;
+    height: 60px;
+  }
+
+  header h1 {
+    font-size: 1.4rem;
+  }
+
+  .menu-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  .menu-item img {
+    height: 120px;
+  }
+
   .cart {
     width: 100%;
     height: 100%;
     border-left: none;
-    border-top: 2px solid var(--accent);
+    border-top: 3px solid var(--vermelho);
+  }
+
+  .cart-toggle {
+    width: 55px;
+    height: 55px;
+    font-size: 1.4rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .menu-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .menu-item img {
+    height: 150px;
+  }
+
+  .menu-item h3 {
+    font-size: 1rem;
+  }
+
+  .cliente-info input,
+  .cliente-info select {
+    font-size: 0.85rem;
   }
 }
