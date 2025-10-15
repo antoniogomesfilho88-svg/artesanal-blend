@@ -1,70 +1,83 @@
-// ==============================
-//  Artesanal Blend - Servidor Unificado
-//  Serve o site + menu.json + API de pedidos
-// ==============================
-
 import express from "express";
 import cors from "cors";
-import fs from "fs";
 import path from "path";
+import { fileURLToPath } from "url";
+import fs from "fs";
 
 const app = express();
-const PORT = 3000;
-const __dirname = process.cwd();
-const ordersFile = path.join(__dirname, "orders.json");
+const port = process.env.PORT || 3000;
 
-// Middlewares
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Middleware
 app.use(cors());
 app.use(express.json());
-app.use(express.static(__dirname)); // ✅ Serve index.html, imagens e menu.json
+app.use(express.static(__dirname)); // Servir os arquivos estáticos (HTML, CSS, JS, imagens)
 
-// Funções auxiliares
-function readOrders() {
-  if (!fs.existsSync(ordersFile)) return [];
-  try {
-    return JSON.parse(fs.readFileSync(ordersFile, "utf-8"));
-  } catch {
-    return [];
-  }
-}
+// =============================
+// ROTAS DO SISTEMA
+// =============================
 
-function saveOrders(data) {
-  fs.writeFileSync(ordersFile, JSON.stringify(data, null, 2));
-}
-
-// ✅ Rota principal (index.html)
+// Página principal (cardápio)
 app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "index.html"));
+  res.sendFile(path.join(__dirname, "índice.html"));
 });
 
-// ✅ Rota de pedidos
-app.get("/orders", (req, res) => {
-  res.json(readOrders());
+// Página do painel administrativo (dashboard)
+app.get("/painel", (req, res) => {
+  res.sendFile(path.join(__dirname, "painel.html"));
 });
 
-app.post("/order", (req, res) => {
-  try {
-    const order = req.body;
-    if (!order || !order.itens || !order.total) {
-      return res.status(400).json({ error: "Formato inválido de pedido." });
-    }
+// =============================
+// API - Cardápio (menu.json)
+// =============================
+app.get("/api/menu", (req, res) => {
+  const filePath = path.join(__dirname, "menu.json");
+  fs.readFile(filePath, "utf8", (err, data) => {
+    if (err) return res.status(500).json({ error: "Erro ao carregar o cardápio" });
+    res.json(JSON.parse(data));
+  });
+});
 
-    const orders = readOrders();
-    const novo = {
-      id: orders.length ? Math.max(...orders.map(o => o.id)) + 1 : 1,
-      data: new Date().toISOString(),
-      ...order,
-    };
-
-    orders.push(novo);
-    saveOrders(orders);
-    console.log("✅ Novo pedido recebido:", novo);
+app.post("/api/menu", (req, res) => {
+  const filePath = path.join(__dirname, "menu.json");
+  fs.writeFile(filePath, JSON.stringify(req.body, null, 2), (err) => {
+    if (err) return res.status(500).json({ error: "Erro ao salvar o cardápio" });
     res.json({ success: true });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
+  });
 });
 
-app.listen(PORT, () =>
-  console.log(`🚀 Servidor rodando em: http://localhost:${PORT}`)
-);
+// =============================
+// API - Pedidos (orders.json)
+// =============================
+app.get("/api/pedidos", (req, res) => {
+  const filePath = path.join(__dirname, "pedidos.json");
+  fs.readFile(filePath, "utf8", (err, data) => {
+    if (err) return res.status(500).json({ error: "Erro ao carregar pedidos" });
+    res.json(JSON.parse(data));
+  });
+});
+
+app.post("/api/pedidos", (req, res) => {
+  const filePath = path.join(__dirname, "pedidos.json");
+  const pedido = req.body;
+
+  fs.readFile(filePath, "utf8", (err, data) => {
+    let pedidos = [];
+    if (!err && data) pedidos = JSON.parse(data);
+
+    pedidos.push(pedido);
+    fs.writeFile(filePath, JSON.stringify(pedidos, null, 2), (err) => {
+      if (err) return res.status(500).json({ error: "Erro ao registrar pedido" });
+      res.json({ success: true });
+    });
+  });
+});
+
+// =============================
+// SERVIDOR ONLINE
+// =============================
+app.listen(port, () => {
+  console.log(`🚀 Servidor rodando em: http://localhost:${port}`);
+});
