@@ -40,8 +40,8 @@ header {
 }
 
 header img {
-  width: 90px;
-  height: 90px;
+  width: 120px;
+  height: 120px;
   border-radius: 50%;
 }
 
@@ -353,4 +353,5 @@ footer {
     transform: translateY(0);
   }
 }
+
 
