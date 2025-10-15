@@ -1,0 +1,310 @@
+/* ========================================
+   🔹 ESTILOS ORIGINAIS DO CARDÁPIO
+======================================== */
+
+body {
+  margin: 0;
+  font-family: "Poppins", sans-serif;
+  background-color: #111;
+  color: #ededf1;
+}
+
+header {
+  background-color: #030303;
+  text-align: center;
+  padding: 20px;
+}
+
+header img {
+  width: 120px;
+  border-radius: 50%;
+}
+
+header h1 {
+  margin-top: 15px;
+  font-size: 3cqmax;
+  color: #f0ecec; /* vermelho principal */
+}
+
+.menu-section {
+  padding: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.menu-section h2 {
+  color: lab(58.73% 59.36 32.51);
+  border-bottom: 2px solid hsl(0, 97%, 77%);
+  display: inline-block;
+  margin-top: 30px;
+  margin-bottom: 15px;
+  font-size: 1.5rem;
+}
+
+.menu-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 20px;
+}
+
+.menu-item {
+  background-color: #1b1b1b;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+  transition: transform 0.2s ease;
+}
+
+.menu-item:hover {
+  transform: scale(1.03);
+}
+
+.menu-item img {
+  width: 100%;
+  height: 180px;
+  object-fit: cover;
+}
+
+.item-info {
+  padding: 15px;
+  text-align: left;
+}
+
+.item-info h4 {
+  color: #fff;
+  font-size: 1.2rem;
+  margin-bottom: 5px;
+}
+
+.item-info p {
+  color: #ccc;
+  font-size: 0.9rem;
+  min-height: 40px;
+}
+
+.item-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 10px;
+}
+
+.item-footer .price {
+  color: #f34850;
+  font-weight: bold;
+  font-size: 1rem;
+}
+
+.add-btn {
+  background-color: #f16269;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 6px 12px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: 0.3s;
+}
+
+.add-btn:hover {
+  background-color: #eb8489;
+}
+
+/* ========================================
+   🛒 CARRINHO LATERAL E BOTÃO FLUTUANTE
+======================================== */
+
+/* Botão flutuante */
+.cart-toggle {
+  position: fixed;
+  bottom: 25px;
+  right: 25px;
+  background: #ee797f;
+  color: #fff;
+  font-weight: bold;
+  border: none;
+  border-radius: 50px;
+  padding: 15px 25px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+  z-index: 1000;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.cart-toggle:hover {
+  background: #f8666e;
+  transform: scale(1.05);
+}
+
+/* Carrinho lateral */
+.cart {
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: 380px;
+  height: 100%;
+  background: #111;
+  color: #fff;
+  padding: 20px;
+  overflow-y: auto;
+  box-shadow: -3px 0 10px rgba(0, 0, 0, 0.5);
+  z-index: 999;
+  display: none;
+  animation: slideIn 0.3s ease forwards;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+.cart-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.cart-header h3 {
+  color: #f56f76;
+}
+
+.close-cart {
+  background: #e67b81;
+  color: #fff;
+  border: none;
+  padding: 5px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.close-cart:hover {
+  background: #f3787e;
+}
+
+/* Linhas de itens no carrinho */
+.cart-line {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #333;
+  padding: 10px 0;
+}
+
+.cart-line strong {
+  color: #fff;
+}
+
+.cart-line span {
+  color: #f77e84;
+  font-weight: bold;
+}
+
+.remove-btn {
+  background: transparent;
+  border: none;
+  color: #f38989;
+  cursor: pointer;
+  margin-left: 8px;
+}
+
+.remove-btn:hover {
+  color: #f17777;
+}
+
+/* Resumo e botão do WhatsApp */
+.cart-summary p {
+  margin: 6px 0;
+  font-size: 0.95rem;
+}
+
+.cart-summary strong {
+  color: #eb7d83;
+}
+
+#checkoutBtn {
+  display: none;
+  background-color: #25d366;
+  color: #fff;
+  font-weight: bold;
+  border-radius: 8px;
+  padding: 12px 20px;
+  font-size: 16px;
+  width: 100%;
+  transition: all 0.3s ease;
+  margin-top: 10px;
+  border: none;
+  cursor: pointer;
+}
+
+#checkoutBtn:hover {
+  background-color: #1ebe5c;
+  transform: scale(1.05);
+}
+
+/* Campos do formulário */
+#cart input,
+#cart select,
+#cart textarea {
+  width: 100%;
+  margin-bottom: 8px;
+  padding: 8px;
+  border-radius: 6px;
+  border: none;
+  outline: none;
+  background-color: #222;
+  color: #fff;
+}
+
+/* Overlay opcional */
+#overlay {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.6);
+  z-index: 998;
+}
+
+/* Scroll estilizado */
+.cart::-webkit-scrollbar {
+  width: 8px;
+}
+.cart::-webkit-scrollbar-thumb {
+  background-color: #333;
+  border-radius: 4px;
+}
+
+/* Responsivo */
+@media (max-width: 768px) {
+  .cart {
+    width: 100%;
+  }
+  .cart-toggle {
+    bottom: 15px;
+    right: 15px;
+    padding: 12px 18px;
+  }
+}
+/* Contador do carrinho */
+.cart-count {
+  background: #eb8489;
+  color: #fff;
+  font-size: 0.8rem;
+  font-weight: bold;
+  border-radius: 50%;
+  padding: 3px 7px;
+  position: absolute;
+  top: -8px;
+  right: -10px;
+  min-width: 18px;
+  text-align: center;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.4);
+}
+

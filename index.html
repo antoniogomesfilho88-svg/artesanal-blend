@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Artesanal Blend - Cardápio</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://kit.fontawesome.com/a2d04d6c3f.js" crossorigin="anonymous"></script>
+</head>
+<body>
+
+  <header class="header">
+    <img src="logo.jpg" alt="Logo" class="logo">
+    <h1>Artesanal Blend</h1>
+  </header>
+
+  <main>
+    <section class="menu-section">
+      <h2>🍔 Hambúrgueres</h2>
+      <div id="cat-Hambúrgueres" class="menu-grid"></div>
+
+      <h2>🥡 Combos</h2>
+      <div id="cat-Combos" class="menu-grid"></div>
+
+      <h2>🍟 Acompanhamentos</h2>
+      <div id="cat-Acompanhamentos" class="menu-grid"></div>
+
+      <h2>➕ Adicionais</h2>
+      <div id="cat-Adicionais" class="menu-grid"></div>
+
+      <h2>🥤 Bebidas</h2>
+      <div id="cat-Bebidas" class="menu-grid"></div>
+    </section>
+  </main>
+
+  <!-- Botão flutuante do carrinho -->
+  <button id="openCartBtn" class="btn cart-toggle">
+  🛒 <span id="cartCount" class="cart-count">0</span>
+</button>
+  <!-- Carrinho lateral -->
+  <section id="cart" class="cart" style="display:none;">
+    <div class="cart-header">
+      <h3>Seu Pedido</h3>
+      <button id="closeCartBtn" class="btn close-cart">✖ Fechar</button>
+    </div>
+
+    <div id="cart-items"></div>
+    <hr>
+
+    <div class="cart-summary">
+      <p><strong>Subtotal:</strong> <span id="subtotal">R$ 0,00</span></p>
+      <p><strong>Taxa de entrega:</strong> <span id="fee">R$ 0,00</span></p>
+      <p><strong>Total:</strong> <span id="total">R$ 0,00</span></p>
+    </div>
+
+    <label>Região:</label>
+    <select id="region">
+      <option value="Retirada" data-fee="0">🏠 Retirada no local - R$ 0,00</option>
+  <option value="Jardim Canadá" data-fee="6">📍 Jardim Canadá - R$ 6,00</option>
+  <option value="Retiro das Pedras" data-fee="10">📍 Retiro das Pedras - R$ 10,00</option>
+  <option value="Serra do Manacás" data-fee="10">📍 Serra do Manacás - R$ 10,00</option>
+  <option value="Vale do Sol" data-fee="12">📍 Vale do Sol - R$ 12,00</option>
+  <option value="Alphaville" data-fee="15">📍 Alphaville - R$ 15,00</option>
+    </select>
+
+    <hr>
+    <input type="text" id="customerName" placeholder="Seu nome">
+    <input type="text" id="customerPhone" placeholder="Telefone / WhatsApp">
+    <input type="text" id="customerAddress" placeholder="Endereço (opcional)">
+    <input type="text" id="customerPayment" placeholder="Forma de pagamento">
+    <textarea id="customerObs" placeholder="Observações gerais (opcional)"></textarea>
+
+    <button id="checkoutBtn" class="btn primary">📩 Enviar pedido pelo WhatsApp</button>
+    <small class="muted">O pedido será enviado para: <strong>(31) 99212-8891</strong></small>
+  </section>
+
+  <script src="script.js"></script>
+</body>
+</html>
