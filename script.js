@@ -204,3 +204,20 @@ document.addEventListener("DOMContentLoaded", () => {
   if (checkoutBtn) checkoutBtn.addEventListener("click", enviarPedido);
   if (regiaoSelect) regiaoSelect.addEventListener("change", atualizarTaxa);
 });
+
+// Controle de abrir e fechar o carrinho com animação
+const openCartBtn = document.getElementById("openCartBtn");
+const closeCartBtn = document.getElementById("closeCartBtn");
+const cart = document.getElementById("cart");
+
+if (openCartBtn && cart) {
+  openCartBtn.addEventListener("click", () => {
+    cart.classList.add("show");
+  });
+}
+
+if (closeCartBtn && cart) {
+  closeCartBtn.addEventListener("click", () => {
+    cart.classList.remove("show");
+  });
+}
