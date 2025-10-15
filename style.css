@@ -2,10 +2,11 @@
    ARTESANAL BLEND - ESTILO GERAL
 =========================== */
 :root {
-  --bg-dark: #1c1c1c;
-  --bg-card: #2a2a2a;
+  --bg-dark: #1b1b1b;
+  --bg-card: #292929;
   --text-light: #f5f5f5;
-  --accent: #f1c40f;
+  --accent: #e65c5c;  /* 🔴 vermelho suave */
+  --accent-hover: #ff7b7b;
   --gray: #999;
   --radius: 12px;
 }
@@ -123,7 +124,7 @@ body {
 
 .add-btn {
   background: var(--accent);
-  color: #000;
+  color: #fff;
   border: none;
   border-radius: 6px;
   width: 30px;
@@ -133,7 +134,7 @@ body {
 }
 
 .add-btn:hover {
-  background: #ffda3b;
+  background: var(--accent-hover);
 }
 
 /* ===========================
@@ -143,9 +144,9 @@ body {
   position: fixed;
   top: 0;
   right: 0;
-  width: 330px;
+  width: 340px;
   height: 100%;
-  background: #222;
+  background: #202020;
   box-shadow: -3px 0 8px rgba(0, 0, 0, 0.6);
   padding: 20px;
   display: flex;
@@ -183,7 +184,7 @@ body {
   width: 25px;
   height: 25px;
   border-radius: 5px;
-  color: #000;
+  color: #fff;
   font-weight: bold;
   cursor: pointer;
 }
@@ -195,9 +196,31 @@ body {
   margin-bottom: 10px;
 }
 
+/* ===========================
+   FORMULÁRIO CLIENTE
+=========================== */
+.cliente-info {
+  background: var(--bg-card);
+  padding: 10px;
+  border-radius: var(--radius);
+  margin-bottom: 10px;
+}
+
+.cliente-info input,
+.cliente-info select {
+  width: 100%;
+  margin: 6px 0;
+  padding: 8px;
+  border-radius: 6px;
+  border: none;
+  background: #333;
+  color: var(--text-light);
+  font-size: 0.9rem;
+}
+
 .primary {
   background: var(--accent);
-  color: #000;
+  color: #fff;
   padding: 10px;
   border: none;
   border-radius: var(--radius);
@@ -211,14 +234,14 @@ body {
 }
 
 /* ===========================
-   BOTÃO FLUTUANTE DO CARRINHO
+   BOTÃO FLUTUANTE
 =========================== */
 .cart-toggle {
   position: fixed;
   bottom: 20px;
   right: 20px;
   background: var(--accent);
-  color: #000;
+  color: #fff;
   border: none;
   border-radius: 50%;
   width: 60px;
@@ -234,7 +257,7 @@ body {
   position: absolute;
   top: 8px;
   right: 10px;
-  background: #e74c3c;
+  background: #ff3b3b;
   color: white;
   font-size: 0.75rem;
   font-weight: bold;
@@ -253,57 +276,13 @@ footer {
 }
 
 /* ===========================
-   🔹 RESPONSIVIDADE MOBILE
+   🔹 RESPONSIVIDADE
 =========================== */
 @media (max-width: 768px) {
-  .header h1 {
-    font-size: 1.2rem;
-  }
-
-  .menu-grid {
-    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-  }
-
-  .menu-item {
-    padding: 8px;
-  }
-
-  .menu-img {
-    height: 110px;
-  }
-
   .cart {
     width: 100%;
     height: 100%;
     border-left: none;
     border-top: 2px solid var(--accent);
-  }
-
-  .cart-toggle {
-    bottom: 15px;
-    right: 15px;
-    width: 55px;
-    height: 55px;
-    font-size: 1.3rem;
-  }
-}
-
-@media (max-width: 480px) {
-  .menu-section h2 {
-    font-size: 1rem;
-  }
-
-  .info h3 {
-    font-size: 0.9rem;
-  }
-
-  .info p {
-    font-size: 0.75rem;
-  }
-
-  .add-btn {
-    width: 25px;
-    height: 25px;
-    font-size: 0.9rem;
   }
 }
