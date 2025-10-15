@@ -141,14 +141,27 @@ function atualizarTaxa() {
 }
 
 // ===============================
+// Mostrar campo de troco
+// ===============================
+function mostrarTroco() {
+  const pagamento = document.getElementById("pagamento").value;
+  const campoTroco = document.getElementById("campoTroco");
+  campoTroco.style.display = pagamento === "Dinheiro" ? "block" : "none";
+}
+
+// ===============================
 // Enviar Pedido pelo WhatsApp
 // ===============================
 function enviarPedido() {
-  if (carrinho.length === 0) return;
+  if (carrinho.length === 0) return alert("Adicione itens ao carrinho antes de enviar!");
 
-  const nome = document.getElementById("clienteNome").value || "Cliente";
+  const nome = document.getElementById("clienteNome").value || "Cliente não informado";
+  const telefone = document.getElementById("clienteTelefone").value || "Telefone não informado";
   const endereco = document.getElementById("clienteEndereco").value || "Endereço não informado";
-  const regiao = document.getElementById("clienteRegiao").value || "Região não selecionada";
+  const regiao = document.getElementById("clienteRegiao").value || "Região não informada";
+  const pagamento = document.getElementById("pagamento").value || "Não informado";
+  const troco = document.getElementById("troco").value || "-";
+  const obs = document.getElementById("obsCliente").value || "Nenhuma observação.";
 
   let mensagem = `🍔 *Pedido - Artesanal Blend*%0A%0A`;
 
@@ -160,11 +173,17 @@ function enviarPedido() {
   const totalFinal = subtotal + taxaEntrega;
 
   mensagem += `%0A💰 *Subtotal:* R$ ${subtotal.toFixed(2)}`;
-  mensagem += `%0A🚚 *Taxa de entrega:* R$ ${taxaEntrega.toFixed(2)}`;
+  mensagem += `%0A🚚 *Entrega (${regiao}):* R$ ${taxaEntrega.toFixed(2)}`;
   mensagem += `%0A💵 *Total:* R$ ${totalFinal.toFixed(2)}`;
-  mensagem += `%0A%0A📍 *Endereço:* ${endereco}`;
+  mensagem += `%0A%0A🏠 *Endereço:* ${endereco}`;
+  mensagem += `%0A👤 *Nome:* ${nome}`;
+  mensagem += `%0A📞 *Telefone:* ${telefone}`;
   mensagem += `%0A🏙️ *Região:* ${regiao}`;
-  mensagem += `%0A👤 *Cliente:* ${nome}`;
+  mensagem += `%0A💳 *Pagamento:* ${pagamento}`;
+  if (pagamento === "Dinheiro") {
+    mensagem += `%0A💵 *Troco para:* R$ ${troco}`;
+  }
+  mensagem += `%0A📝 *Obs:* ${obs}`;
   mensagem += `%0A%0A✅ *Agradecemos seu pedido!*`;
 
   const numero = "5531992128891";
