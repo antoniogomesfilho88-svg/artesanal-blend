@@ -7,12 +7,10 @@
         let produtos = []; 
         let insumos = []; 
         let logged = false;
+        // Variável que armazena a composição de TODOS os produtos (estrutura: { produtoId: [{insumoId, uso}] })
         let composicoes = {}; 
         let currentProductComposition = []; 
         let currentProductId = null; 
-
-        const LOW_STOCK_LIMIT_G_ML = 500;
-        const LOW_STOCK_LIMIT_UN = 5;
 
         // Elementos de Segurança
         const loginModal = document.getElementById('login-screen');
@@ -26,20 +24,18 @@
         const menuTbody = document.getElementById('menu-tbody');
         const insumosTbody = document.getElementById('insumos-tbody'); 
 
-        // Modais e Formulários 
+        // Modais e Formulários (Inicialização dos objetos Bootstrap - ESSENCIAL!)
         const productModal = new bootstrap.Modal(document.getElementById('productModal'));
         const insumoModal = new bootstrap.Modal(document.getElementById('insumoModal'));
-        const compositionModal = new bootstrap.Modal(document.getElementById('compositionModal')); 
+        const compositionModal = new bootstrap.Modal(document.getElementById('compositionModal')); // NOVO MODAL
         
         const saveProductBtn = document.getElementById('saveProductBtn');
         const saveInsumoBtn = document.getElementById('saveInsumoBtn');
 
         // ELEMENTOS DO MODAL DE INSUMO (PARA CÁLCULO)
         const insumoPrecoTotal = document.getElementById('insumoPrecoTotal');
-        // CORRIGIDO: Voltando a usar o ID para Kg
-        const insumoQuantidadeKg = document.getElementById('insumoQuantidadeKg'); 
+        const insumoQuantidadeKg = document.getElementById('insumoQuantidadeKg');
         const insumoCusto = document.getElementById('insumoCusto');
-        const insumoUnidade = document.getElementById('insumoUnidade'); 
 
         // ELEMENTOS DO MODAL DE COMPOSIÇÃO (FICHA TÉCNICA)
         const compInsumoSelect = document.getElementById('compInsumoSelect');
@@ -47,10 +43,6 @@
         const compositionTbody = document.getElementById('composition-tbody');
         const compositionProductName = document.getElementById('compositionProductName');
         const totalCostDisplay = document.getElementById('totalCostDisplay');
-
-        // ELEMENTOS DA SIMULAÇÃO DE VENDAS
-        const vendaProdutoSelect = document.getElementById('vendaProdutoSelect');
-        const vendaQuantidade = document.getElementById('vendaQuantidade');
         
         // ==================================================================
         // FUNÇÕES DE NAVEGAÇÃO E UX
@@ -65,21 +57,14 @@
             const titleMap = {
                 'products': 'Gerenciamento de Produtos',
                 'insumos': 'Gestão de Insumos',
-                'financeiro': 'Financeiro e Vendas'
+                'financeiro': 'Visão Financeira'
             };
             document.getElementById('main-title').innerText = titleMap[sectionId] || 'Dashboard';
             
             document.querySelectorAll('#sidebar .nav-link').forEach(link => {
                 link.classList.remove('active');
             });
-            document.querySelector(`[onclick="showSection('${sectionId}')"]`)?.classList.add('active');
-            document.querySelector(`[onclick="showFinanceiroSection()"]`)?.classList.add('active'); 
-        }
-        
-        function showFinanceiroSection() {
-            showSection('financeiro');
-            populateVendaSelect(); 
-            renderFinanceiroSummary(); 
+            document.querySelector(`[onclick="showSection('${sectionId}')"]`).classList.add('active');
         }
 
         // ==================================================================
@@ -99,6 +84,7 @@
             }
         }
         
+        // ATUALIZADO: Inclui botão "Ficha" e exibe Custo
         function render() {
             menuTbody.innerHTML = '';
             if (produtos.length === 0) {
@@ -107,7 +93,7 @@
             }
 
             produtos.forEach(p => {
-                const custo = calculateProductCost(p.id); 
+                const custo = calculateProductCost(p.id); // Calcula o custo do produto
                 
                 const row = menuTbody.insertRow();
                 row.innerHTML = `
@@ -124,7 +110,6 @@
                     </td>
                 `;
             });
-            renderFinanceiroSummary(); 
         }
         
         function openAddProductModal() {
@@ -182,7 +167,7 @@
         function delP(id) { 
             if (confirm(`Tem certeza que deseja excluir o produto ID ${id}?`)) {
                 produtos = produtos.filter(p => p.id !== id);
-                delete composicoes[id]; 
+                delete composicoes[id]; // Remove a composição do produto excluído
                 render();
                 alert('Produto excluído localmente. Lembre-se de EXPORTAR!');
             }
@@ -213,22 +198,7 @@
             }
 
             insumos.forEach(i => {
-                let isLowStock = false;
-                if (i.unidade.toLowerCase() === 'g' || i.unidade.toLowerCase() === 'ml') {
-                    if (i.estoqueAtual < LOW_STOCK_LIMIT_G_ML) {
-                        isLowStock = true;
-                    }
-                } else if (i.unidade.toLowerCase() === 'un') {
-                    if (i.estoqueAtual < LOW_STOCK_LIMIT_UN) {
-                        isLowStock = true;
-                    }
-                }
-                
                 const row = insumosTbody.insertRow();
-                if (isLowStock) {
-                    row.classList.add('table-danger-light');
-                }
-                
                 row.innerHTML = `
                     <td>${i.id}</td>
                     <td>${i.nome}</td>
@@ -242,48 +212,42 @@
             });
         }
 
-        // FUNÇÃO DE CÁLCULO CORRIGIDA: Converte Kg/Litros para Gramas/ML
+        // NOVO: Função de Cálculo de Custo por Grama/Unidade
         function calculateCustoUnitario() {
             const precoTotal = parseFloat(insumoPrecoTotal.value);
-            const quantidadeKg = parseFloat(insumoQuantidadeKg.value); // Valor inserido em Kg ou Litros
-            const unidade = insumoUnidade.value.toLowerCase();
+            const quantidadeKg = parseFloat(insumoQuantidadeKg.value);
 
-            if (isNaN(precoTotal) || isNaN(quantidadeKg) || quantidadeKg <= 0) {
-                insumoCusto.value = '';
-                return;
-            }
-            
-            if (unidade === 'g') {
-                // Cálculo para Gramas: (Preço Total) / (Kg * 1000)
+            // Verifica se a unidade é grama para usar a fórmula de Kg
+            if (insumoUnidade.value.toLowerCase() === 'g') {
+                if (isNaN(precoTotal) || isNaN(quantidadeKg) || quantidadeKg <= 0) {
+                    insumoCusto.value = '';
+                    return;
+                }
+
+                // 1 kg = 1000g
                 const quantidadeGramas = quantidadeKg * 1000;
                 const custoPorGrama = precoTotal / quantidadeGramas;
+
+                // Limita a 4 casas decimais para precisão de custo por grama (0.0XXX)
                 insumoCusto.value = custoPorGrama.toFixed(4);
-            } else if (unidade === 'ml') {
-                // Cálculo para Mililitros: (Preço Total) / (Litros * 1000)
-                const quantidadeMl = quantidadeKg * 1000;
-                const custoPorMl = precoTotal / quantidadeMl;
-                insumoCusto.value = custoPorMl.toFixed(4);
             } else {
-                 // Para 'un' ou outras, o campo fica vazio para inserção manual do custo unitário
+                 // Para outras unidades ('un', 'ml', etc.), não fazemos o cálculo automático.
                  insumoCusto.value = ''; 
             }
         }
         
-        // Adiciona a função de cálculo aos eventos de input
-        insumoPrecoTotal.oninput = calculateCustoUnitario;
-        insumoQuantidadeKg.oninput = calculateCustoUnitario; 
-        insumoUnidade.oninput = calculateCustoUnitario;
-        
+        // ATUALIZADO: Limpa campos de cálculo na adição
         function openAddInsumoModal() {
             document.getElementById('insumoModalLabel').innerText = 'Adicionar Novo Insumo';
             document.getElementById('insumo-form').reset();
             document.getElementById('insumoId').value = ''; 
             insumoPrecoTotal.value = '';
-            insumoQuantidadeKg.value = ''; 
+            insumoQuantidadeKg.value = '';
             insumoCusto.value = '';
             insumoModal.show();
         }
 
+        // ATUALIZADO: Esconde campos de cálculo na edição e preenche custo/estoque
         function editInsumo(id) {
             const insumo = insumos.find(i => i.id === id);
             if (!insumo) return;
@@ -293,8 +257,9 @@
             document.getElementById('insumoId').value = insumo.id;
             document.getElementById('insumoName').value = insumo.nome;
             
+            // Na edição, não mostramos os campos de cálculo (Preço Total e Kg)
             insumoPrecoTotal.value = ''; 
-            insumoQuantidadeKg.value = ''; 
+            insumoQuantidadeKg.value = '';
             
             insumoCusto.value = insumo.custoUnitario;
             document.getElementById('insumoUnidade').value = insumo.unidade;
@@ -303,6 +268,7 @@
             insumoModal.show();
         }
 
+        // ATUALIZADO: Salva Insumo (usando o valor do campo insumoCusto)
         saveInsumoBtn.onclick = () => {
             const id = document.getElementById('insumoId').value;
             const nome = document.getElementById('insumoName').value;
@@ -312,7 +278,7 @@
             const estoqueAtual = parseFloat(document.getElementById('insumoEstoque').value);
             
             if (!nome || isNaN(custoUnitario) || isNaN(estoqueAtual) || custoUnitario <= 0) {
-                alert("Nome, Custo Unitário (deve ser maior que zero) e Estoque são obrigatórios.");
+                alert("Nome, Custo Unitário (deve ser maior que zero) e Estoque são obrigatórios. Use o cálculo de Kg/R$ ou digite manualmente.");
                 return;
             }
 
@@ -374,6 +340,7 @@
         // FUNÇÕES DE MANIPULAÇÃO DE DADOS (COMPOSIÇÃO / FICHA TÉCNICA)
         // ==================================================================
 
+        // Calcula o custo total de UM PRODUTO (usado na tabela de produtos)
         function calculateProductCost(productId) {
             const composition = composicoes[productId] || [];
             let custoTotal = 0;
@@ -423,22 +390,17 @@
                 return;
             }
 
-            const existingIndex = currentProductComposition.findIndex(c => c.insumoId === insumoId);
-            if (existingIndex !== -1) {
-                currentProductComposition[existingIndex].uso = uso;
-                alert("Uso do insumo atualizado na ficha técnica! Lembre-se de EXPORTAR TUDO.");
-            } else {
+            if (!currentProductComposition.find(c => c.insumoId === insumoId)) {
                 currentProductComposition.push({ insumoId, uso });
+                composicoes[currentProductId] = currentProductComposition; // Salva na estrutura global
+                
+                compInsumoSelect.value = '';
+                compInsumoUso.value = '';
+                populateInsumoSelect();
+                renderComposition();
+                render(); // Atualiza a tabela de produtos para mostrar o novo custo
                 alert("Insumo adicionado à ficha técnica! Lembre-se de EXPORTAR TUDO.");
             }
-
-            composicoes[currentProductId] = currentProductComposition; 
-            
-            compInsumoSelect.value = '';
-            compInsumoUso.value = '';
-            populateInsumoSelect(); 
-            renderComposition();
-            render(); 
         }
 
         function removeInsumoFromComposition(insumoIdToRemove) {
@@ -448,7 +410,7 @@
 
                 populateInsumoSelect();
                 renderComposition();
-                render(); 
+                render(); // Atualiza a tabela de produtos para mostrar o novo custo
                 alert("Insumo removido da ficha técnica! Lembre-se de EXPORTAR TUDO.");
             }
         }
@@ -493,110 +455,14 @@
 
             totalCostDisplay.innerText = `R$ ${custoTotal.toFixed(2)}`;
         }
-
+        
         // ==================================================================
-        // FUNÇÕES DE CONTROLE DE ESTOQUE E VENDAS 
-        // ==================================================================
-
-        function populateVendaSelect() {
-            vendaProdutoSelect.innerHTML = '<option value="">Selecione um Produto...</option>';
-            
-            produtos.forEach(p => {
-                if (composicoes[p.id] && composicoes[p.id].length > 0) {
-                    const custo = calculateProductCost(p.id);
-                    const option = document.createElement('option');
-                    option.value = p.id;
-                    option.innerText = `${p.name} (Venda: R$ ${Number(p.price).toFixed(2)} | Custo: R$ ${custo.toFixed(2)})`;
-                    vendaProdutoSelect.appendChild(option);
-                }
-            });
-        }
-
-        function renderFinanceiroSummary() {
-            let totalCusto = 0;
-            let totalVenda = 0;
-            let countProdutosComCusto = 0;
-            
-            produtos.forEach(p => {
-                const custo = calculateProductCost(p.id);
-                if (custo > 0) {
-                    totalCusto += custo;
-                    totalVenda += p.price;
-                    countProdutosComCusto++;
-                }
-            });
-
-            const custoMedio = countProdutosComCusto > 0 ? totalCusto / countProdutosComCusto : 0;
-            const vendaMedia = countProdutosComCusto > 0 ? totalVenda / countProdutosComCusto : 0;
-            const lucroMedio = vendaMedia - custoMedio;
-
-            document.getElementById('totalProdutos').innerText = produtos.length;
-            document.getElementById('resumoCusto').innerText = `R$ ${custoMedio.toFixed(2)}`;
-            document.getElementById('resumoLucro').innerText = `R$ ${lucroMedio.toFixed(2)}`;
-        }
-
-
-        function processSaleAndLowerStock() {
-            const productId = parseInt(vendaProdutoSelect.value);
-            const quantidade = parseInt(vendaQuantidade.value);
-
-            if (isNaN(productId) || isNaN(quantidade) || quantidade <= 0) {
-                alert("Selecione um produto e defina uma quantidade válida.");
-                return;
-            }
-
-            const composition = composicoes[productId];
-            if (!composition || composition.length === 0) {
-                alert("Este produto não possui ficha técnica para dar baixa no estoque.");
-                return;
-            }
-
-            let hasStockIssue = false;
-            let insufficientInsumos = [];
-            
-            // 1. PRIMEIRA PASSAGEM: Checa se há estoque suficiente
-            composition.forEach(comp => {
-                const insumo = insumos.find(i => i.id === comp.insumoId);
-                if (insumo) {
-                    const usoTotal = comp.uso * quantidade;
-                    if (insumo.estoqueAtual < usoTotal) {
-                        hasStockIssue = true;
-                        insufficientInsumos.push(`${insumo.nome} (${insumo.estoqueAtual.toFixed(2)} ${insumo.unidade} disponíveis, necessário: ${usoTotal.toFixed(2)} ${insumo.unidade})`);
-                    }
-                }
-            });
-
-            if (hasStockIssue) {
-                alert(`❌ Não é possível registrar a venda. Estoque insuficiente para os seguintes insumos:\n\n- ${insufficientInsumos.join('\n- ')}`);
-                return;
-            }
-
-            // 2. SEGUNDA PASSAGEM: Dá baixa no estoque
-            composition.forEach(comp => {
-                const insumoIndex = insumos.findIndex(i => i.id === comp.insumoId);
-                if (insumoIndex !== -1) {
-                    const usoTotal = comp.uso * quantidade;
-                    insumos[insumoIndex].estoqueAtual -= usoTotal;
-                }
-            });
-
-            // 3. ATUALIZAÇÃO DA INTERFACE
-            renderInsumos(); 
-            
-            alert(`✅ Venda de ${quantidade} unidade(s) registrada com sucesso! Estoque dos insumos utilizados foi baixado.\n\nLembre-se de EXPORTAR INSUMOS para salvar esta baixa no servidor!`);
-            
-            vendaProdutoSelect.value = '';
-            vendaQuantidade.value = 1;
-            populateVendaSelect(); 
-        }
-
-
-        // ==================================================================
-        // LÓGICA DE SEGURANÇA E EXPORTAÇÃO
+        // LÓGICA DE SEGURANÇA E EXPORTAÇÃO (ATUALIZADA)
         // ==================================================================
         
         async function loadCompositions() {
             // Em uma aplicação real, aqui você faria um fetch para carregar o arquivo 'composicoes.json'
+            // Por enquanto, apenas inicia vazio.
             composicoes = {}; 
         }
 
@@ -638,10 +504,11 @@
                 logoutBtn.style.display = "inline-block";
                 
                 showSection('products'); 
+                // Carrega insumos e menu antes de carregar e renderizar composições
                 await loadInsumos(); 
                 await loadCompositions(); 
                 await loadMenu(); 
-                render(); 
+                render(); // Re-renderiza para garantir que os custos sejam exibidos
             } else {
                 loginModal.style.display = "flex";
             }
@@ -693,15 +560,18 @@
             }
         };
 
+        // Evento de Exportação de PRODUTOS e COMPOSIÇÕES (ATUALIZADO)
         document.getElementById("exportBtn").onclick = async () => {
             if (!logged) { alert("Você precisa estar logado para exportar para o servidor."); return; }
             if (!confirm("ATENÇÃO: Tem certeza que deseja exportar e ATUALIZAR TODOS os dados (Produtos e Fichas Técnicas) no servidor?")) return;
             
             let exportSuccess = true;
 
+            // 1. Exportar Composições (Fichas Técnicas)
             const compResult = await exportCompositions();
             if (!compResult) { exportSuccess = false; }
             
+            // 2. Exportar Produtos (Cardápio)
             try {
                 const response = await fetch('/api/export', {
                     method: 'POST',
@@ -718,6 +588,7 @@
                     checkStatus();
                     exportSuccess = false;
                 } else if (data.success) {
+                    // Sucesso na exportação do menu
                 } else {
                     alert(`❌ Erro ao exportar Produtos: ${data.message}`);
                     exportSuccess = false;
@@ -734,9 +605,8 @@
                 alert("⚠️ A exportação teve problemas. Verifique os alertas anteriores.");
             }
         };
-        
-        document.querySelector('[onclick="showSection(\'financeiro\')"]').onclick = showFinanceiroSection;
 
+        // Inicializa a verificação de status
         checkStatus();
 
     </script>
