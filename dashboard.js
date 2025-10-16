@@ -1,6 +1,5 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-
-    <script>
+<script>
         // ==================================================================
         // VARIÁVEIS GLOBAIS E ELEMENTOS DOM 
         // ==================================================================
@@ -71,8 +70,14 @@
             document.querySelectorAll('#sidebar .nav-link').forEach(link => {
                 link.classList.remove('active');
             });
-            document.querySelector(`[onclick="showSection('${sectionId}')"]`)?.classList.add('active');
-            document.querySelector(`[onclick="showFinanceiroSection()"]`)?.classList.add('active'); 
+            // Adiciona a classe 'active' ao link correto
+            const targetLink = document.querySelector(`#sidebar a[onclick*="'${sectionId}'"]`);
+            if (targetLink) {
+                targetLink.classList.add('active');
+            } else if (sectionId === 'financeiro') {
+                // Caso especial para a seção financeira se o onclick for showFinanceiroSection()
+                document.querySelector(`[onclick="showFinanceiroSection()"]`)?.classList.add('active'); 
+            }
         }
         
         function showFinanceiroSection() {
@@ -86,15 +91,14 @@
         // ==================================================================
         
         async function loadMenu() {
+            // Simulação: Em um ambiente real, substitua este fetch pela sua lógica de backend
             try {
-                // OBS: No ambiente real, substitua este fetch pela sua lógica de backend
                 const response = await fetch("/api/menu", { cache: "no-store" });
                 if (!response.ok) { throw new Error(`Erro: ${response.status}`); }
                 produtos = await response.json(); 
                 render(); 
             } catch (e) {
                 console.error("Erro ao carregar cardápio:", e);
-                // Dados de fallback para demonstração (remova em produção)
                 produtos = []; 
                 render();
             }
@@ -194,15 +198,14 @@
         // ==================================================================
         
         async function loadInsumos() {
+            // Simulação: Em um ambiente real, substitua este fetch pela sua lógica de backend
             try {
-                // OBS: No ambiente real, substitua este fetch pela sua lógica de backend
                 const response = await fetch("/api/insumos", { cache: "no-store" });
                 if (!response.ok) { throw new Error(`Erro: ${response.status}`); }
                 insumos = await response.json(); 
                 renderInsumos();
             } catch (e) {
                 console.error("Erro ao carregar insumos:", e);
-                // Dados de fallback para demonstração (remova em produção)
                 insumos = []; 
                 renderInsumos();
             }
@@ -249,7 +252,7 @@
         function calculateCustoUnitario() {
             const precoTotal = parseFloat(insumoPrecoTotal.value);
             const quantidadeKg = parseFloat(insumoQuantidadeKg.value); // Valor inserido em Kg ou Litros
-            const unidade = insumoUnidade.value.toLowerCase();
+            const unidade = insumoUnidade.value.toLowerCase().trim(); // Garantia de limpeza (trim) e minúsculas
 
             // 1. Limpa o campo de custo unitário por padrão
             insumoCusto.value = '';
@@ -297,7 +300,7 @@
             }
         }
         
-        // Adiciona a função de cálculo aos eventos de input
+        // **CONEXÃO VITAL:** Adiciona a função de cálculo aos eventos de input
         insumoPrecoTotal.oninput = calculateCustoUnitario;
         insumoQuantidadeKg.oninput = calculateCustoUnitario; 
         insumoUnidade.oninput = calculateCustoUnitario;
@@ -326,7 +329,7 @@
             document.getElementById('insumoId').value = insumo.id;
             document.getElementById('insumoName').value = insumo.nome;
             
-            // Limpa os campos de cálculo (não relevantes para a edição, exceto se for 'un')
+            // Limpa os campos de cálculo (não relevantes na edição, exceto se for 'un')
             insumoPrecoTotal.value = ''; 
             insumoQuantidadeKg.value = ''; 
             
@@ -385,7 +388,7 @@
             if (!confirm("ATENÇÃO: Tem certeza que deseja ATUALIZAR o insumos.json no servidor?")) return;
 
             try {
-                // OBS: No ambiente real, substitua este fetch pela sua lógica de backend
+                // Simulação: Em um ambiente real, substitua este fetch pela sua lógica de backend
                 const response = await fetch('/api/insumos/export', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -634,15 +637,15 @@
         // ==================================================================
         
         async function loadCompositions() {
-            // OBS: Em uma aplicação real, aqui você faria um fetch para carregar o arquivo 'composicoes.json'
-            composicoes = {}; // Mantém vazio ou carrega do servidor
+            // Simulação: Mantém vazio ou carrega do servidor
+            composicoes = {}; 
         }
 
         async function exportCompositions() {
             if (!logged) { return false; }
             
             try {
-                // OBS: No ambiente real, substitua este fetch pela sua lógica de backend
+                // Simulação: Em um ambiente real, substitua este fetch pela sua lógica de backend
                 const response = await fetch('/api/composicoes/export', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -670,69 +673,40 @@
 
 
         async function checkStatus() {
-            // Simulação de check de login, baseado na existência de um cookie ou token
-            if (document.cookie.includes('auth_session')) {
-                logged = true;
-                loginModal.style.display = "none";
-                currentUser.innerText = "admin"; 
-                logoutBtn.style.display = "inline-block";
-                
-                showSection('products'); 
-                await loadInsumos(); 
-                await loadCompositions(); 
-                await loadMenu(); 
-                render(); 
-            } else {
-                loginModal.style.display = "flex";
-            }
+            // Simulação de check de login: FORÇA A TELA DE LOGIN
+            logged = false;
+            loginModal.style.display = "flex"; 
         }
 
         doLoginBtn.onclick = async () => {
             const user = loginUser.value;
             const pass = loginPass.value;
 
-            try {
-                // OBS: No ambiente real, substitua este fetch pela sua lógica de backend
-                const response = await fetch('/api/login', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ user, pass })
-                });
+            // Simulação de autenticação
+            if (user === 'admin' && pass === '12345') {
+                logged = true;
+                currentUser.innerText = user; 
+                loginModal.style.display = "none";
+                logoutBtn.style.display = "inline-block";
                 
-                const data = await response.json();
-
-                if (data.success) {
-                    logged = true;
-                    currentUser.innerText = user; 
-                    loginModal.style.display = "none";
-                    logoutBtn.style.display = "inline-block";
-                    
-                    showSection('products');
-                    await loadInsumos();
-                    await loadCompositions();
-                    await loadMenu(); 
-                    render();
-                    alert('Login efetuado com sucesso!');
-                } else {
-                    alert(data.message);
-                }
-            } catch (error) {
-                alert('Erro de conexão ao tentar logar com o servidor.');
+                showSection('products');
+                await loadInsumos();
+                await loadCompositions();
+                await loadMenu(); 
+                render();
+                alert('Login efetuado com sucesso!');
+            } else {
+                alert('Usuário ou senha inválidos. Tente "admin" e "12345".');
             }
         };
 
         logoutBtn.onclick = async () => {
-            try {
-                // OBS: No ambiente real, substitua este fetch pela sua lógica de backend
-                await fetch('/api/logout', { method: 'POST' });
-                logged = false;
-                currentUser.innerText = "—";
-                logoutBtn.style.display = "none";
-                loginModal.style.display = "flex";
-                alert('Você saiu do painel.');
-            } catch (error) {
-                alert('Erro ao fazer logout, mas a sessão local foi encerrada.');
-            }
+            // Simulação de logout
+            logged = false;
+            currentUser.innerText = "—";
+            logoutBtn.style.display = "none";
+            loginModal.style.display = "flex";
+            alert('Você saiu do painel.');
         };
 
         document.getElementById("exportBtn").onclick = async () => {
@@ -747,7 +721,7 @@
             
             // 2. Exporta produtos
             try {
-                // OBS: No ambiente real, substitua este fetch pela sua lógica de backend
+                // Simulação: Em um ambiente real, substitua este fetch pela sua lógica de backend
                 const response = await fetch('/api/export', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -783,7 +757,9 @@
         
         document.querySelector('[onclick="showSection(\'financeiro\')"]').onclick = showFinanceiroSection;
 
-        // Inicialização
+        // Inicialização: Tenta carregar dados ou mostra tela de login
         checkStatus();
 
     </script>
+  
+
