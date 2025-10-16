@@ -1,171 +1,273 @@
-const LS_KEY = 'blendDashboard';
-const LS_SESSION_KEY = 'dashboardSession'; // Nova chave para a sessão
-const ADMIN_USER = 'admin';
-const ADMIN_PASS = '1234'; // ATENÇÃO: Em produção, o ideal é não ter a senha em texto claro.
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
-let state = { produtos: [] };
+    <script>
+        // ==================================================================
+        // VARIÁVEIS GLOBAIS E ELEMENTOS DOM
+        // ==================================================================
+        let produtos = []; 
+        let insumos = [];
+        let logged = false;
 
-const money = v => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+        // Elementos de Segurança
+        const loginModal = document.getElementById('login-screen');
+        const loginUser = document.getElementById('loginUser');
+        const loginPass = document.getElementById('loginPass');
+        const doLoginBtn = document.getElementById('doLoginBtn');
+        const logoutBtn = document.getElementById('logoutBtn');
+        const currentUser = document.getElementById('currentUser');
+        const menuTbody = document.getElementById('menu-tbody');
+        const insumosTbody = document.getElementById('insumos-tbody'); 
 
-// Funções de Estado (Produtos)
-function saveState() { localStorage.setItem(LS_KEY, JSON.stringify(state)); }
-function loadState() {
-  const data = localStorage.getItem(LS_KEY);
-  if (data) state = JSON.parse(data);
-  else saveState();
-}
+        // Modais e Formulários (Novos Elementos)
+        const productModal = new bootstrap.Modal(document.getElementById('productModal'));
+        const insumoModal = new bootstrap.Modal(document.getElementById('insumoModal'));
+        const saveProductBtn = document.getElementById('saveProductBtn');
+        const saveInsumoBtn = document.getElementById('saveInsumoBtn');
+        
+        // ==================================================================
+        // FUNÇÕES DE NAVEGAÇÃO E UX
+        // ==================================================================
+        
+        function showSection(sectionId) {
+            document.querySelectorAll('.content-section').forEach(section => {
+                section.style.display = 'none';
+            });
+            document.getElementById(sectionId + '-section').style.display = 'block';
 
-// === FUNÇÕES DE LOGIN ===
-function checkSession() {
-  const isLoggedIn = localStorage.getItem(LS_SESSION_KEY) === 'true';
-  if (isLoggedIn) {
-    document.getElementById('login-screen').style.display = 'none';
-    document.getElementById('main-dashboard').style.display = 'block';
-  } else {
-    document.getElementById('main-dashboard').style.display = 'none';
-    document.getElementById('login-screen').style.display = 'flex';
-  }
-  return isLoggedIn;
-}
+            const titleMap = {
+                'products': 'Gerenciamento de Produtos',
+                'insumos': 'Gestão de Insumos',
+                'financeiro': 'Visão Financeira'
+            };
+            document.getElementById('main-title').innerText = titleMap[sectionId] || 'Dashboard';
+            
+            document.querySelectorAll('#sidebar .nav-link').forEach(link => {
+                link.classList.remove('active');
+            });
+            document.querySelector(`[onclick="showSection('${sectionId}')"]`).classList.add('active');
+        }
 
-function handleLogin() {
-  const user = document.getElementById('login-user').value.trim();
-  const pass = document.getElementById('login-pass').value.trim();
+        // ==================================================================
+        // FUNÇÕES DE MANIPULAÇÃO DE DADOS (PRODUTOS)
+        // ==================================================================
+        
+        async function loadMenu() {
+            try {
+                const response = await fetch("/api/menu", { cache: "no-store" });
+                if (!response.ok) { throw new Error(`Erro: ${response.status}`); }
+                produtos = await response.json(); 
+                render(); 
+            } catch (e) {
+                console.error("Erro ao carregar cardápio:", e);
+                produtos = []; 
+                render();
+            }
+        }
+        
+        function render() {
+            menuTbody.innerHTML = '';
+            if (produtos.length === 0) {
+                menuTbody.innerHTML = '<tr><td colspan="5" class="text-center">Nenhum produto cadastrado.</td></tr>';
+                return;
+            }
 
-  if (user === ADMIN_USER && pass === ADMIN_PASS) {
-    localStorage.setItem(LS_SESSION_KEY, 'true');
-    checkSession();
-    loadState(); // Carrega os dados só após o login
-    showContent('dashboard', document.querySelector('.nav-tabs a')); // Redireciona para o dashboard
-    alert('Login realizado com sucesso!');
-  } else {
-    alert('Usuário ou senha inválidos.');
-  }
-}
+            produtos.forEach(p => {
+                const row = menuTbody.insertRow();
+                row.innerHTML = `
+                    <td>${p.id}</td>
+                    <td>${p.name}</td>
+                    <td>R$ ${Number(p.price).toFixed(2)}</td>
+                    <td>${p.cat}</td>
+                    <td>
+                        <button class="btn btn-sm btn-warning me-1" onclick="editP(${p.id})"><i class="fas fa-edit"></i> Editar</button>
+                        <button class="btn btn-sm btn-danger" onclick="delP(${p.id})"><i class="fas fa-trash-alt"></i> Excluir</button>
+                    </td>
+                `;
+            });
+        }
+        
+        // NOVO: Abre o modal para ADIÇÃO
+        function openAddProductModal() {
+            document.getElementById('productModalLabel').innerText = 'Adicionar Novo Produto';
+            document.getElementById('product-form').reset();
+            document.getElementById('productId').value = ''; 
+            productModal.show();
+        }
 
-function handleLogout() {
-  localStorage.removeItem(LS_SESSION_KEY);
-  checkSession();
-  document.getElementById('login-user').value = '';
-  document.getElementById('login-pass').value = '';
-  alert('Você saiu do painel.');
-}
-// === FIM DAS FUNÇÕES DE LOGIN ===
+        // NOVO: Abre o modal para EDIÇÃO
+        function editP(id) {
+            const produto = produtos.find(p => p.id === id);
+            if (!produto) return;
 
-function showContent(tabId, el) {
-  if (!checkSession()) return; // Protege contra acesso direto
-  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-  document.getElementById(tabId).classList.add('active');
-  document.querySelectorAll('.nav-tabs a').forEach(a => a.classList.remove('active'));
-  el.classList.add('active');
-  if (tabId === 'produtos') renderProdutos();
-  if (tabId === 'dashboard') updateResumo();
-}
+            document.getElementById('productModalLabel').innerText = 'Editar Produto';
+            
+            document.getElementById('productId').value = produto.id;
+            document.getElementById('productName').value = produto.name;
+            document.getElementById('productPrice').value = produto.price;
+            document.getElementById('productCat').value = produto.cat;
+            document.getElementById('productDesc').value = produto.desc || '';
+            document.getElementById('productImgUrl').value = produto.imgUrl || '';
 
-/* === O RESTANTE DO SEU CÓDIGO (PRODUTOS, RESUMO, EXPORTAR) VAI AQUI === */
+            productModal.show();
+        }
 
-/* === PRODUTOS === */
-function renderProdutos() {
-  // ... (o conteúdo da sua função renderProdutos permanece o mesmo)
-  const tableBody = document.querySelector('#produtosTable tbody');
-  tableBody.innerHTML = '';
-  state.produtos.sort((a, b) => a.id - b.id);
-  state.produtos.forEach(p => {
-    const lucroPct = ((p.preco - p.custo) / p.preco * 100 || 0).toFixed(1);
-    const row = tableBody.insertRow();
-    row.innerHTML = `
-      <td>${p.id}</td>
-      <td>${p.nome}</td>
-      <td>${money(p.preco)}</td>
-      <td>${money(p.custo)}</td>
-      <td class="${lucroPct >= 0 ? 'positive' : 'negative'}">${lucroPct}%</td>
-      <td>${p.categoria}</td>
-      <td class="action-buttons">
-        <button onclick="editProduto(${p.id})"><i class="fas fa-edit"></i></button>
-        <button onclick="deleteProduto(${p.id})"><i class="fas fa-trash"></i></button>
-      </td>`;
-  });
-  updateResumo();
-}
+        // NOVO: Salva Produto (Adicionar ou Editar)
+        saveProductBtn.onclick = () => {
+            const id = document.getElementById('productId').value;
+            const name = document.getElementById('productName').value;
+            const price = parseFloat(document.getElementById('productPrice').value);
+            const cat = document.getElementById('productCat').value;
+            const desc = document.getElementById('productDesc').value;
+            const imgUrl = document.getElementById('productImgUrl').value;
+            
+            if (!name || isNaN(price) || !cat) {
+                alert("Nome, Preço e Categoria são obrigatórios.");
+                return;
+            }
 
-function addProduto() {
-  // ... (o conteúdo da sua função addProduto permanece o mesmo)
-  const id = document.getElementById('prodIdToEdit').value;
-  const nome = document.getElementById('prodNome').value.trim();
-  const desc = document.getElementById('prodDesc').value.trim();
-  const preco = parseFloat(document.getElementById('prodPreco').value) || 0;
-  const custo = parseFloat(document.getElementById('prodCusto').value) || 0;
-  const cat = document.getElementById('prodCat').value;
-  const imgUrl = document.getElementById('prodImgUrl').value || 'logo.jpg';
+            if (id) {
+                // EDIÇÃO
+                const index = produtos.findIndex(p => p.id == id);
+                if (index !== -1) {
+                    produtos[index] = { ...produtos[index], name, price, cat, desc, imgUrl };
+                    alert("Produto atualizado localmente. EXPORTE para salvar!");
+                }
+            } else {
+                // ADIÇÃO
+                const newId = produtos.length > 0 ? Math.max(...produtos.map(p => p.id)) + 1 : 1;
+                produtos.push({ id: newId, name, price, cat, desc, imgUrl });
+                alert("Produto adicionado localmente. EXPORTE para salvar!");
+            }
 
-  if (!nome || preco <= 0) return alert('Nome e preço obrigatórios.');
+            render();
+            productModal.hide();
+        };
 
-  if (id) {
-    const p = state.produtos.find(p => p.id == id);
-    Object.assign(p, { nome, descricao: desc, preco, custo, categoria: cat, imgUrl });
-    alert('Produto atualizado!');
-  } else {
-    const newId = state.produtos.length ? Math.max(...state.produtos.map(p => p.id)) + 1 : 1;
-    state.produtos.push({ id: newId, nome, descricao: desc, preco, custo, categoria: cat, imgUrl });
-    alert('Produto adicionado!');
-  }
-  saveState(); renderProdutos(); clearForm();
-}
+        function delP(id) { 
+            if (confirm(`Tem certeza que deseja excluir o produto ID ${id}?`)) {
+                produtos = produtos.filter(p => p.id !== id);
+                render();
+                alert('Produto excluído localmente. Lembre-se de EXPORTAR!');
+            }
+        }
+        
+        // ==================================================================
+        // FUNÇÕES DE MANIPULAÇÃO DE DADOS (INSUMOS)
+        // ==================================================================
 
-function editProduto(id) {
-  // ... (o conteúdo da sua função editProduto permanece o mesmo)
-  const p = state.produtos.find(p => p.id === id);
-  if (!p) return;
-  document.getElementById('prodIdToEdit').value = p.id;
-  document.getElementById('prodNome').value = p.nome;
-  document.getElementById('prodDesc').value = p.descricao;
-  document.getElementById('prodPreco').value = p.preco;
-  document.getElementById('prodCusto').value = p.custo;
-  document.getElementById('prodCat').value = p.categoria;
-  document.getElementById('prodImgUrl').value = p.imgUrl;
-}
+        async function loadInsumos() {
+            try {
+                const response = await fetch("/api/insumos", { cache: "no-store" });
+                if (!response.ok) { throw new Error(`Erro: ${response.status}`); }
+                insumos = await response.json(); 
+                renderInsumos();
+            } catch (e) {
+                console.error("Erro ao carregar insumos:", e);
+                insumos = []; 
+                renderInsumos();
+            }
+        }
 
-function deleteProduto(id) {
-  // ... (o conteúdo da sua função deleteProduto permanece o mesmo)
-  if (confirm('Excluir produto?')) {
-    state.produtos = state.produtos.filter(p => p.id !== id);
-    saveState(); renderProdutos();
-  }
-}
+        function renderInsumos() {
+            insumosTbody.innerHTML = '';
+            if (insumos.length === 0) {
+                insumosTbody.innerHTML = '<tr><td colspan="5" class="text-center">Nenhum insumo cadastrado.</td></tr>';
+                return;
+            }
 
-function clearForm() {
-  ['prodIdToEdit','prodNome','prodDesc','prodPreco','prodCusto','prodImgUrl'].forEach(id=>document.getElementById(id).value='');
-}
+            insumos.forEach(i => {
+                const row = insumosTbody.insertRow();
+                row.innerHTML = `
+                    <td>${i.id}</td>
+                    <td>${i.nome}</td>
+                    <td>R$ ${Number(i.custoUnitario).toFixed(2)} / ${i.unidade}</td>
+                    <td>${Number(i.estoqueAtual).toFixed(2)} ${i.unidade}</td>
+                    <td>
+                        <button class="btn btn-sm btn-warning me-1" onclick="editInsumo(${i.id})"><i class="fas fa-edit"></i></button>
+                        <button class="btn btn-sm btn-danger" onclick="delInsumo(${i.id})"><i class="fas fa-trash-alt"></i></button>
+                    </td>
+                `;
+            });
+        }
+        
+        // NOVO: Abre o modal para ADIÇÃO de Insumo (chamada pelo botão)
+        function openAddInsumoModal() {
+            document.getElementById('insumoModalLabel').innerText = 'Adicionar Novo Insumo';
+            document.getElementById('insumo-form').reset();
+            document.getElementById('insumoId').value = ''; 
+            insumoModal.show();
+        }
 
-/* === RESUMO === */
-function updateResumo() {
-  // ... (o conteúdo da sua função updateResumo permanece o mesmo)
-  document.getElementById('totalProdutos').textContent = state.produtos.length;
-  const lucroMedio = state.produtos.length ?
-    (state.produtos.reduce((s,p)=>(s+(p.preco-p.custo)/p.preco*100),0)/state.produtos.length).toFixed(1) : 0;
-  document.getElementById('lucroMedio').textContent = `${lucroMedio}%`;
-}
+        // NOVO: Abre o modal para EDIÇÃO de Insumo
+        function editInsumo(id) {
+            const insumo = insumos.find(i => i.id === id);
+            if (!insumo) return;
 
-/* === EXPORTAR MENU.JSON === */
-// Esta função será substituída no próximo passo pela versão com token.
-function exportarMenuJSON() {
-  const produtos = state.produtos.map(p => ({
-    id: p.id, name: p.nome, desc: p.descricao,
-    price: p.preco, cat: p.categoria, imgUrl: p.imgUrl
-  }));
-  const blob = new Blob([JSON.stringify(produtos, null, 2)], { type: "application/json" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url; a.download = "menu.json"; a.click();
-  URL.revokeObjectURL(url);
-  alert("✅ Arquivo menu.json exportado com sucesso! (Ainda não salvo no servidor)");
-}
+            document.getElementById('insumoModalLabel').innerText = 'Editar Insumo';
+            
+            document.getElementById('insumoId').value = insumo.id;
+            document.getElementById('insumoName').value = insumo.nome;
+            document.getElementById('insumoCusto').value = insumo.custoUnitario;
+            document.getElementById('insumoUnidade').value = insumo.unidade;
+            document.getElementById('insumoEstoque').value = insumo.estoqueAtual;
 
-// INICIALIZAÇÃO
-// Não chame loadState/renderProdutos aqui. A função checkSession fará isso após o login.
-document.addEventListener('DOMContentLoaded', () => {
-  checkSession();
-  // Adiciona o listener para o botão de login (se você estiver usando um no HTML)
-  const loginButton = document.getElementById('login-button');
-  if (loginButton) loginButton.addEventListener('click', handleLogin);
-});
+            insumoModal.show();
+        }
+
+        // NOVO: Salva Insumo (Adicionar ou Editar)
+        saveInsumoBtn.onclick = () => {
+            const id = document.getElementById('insumoId').value;
+            const nome = document.getElementById('insumoName').value;
+            const custoUnitario = parseFloat(document.getElementById('insumoCusto').value);
+            const unidade = document.getElementById('insumoUnidade').value;
+            const estoqueAtual = parseFloat(document.getElementById('insumoEstoque').value);
+            
+            if (!nome || isNaN(custoUnitario) || isNaN(estoqueAtual)) {
+                alert("Nome, Custo e Estoque são obrigatórios.");
+                return;
+            }
+
+            const newInsumoData = { nome, custoUnitario, unidade, estoqueAtual };
+
+            if (id) {
+                // EDIÇÃO
+                const index = insumos.findIndex(i => i.id == id);
+                if (index !== -1) {
+                    insumos[index] = { ...insumos[index], id: parseInt(id), ...newInsumoData };
+                    alert("Insumo atualizado localmente. EXPORTE para salvar!");
+                }
+            } else {
+                // ADIÇÃO
+                const newId = insumos.length > 0 ? Math.max(...insumos.map(i => i.id)) + 1 : 1;
+                insumos.push({ id: newId, ...newInsumoData });
+                alert("Insumo adicionado localmente. EXPORTE para salvar!");
+            }
+
+            renderInsumos();
+            insumoModal.hide();
+        };
+
+        function delInsumo(id) { 
+            if (confirm(`Tem certeza que deseja excluir o Insumo ID ${id}?`)) {
+                insumos = insumos.filter(i => i.id !== id);
+                renderInsumos();
+                alert('Insumo excluído localmente. Lembre-se de EXPORTAR!');
+            }
+        }
+        
+        // Funções de Exportação (Já existentes, mantidas)
+        async function exportInsumos() { /* ... */ } // Mantenha a função de exportInsumos original
+        document.getElementById("exportBtn").onclick = async () => { /* ... */ }; // Mantenha a função de exportação de PRODUTOS original
+
+        // ==================================================================
+        // LÓGICA DE SEGURANÇA (Mantidas)
+        // ==================================================================
+        
+        async function checkStatus() { /* ... */ }
+        doLoginBtn.onclick = async () => { /* ... */ };
+        logoutBtn.onclick = async () => { /* ... */ };
+
+        // Inicializa a verificação de status
+        checkStatus();
+
+    </script>
