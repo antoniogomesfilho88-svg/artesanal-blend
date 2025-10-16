@@ -1,47 +1,67 @@
+import express from 'express';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
+import fs from 'fs';
+import cookieParser from 'cookie-parser';
+import cors from 'cors';
+
+// ==================================================================
+// CONFIGURAÇÃO INICIAL E ACESSO AO DIRETÓRIO
+// ==================================================================
+
 const app = express();
 const port = process.env.PORT || 3000;
 
-// Configuração para ES Modules para obter o __dirname
+// Configuração para ES Modules para obter o __dirname (caminho absoluto)
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 // Middlewares
 app.use(express.json());
 app.use(cookieParser());
-app.use(cors({ origin: '*', credentials: true })); // Ajuste a origem se necessário
+app.use(cors({ origin: '*', credentials: true })); // Permite conexões do seu front-end
 
-// Servir arquivos estáticos (HTML, JS, CSS do painel)
+// Servir arquivos estáticos (HTML, JS, CSS do painel) - Assumindo que estão em 'public'
 app.use(express.static(join(__dirname, 'public')));
 
 // ==================================================================
 // SIMULAÇÃO DE BANCO DE DADOS (CARREGAMENTO DOS JSONs)
 // ==================================================================
 
-// Função genérica para carregar JSON de forma segura
+// Função genérica e SEGURA para carregar JSONs na inicialização
 function loadJSON(fileName) {
     try {
-        const filePath = join(__dirname, fileName);
+        // Usa join para garantir o caminho absoluto correto, evitando falhas de inicialização
+        const filePath = join(__dirname, fileName); 
+        
         if (fs.existsSync(filePath)) {
             const data = fs.readFileSync(filePath, 'utf8');
-            return JSON.parse(data);
+            // Se o arquivo estiver vazio, retorna um objeto vazio para evitar erro de JSON.parse
+            return data ? JSON.parse(data) : {}; 
         }
-        return []; // Retorna array vazio se o arquivo não existir
+        // Retorna array ou objeto vazio se o arquivo não existir (evita crash)
+        return []; 
     } catch (error) {
-        console.error(`Erro ao carregar ${fileName}:`, error);
-        return [];
+        // Se houver qualquer erro na leitura ou parsing (JSON corrompido), loga e retorna vazio
+        console.error(`ERRO CRÍTICO ao carregar ${fileName}. Arquivo corrompido ou inacessível:`, error.message);
+        return []; 
     }
 }
 
+// Carregamento inicial dos dados. O servidor não trava se os arquivos falharem.
+let menuData = loadJSON('menu.json');
+let insumosData = loadJSON('insumos.json');
+let composicoesData = loadJSON('composicoes.json');
+
 // ==================================================================
-// ROTAS DE SEGURANÇA (MANTIDAS SIMPLES)
+// ROTAS DE SEGURANÇA E AUTENTICAÇÃO
 // ==================================================================
 
-const SECRET_PASSWORD = process.env.ADMIN_PASS || '1234'; // Use variável de ambiente!
+const SECRET_PASSWORD = process.env.ADMIN_PASS || '1234'; // USE VARIÁVEL DE AMBIENTE!
 
 app.post('/api/login', (req, res) => {
     const { user, pass } = req.body;
     if (user === 'admin' && pass === SECRET_PASSWORD) {
-        // Define um cookie de sessão simples (auth_session=true)
         res.cookie('auth_session', 'true', { httpOnly: true, maxAge: 3600000 }); // 1 hora
         return res.json({ success: true, message: 'Login realizado!' });
     }
@@ -58,7 +78,7 @@ function isAuthenticated(req, res, next) {
     if (req.cookies.auth_session === 'true') {
         return next();
     }
-    // O status 401 é crucial para o Front-end saber que a sessão expirou
+    // Retorna 401 para que o front-end saiba que a sessão expirou
     res.status(401).json({ success: false, message: 'Sessão expirada. Faça login novamente.' });
 }
 
@@ -67,74 +87,65 @@ function isAuthenticated(req, res, next) {
 // ==================================================================
 
 app.get('/api/menu', (req, res) => {
-    const menu = loadJSON('menu.json');
-    res.json(menu);
+    res.json(menuData);
 });
 
 app.get('/api/insumos', (req, res) => {
-    const insumos = loadJSON('insumos.json');
-    res.json(insumos);
+    res.json(insumosData);
 });
 
 app.get('/api/composicoes', (req, res) => {
-    const composicoes = loadJSON('composicoes.json');
-    res.json(composicoes);
+    res.json(composicoesData);
 });
 
 
 // ==================================================================
-// ROTAS DE ESCRITA (POST) - AQUI ESTÁ A CORREÇÃO PRINCIPAL ❗
+// ROTAS DE ESCRITA (POST) - CORREÇÃO DE SALVAMENTO INSTANTÂNEO ❗
 // ==================================================================
 
-// 1. Rota de Exportação do Menu (Chamada pela função 'exportMenuOnly' para salvamento instantâneo)
-app.post('/api/export', isAuthenticated, (req, res) => {
-    const menuData = req.body;
-    const filePath = join(__dirname, 'menu.json');
+// Função genérica e SEGURA para salvar JSONs
+function saveJSON(fileName, data) {
+    // Usa join para garantir o caminho absoluto correto para ESCRITA
+    const filePath = join(__dirname, fileName); 
+    fs.writeFileSync(filePath, JSON.stringify(data, null, 2));
+}
 
+// 1. Rota de Exportação do Menu (Chamada pela edição instantânea)
+app.post('/api/export', isAuthenticated, (req, res) => {
     try {
-        fs.writeFileSync(filePath, JSON.stringify(menuData, null, 2));
+        menuData = req.body; // Atualiza a variável local
+        saveJSON('menu.json', menuData);
         res.json({ success: true, message: 'Menu salvo com sucesso!' });
     } catch (error) {
-        console.error("ERRO CRÍTICO (RENDER/PERMISSÃO) - menu.json:", error);
-        // Retorna um status 500 com a mensagem de erro para o Front-end
+        console.error("ERRO CRÍTICO (ESCRITA NO RENDER) - menu.json:", error);
         res.status(500).json({ 
             success: false, 
-            message: `Erro de Servidor ao salvar menu. Verifique os logs do Render. Detalhe: ${error.code}` 
+            message: `Erro de Servidor: Falha na permissão de escrita (${error.code}). Verifique o Render.` 
         });
     }
 });
 
 // 2. Rota de Exportação de Insumos
 app.post('/api/insumos/export', isAuthenticated, (req, res) => {
-    const insumosData = req.body;
-    const filePath = join(__dirname, 'insumos.json');
-
     try {
-        fs.writeFileSync(filePath, JSON.stringify(insumosData, null, 2));
+        insumosData = req.body;
+        saveJSON('insumos.json', insumosData);
         res.json({ success: true, message: 'Insumos salvos com sucesso!' });
     } catch (error) {
-        console.error("ERRO CRÍTICO (RENDER/PERMISSÃO) - insumos.json:", error);
-        res.status(500).json({ 
-            success: false, 
-            message: `Erro de Servidor ao salvar insumos. Detalhe: ${error.code}` 
-        });
+        console.error("ERRO CRÍTICO (ESCRITA NO RENDER) - insumos.json:", error);
+        res.status(500).json({ success: false, message: `Erro de Servidor: Falha na permissão de escrita (${error.code})` });
     }
 });
 
 // 3. Rota de Exportação de Composições (Fichas Técnicas)
 app.post('/api/composicoes/export', isAuthenticated, (req, res) => {
-    const composicoesData = req.body;
-    const filePath = join(__dirname, 'composicoes.json');
-
     try {
-        fs.writeFileSync(filePath, JSON.stringify(composicoesData, null, 2));
+        composicoesData = req.body;
+        saveJSON('composicoes.json', composicoesData);
         res.json({ success: true, message: 'Composições salvas com sucesso!' });
     } catch (error) {
-        console.error("ERRO CRÍTICO (RENDER/PERMISSÃO) - composicoes.json:", error);
-        res.status(500).json({ 
-            success: false, 
-            message: `Erro de Servidor ao salvar composições. Detalhe: ${error.code}` 
-        });
+        console.error("ERRO CRÍTICO (ESCRITA NO RENDER) - composicoes.json:", error);
+        res.status(500).json({ success: false, message: `Erro de Servidor: Falha na permissão de escrita (${error.code})` });
     }
 });
 
@@ -144,5 +155,5 @@ app.post('/api/composicoes/export', isAuthenticated, (req, res) => {
 // ==================================================================
 
 app.listen(port, () => {
-    console.log(`Servidor rodando na porta ${port}`);
+    console.log(`Servidor Node.js rodando na porta ${port}`);
 });
