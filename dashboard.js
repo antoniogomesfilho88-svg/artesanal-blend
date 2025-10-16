@@ -36,7 +36,6 @@
 
         // ELEMENTOS DO MODAL DE INSUMO (PARA CÁLCULO)
         const insumoPrecoTotal = document.getElementById('insumoPrecoTotal');
-        // CORRIGIDO: Voltando a usar o ID para Kg
         const insumoQuantidadeKg = document.getElementById('insumoQuantidadeKg'); 
         const insumoCusto = document.getElementById('insumoCusto');
         const insumoUnidade = document.getElementById('insumoUnidade'); 
@@ -88,12 +87,14 @@
         
         async function loadMenu() {
             try {
+                // OBS: No ambiente real, substitua este fetch pela sua lógica de backend
                 const response = await fetch("/api/menu", { cache: "no-store" });
                 if (!response.ok) { throw new Error(`Erro: ${response.status}`); }
                 produtos = await response.json(); 
                 render(); 
             } catch (e) {
                 console.error("Erro ao carregar cardápio:", e);
+                // Dados de fallback para demonstração (remova em produção)
                 produtos = []; 
                 render();
             }
@@ -194,12 +195,14 @@
         
         async function loadInsumos() {
             try {
+                // OBS: No ambiente real, substitua este fetch pela sua lógica de backend
                 const response = await fetch("/api/insumos", { cache: "no-store" });
                 if (!response.ok) { throw new Error(`Erro: ${response.status}`); }
                 insumos = await response.json(); 
                 renderInsumos();
             } catch (e) {
                 console.error("Erro ao carregar insumos:", e);
+                // Dados de fallback para demonstração (remova em produção)
                 insumos = []; 
                 renderInsumos();
             }
@@ -242,17 +245,40 @@
             });
         }
 
-        // FUNÇÃO DE CÁLCULO CORRIGIDA: Converte Kg/Litros para Gramas/ML
+        // FUNÇÃO DE CÁLCULO COMPLETA E CORRIGIDA: Trata Kg/Litros e Unidades (UN)
         function calculateCustoUnitario() {
             const precoTotal = parseFloat(insumoPrecoTotal.value);
             const quantidadeKg = parseFloat(insumoQuantidadeKg.value); // Valor inserido em Kg ou Litros
             const unidade = insumoUnidade.value.toLowerCase();
 
-            if (isNaN(precoTotal) || isNaN(quantidadeKg) || quantidadeKg <= 0) {
-                insumoCusto.value = '';
-                return;
+            // 1. Limpa o campo de custo unitário por padrão
+            insumoCusto.value = '';
+            
+            // 2. Controla a disponibilidade do campo Custo Unitário (R$/unidade) e os atributos 'required'
+            if (unidade === 'un') {
+                insumoCusto.removeAttribute('readonly');
+                insumoCusto.classList.add('bg-warning-light'); 
+                insumoCusto.placeholder = 'Insira o custo por UNIDADE (R$/un)';
+                
+                // IMPORTANTE: Remove a obrigatoriedade dos campos de cálculo (Preço Total e Quantidade Kg/L)
+                insumoPrecoTotal.removeAttribute('required');
+                insumoQuantidadeKg.removeAttribute('required');
+                return; // Encerra, esperando que o usuário digite o valor no insumoCusto
+            } else {
+                insumoCusto.setAttribute('readonly', true);
+                insumoCusto.classList.remove('bg-warning-light');
+                insumoCusto.placeholder = '';
+                
+                // IMPORTANTE: Restaura a obrigatoriedade dos campos de cálculo
+                insumoPrecoTotal.setAttribute('required', true);
+                insumoQuantidadeKg.setAttribute('required', true);
+
+                if (isNaN(precoTotal) || isNaN(quantidadeKg) || quantidadeKg <= 0) {
+                    return; // Se os dados de cálculo estão incompletos, não faz nada
+                }
             }
             
+            // 3. Executa o cálculo para 'g' e 'ml'
             if (unidade === 'g') {
                 // Cálculo para Gramas: (Preço Total) / (Kg * 1000)
                 const quantidadeGramas = quantidadeKg * 1000;
@@ -264,8 +290,10 @@
                 const custoPorMl = precoTotal / quantidadeMl;
                 insumoCusto.value = custoPorMl.toFixed(4);
             } else {
-                 // Para 'un' ou outras, o campo fica vazio para inserção manual do custo unitário
-                 insumoCusto.value = ''; 
+                 // Caso o usuário digite uma unidade não reconhecida ('g', 'ml', 'un')
+                 alert("Unidade de medida não reconhecida. Use 'g', 'ml' ou 'un'.");
+                 insumoUnidade.value = 'g'; // Volta para o padrão
+                 calculateCustoUnitario(); // Recalcula
             }
         }
         
@@ -274,16 +302,21 @@
         insumoQuantidadeKg.oninput = calculateCustoUnitario; 
         insumoUnidade.oninput = calculateCustoUnitario;
         
+        // FUNÇÃO DE ADIÇÃO (OPEN MODAL) AJUSTADA
         function openAddInsumoModal() {
             document.getElementById('insumoModalLabel').innerText = 'Adicionar Novo Insumo';
             document.getElementById('insumo-form').reset();
             document.getElementById('insumoId').value = ''; 
-            insumoPrecoTotal.value = '';
-            insumoQuantidadeKg.value = ''; 
-            insumoCusto.value = '';
+            
+            // Garante que a unidade padrão seja 'g' e chama o cálculo para aplicar as regras
+            document.getElementById('insumoUnidade').value = 'g';
+            
+            calculateCustoUnitario(); // Aplica as regras de 'g': readonly no custo e required nos inputs de cálculo
+
             insumoModal.show();
         }
 
+        // FUNÇÃO DE EDIÇÃO (EDIT INSUMO) AJUSTADA
         function editInsumo(id) {
             const insumo = insumos.find(i => i.id === id);
             if (!insumo) return;
@@ -293,12 +326,16 @@
             document.getElementById('insumoId').value = insumo.id;
             document.getElementById('insumoName').value = insumo.nome;
             
+            // Limpa os campos de cálculo (não relevantes para a edição, exceto se for 'un')
             insumoPrecoTotal.value = ''; 
             insumoQuantidadeKg.value = ''; 
             
             insumoCusto.value = insumo.custoUnitario;
             document.getElementById('insumoUnidade').value = insumo.unidade;
             document.getElementById('insumoEstoque').value = insumo.estoqueAtual;
+
+            // Chama o cálculo para aplicar as regras da unidade carregada
+            calculateCustoUnitario(); 
 
             insumoModal.show();
         }
@@ -348,6 +385,7 @@
             if (!confirm("ATENÇÃO: Tem certeza que deseja ATUALIZAR o insumos.json no servidor?")) return;
 
             try {
+                // OBS: No ambiente real, substitua este fetch pela sua lógica de backend
                 const response = await fetch('/api/insumos/export', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -596,14 +634,15 @@
         // ==================================================================
         
         async function loadCompositions() {
-            // Em uma aplicação real, aqui você faria um fetch para carregar o arquivo 'composicoes.json'
-            composicoes = {}; 
+            // OBS: Em uma aplicação real, aqui você faria um fetch para carregar o arquivo 'composicoes.json'
+            composicoes = {}; // Mantém vazio ou carrega do servidor
         }
 
         async function exportCompositions() {
             if (!logged) { return false; }
             
             try {
+                // OBS: No ambiente real, substitua este fetch pela sua lógica de backend
                 const response = await fetch('/api/composicoes/export', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -631,6 +670,7 @@
 
 
         async function checkStatus() {
+            // Simulação de check de login, baseado na existência de um cookie ou token
             if (document.cookie.includes('auth_session')) {
                 logged = true;
                 loginModal.style.display = "none";
@@ -652,6 +692,7 @@
             const pass = loginPass.value;
 
             try {
+                // OBS: No ambiente real, substitua este fetch pela sua lógica de backend
                 const response = await fetch('/api/login', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -682,6 +723,7 @@
 
         logoutBtn.onclick = async () => {
             try {
+                // OBS: No ambiente real, substitua este fetch pela sua lógica de backend
                 await fetch('/api/logout', { method: 'POST' });
                 logged = false;
                 currentUser.innerText = "—";
@@ -699,10 +741,13 @@
             
             let exportSuccess = true;
 
+            // 1. Exporta composições (Fichas Técnicas)
             const compResult = await exportCompositions();
             if (!compResult) { exportSuccess = false; }
             
+            // 2. Exporta produtos
             try {
+                // OBS: No ambiente real, substitua este fetch pela sua lógica de backend
                 const response = await fetch('/api/export', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -718,6 +763,7 @@
                     checkStatus();
                     exportSuccess = false;
                 } else if (data.success) {
+                    // Sucesso na exportação de produtos
                 } else {
                     alert(`❌ Erro ao exportar Produtos: ${data.message}`);
                     exportSuccess = false;
@@ -737,6 +783,7 @@
         
         document.querySelector('[onclick="showSection(\'financeiro\')"]').onclick = showFinanceiroSection;
 
+        // Inicialização
         checkStatus();
 
     </script>
