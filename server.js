@@ -13,8 +13,8 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Configurações de Segurança
-const ADMIN_USER = 'admin';
-const ADMIN_PASS = '1234';
+const ADMIN_USER = 'admin'; // Seu usuário de login
+const ADMIN_PASS = '1234';  // Sua senha de login
 // Chave secreta para assinar o cookie de sessão. Configure no Render!
 const COOKIE_SECRET = process.env.COOKIE_SECRET || 'SUA_CHAVE_SECRETA_MUITO_LONGA_123456789'; 
 
@@ -26,14 +26,15 @@ app.use(cors({
 app.use(express.json({ limit: '5mb' }));
 app.use(cookieParser(COOKIE_SECRET)); 
 
-// CORREÇÃO ESSENCIAL: Serve arquivos estáticos (HTML, CSS, JS, Imagens) da raiz do projeto
-// Se seus arquivos estáticos (index.html, dashboard.html, etc.) estão junto com o servidor.js, use __dirname
+// CORREÇÃO: Serve arquivos estáticos (HTML, CSS, JS, Imagens) da raiz do projeto
 app.use(express.static(__dirname)); 
 
 
-// ------------------------------------------------------------------
-// ROTA 1: ROTA DE LOGIN (API)
-// ------------------------------------------------------------------
+// ==================================================================
+// ROTAS DA API
+// ==================================================================
+
+// ROTA 1: ROTA DE LOGIN
 app.post('/api/login', (req, res) => {
     const { user, pass } = req.body;
 
@@ -42,28 +43,38 @@ app.post('/api/login', (req, res) => {
         res.cookie('auth_session', 'loggedIn', { 
             signed: true, 
             httpOnly: true, 
-            maxAge: 1000 * 60 * 60 * 24 // 24 horas
+            maxAge: 1000 * 60 * 60 * 24 
         });
         return res.json({ success: true, message: 'Login efetuado.' });
     } else {
-        // Não use status 401 para evitar que o navegador peça autenticação HTTP
         return res.status(401).json({ success: false, message: 'Usuário ou senha inválidos.' });
     }
 });
 
-// ------------------------------------------------------------------
-// ROTA 2: ROTA DE LOGOUT (API)
-// ------------------------------------------------------------------
+// ROTA 2: ROTA DE LOGOUT
 app.post('/api/logout', (req, res) => {
     res.clearCookie('auth_session');
     return res.json({ success: true, message: 'Logout efetuado.' });
 });
 
-// ------------------------------------------------------------------
-// ROTA 3: EXPORTAÇÃO (API PROTEGIDA POR COOKIE DE SESSÃO)
-// ------------------------------------------------------------------
+// ROTA 3: OBTER CARDÁPIO (NOVO: Para carregar os dados no dashboard e no cardápio principal)
+app.get('/api/menu', (req, res) => {
+    const filePath = join(__dirname, 'menu.json'); 
+
+    fs.readFile(filePath, 'utf8', (err, data) => {
+        if (err) {
+            console.error('Erro ao ler menu.json:', err);
+            return res.status(500).json({ success: false, message: 'Erro interno ao carregar o cardápio.' });
+        }
+        
+        res.setHeader('Content-Type', 'application/json');
+        res.send(data);
+    });
+});
+
+// ROTA 4: EXPORTAÇÃO (PROTEGIDA POR COOKIE DE SESSÃO)
 app.post('/api/export', (req, res) => {
-    // 1. Verifica a Sessão: Checa se o cookie assinado 'auth_session' existe e é válido
+    // 1. Verifica a Sessão
     const isAuthenticated = req.signedCookies.auth_session === 'loggedIn';
 
     if (!isAuthenticated) {
@@ -77,7 +88,7 @@ app.post('/api/export', (req, res) => {
         return res.status(400).json({ success: false, message: 'Dados de menu inválidos.' });
     }
 
-    // CORREÇÃO DE CAMINHO: Assumindo que menu.json está na raiz
+    // Caminho para salvar menu.json na raiz
     const filePath = join(__dirname, 'menu.json'); 
 
     // 3. Salvando o arquivo
@@ -91,9 +102,9 @@ app.post('/api/export', (req, res) => {
 });
 
 
-// ------------------------------------------------------------------
+// ==================================================================
 // ROTAS DE SERVIÇO DE ARQUIVOS HTML (CORRIGIDO PARA RAIZ)
-// ------------------------------------------------------------------
+// ==================================================================
 
 // Serve o dashboard.html (Ex: acessando /dashboard.html)
 app.get('/dashboard.html', (req, res) => {
