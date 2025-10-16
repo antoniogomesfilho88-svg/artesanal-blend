@@ -401,7 +401,7 @@
         const insumoPrecoTotal = document.getElementById('insumoPrecoTotal');
         const insumoQuantidadeKg = document.getElementById('insumoQuantidadeKg');
         const insumoCusto = document.getElementById('insumoCusto');
-        const insumoUnidade = document.getElementById('insumoUnidade'); // NOVO: Referência ao elemento de Unidade
+        const insumoUnidade = document.getElementById('insumoUnidade'); 
 
         // ELEMENTOS DO MODAL DE COMPOSIÇÃO (FICHA TÉCNICA)
         const compInsumoSelect = document.getElementById('compInsumoSelect');
@@ -410,6 +410,74 @@
         const compositionProductName = document.getElementById('compositionProductName');
         const totalCostDisplay = document.getElementById('totalCostDisplay');
         
+        // ==================================================================
+        // FUNÇÕES DE SEGURANÇA E AUTENTICAÇÃO (CORRIGIDAS)
+        // ==================================================================
+
+        async function checkAuth() {
+            try {
+                // Tenta carregar dados; se falhar (401), a sessão expirou
+                const response = await fetch('/api/menu'); 
+                logged = response.ok;
+            } catch (e) {
+                logged = false;
+            }
+
+            if (logged) {
+                loginModal.style.display = 'none';
+                logoutBtn.style.display = 'inline-block';
+                currentUser.innerText = 'admin';
+                await initialLoad();
+            } else {
+                loginModal.style.display = 'flex';
+                logoutBtn.style.display = 'none';
+                currentUser.innerText = '—';
+                // Garante que o usuário não pode interagir com o conteúdo principal
+                document.getElementById('content').style.pointerEvents = 'none';
+            }
+        }
+
+        doLoginBtn.onclick = async () => {
+            const user = loginUser.value;
+            const pass = loginPass.value;
+
+            try {
+                const response = await fetch('/api/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    // CORREÇÃO CRÍTICA: Essencial para receber o cookie de autenticação
+                    credentials: 'include', 
+                    body: JSON.stringify({ user, pass })
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.success) {
+                    alert('Login realizado com sucesso!');
+                    // Após o login, a função checkAuth() deve ser chamada para recarregar tudo
+                    checkAuth(); 
+                    document.getElementById('content').style.pointerEvents = 'auto'; // Reabilita a interação
+                } else {
+                    alert(data.message || 'Erro ao fazer login.');
+                }
+            } catch (e) {
+                console.error("Erro na requisição de login:", e);
+                alert('Erro de rede ou servidor ao tentar logar.');
+            }
+        };
+
+        logoutBtn.onclick = async () => {
+            try {
+                await fetch('/api/logout', { method: 'POST', credentials: 'include' });
+            } catch (e) {
+                console.warn("Erro ao fazer logout, mas prosseguindo com limpeza local.");
+            }
+            // Limpeza local e reexibição do modal de login
+            logged = false;
+            checkAuth();
+            alert('Você saiu do sistema.');
+        };
+
         // ==================================================================
         // FUNÇÕES DE NAVEGAÇÃO E UX
         // ==================================================================
@@ -434,9 +502,9 @@
         }
 
         // ==================================================================
-        // FUNÇÕES DE MANIPULAÇÃO DE DADOS (PRODUTOS)
+        // FUNÇÕES DE CARREGAMENTO DE DADOS (GET)
         // ==================================================================
-        
+
         async function loadMenu() {
             try {
                 const response = await fetch("/api/menu", { cache: "no-store" });
@@ -450,7 +518,145 @@
             }
         }
         
-        // ATUALIZADO: Inclui botão "Ficha" e exibe Custo
+        async function loadInsumos() {
+            try {
+                const response = await fetch("/api/insumos", { cache: "no-store" });
+                if (!response.ok) { throw new Error(`Erro: ${response.status}`); }
+                insumos = await response.json(); 
+                renderInsumos();
+            } catch (e) {
+                console.error("Erro ao carregar insumos:", e);
+                insumos = []; 
+                renderInsumos();
+            }
+        }
+
+        async function loadComposicoes() {
+            try {
+                const response = await fetch("/api/composicoes", { cache: "no-store" });
+                if (!response.ok) { throw new Error(`Erro: ${response.status}`); }
+                
+                const data = await response.json();
+                
+                // Converte o array do servidor para o formato de objeto local: { produtoId: [{insumoId, uso}, ...] }
+                composicoes = data.reduce((acc, comp) => {
+                    const prodId = comp.produtoId;
+                    if (!acc[prodId]) {
+                        acc[prodId] = [];
+                    }
+                    acc[prodId].push({ insumoId: comp.insumoId, uso: comp.uso });
+                    return acc;
+                }, {});
+                
+            } catch (e) {
+                console.error("Erro ao carregar composições:", e);
+                composicoes = {}; 
+            }
+        }
+
+        // Função de carregamento inicial
+        async function initialLoad() {
+            // Carrega insumos e composições primeiro, pois o custo do menu depende deles
+            await loadInsumos();
+            await loadComposicoes();
+            await loadMenu();
+            // Inicia na seção de produtos
+            showSection('products');
+        }
+        
+        // ==================================================================
+        // FUNÇÕES DE EXPORTAÇÃO (POST) - CORRIGIDAS
+        // ==================================================================
+
+        const API_BASE = 'https://artesanal-blend.onrender.com/api';
+
+        // Função genérica de exportação para evitar código repetitivo
+        async function genericExport(endpoint, data, successMessage) {
+            try {
+                const response = await fetch(`${API_BASE}${endpoint}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include', // CRÍTICO: Garante que o cookie de autenticação é enviado
+                    body: JSON.stringify(data)
+                });
+
+                if (response.status === 401) {
+                    alert('Sessão expirada. Faça login novamente.');
+                    checkAuth(); // Força a reexibição do login
+                    return;
+                }
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(`Falha no Servidor (${response.status}): ${errorData.message || 'Erro desconhecido.'}`);
+                }
+
+                alert(successMessage);
+                
+                // CRÍTICO: Recarrega os dados do servidor para atualizar a visualização (Resolve o "desaparecer")
+                if (endpoint.includes('/insumos/export')) {
+                    await loadInsumos(); // Recarrega os insumos
+                } else if (endpoint.includes('/export')) {
+                    // Exportar TUDO: recarrega composições e menu
+                    await loadComposicoes(); 
+                    await loadMenu(); 
+                }
+
+            } catch (error) {
+                console.error("Erro na exportação:", error);
+                alert(`Erro na exportação: ${error.message}`);
+            }
+        }
+
+
+        // Exporta Apenas Insumos
+        async function exportInsumos() {
+            await genericExport(
+                '/insumos/export', 
+                insumos, 
+                'Insumos salvos no MongoDB com sucesso!'
+            );
+        }
+
+        // Exporta Tudo (Produtos e Composições)
+        document.getElementById('exportBtn').onclick = async () => {
+             // 1. Exporta as composições (fichas técnicas)
+             // Nota: O backend precisa de uma rota POST /api/composicoes/export que aceite um ARRAY
+             const composicoesArray = Object.keys(composicoes).flatMap(produtoId => 
+                 composicoes[produtoId].map(comp => ({ 
+                     produtoId: parseInt(produtoId), 
+                     insumoId: comp.insumoId, 
+                     uso: comp.uso 
+                 }))
+             );
+             await genericExport('/composicoes/export', composicoesArray, 'Fichas Técnicas salvas.');
+             
+             // 2. Exporta o cardápio (produtos)
+             await genericExport('/export', produtos, 'Cardápio salvo no MongoDB com sucesso!');
+        };
+        
+        // ==================================================================
+        // LÓGICA DE CUSTO
+        // ==================================================================
+        function calculateProductCost(productId) {
+            const composition = composicoes[productId] || [];
+            let totalCost = 0;
+            
+            composition.forEach(item => {
+                // IDs são strings ou números? Usamos find para segurança
+                const insumo = insumos.find(i => i.id == item.insumoId); 
+                if (insumo) {
+                    // Custo Unitário (R$/unidade padrão) * Uso no produto (unidade padrão)
+                    totalCost += insumo.custoUnitario * item.uso;
+                }
+            });
+            return totalCost;
+        }
+
+        // ==================================================================
+        // FUNÇÕES DE RENDERIZAÇÃO E CRUD (Produtos)
+        // ==================================================================
+        
         function render() {
             menuTbody.innerHTML = '';
             if (produtos.length === 0) {
@@ -514,15 +720,21 @@
                 return;
             }
 
+            const novoProduto = {
+                id: id ? parseInt(id) : produtos.length > 0 ? Math.max(...produtos.map(p => p.id)) + 1 : 1, 
+                name, price, cat, desc, imgUrl 
+            };
+            
             if (id) {
+                // Editando
                 const index = produtos.findIndex(p => p.id == id);
                 if (index !== -1) {
-                    produtos[index] = { ...produtos[index], name, price, cat, desc, imgUrl };
+                    produtos[index] = { ...produtos[index], ...novoProduto };
                     alert("Produto atualizado localmente. EXPORTE para salvar!");
                 }
             } else {
-                const newId = produtos.length > 0 ? Math.max(...produtos.map(p => p.id)) + 1 : 1;
-                produtos.push({ id: newId, name, price, cat, desc, imgUrl });
+                // Adicionando
+                produtos.push(novoProduto);
                 alert("Produto adicionado localmente. EXPORTE para salvar!");
             }
 
@@ -540,22 +752,9 @@
         }
 
         // ==================================================================
-        // FUNÇÕES DE MANIPULAÇÃO DE DADOS (INSUMOS)
+        // FUNÇÕES DE RENDERIZAÇÃO E CRUD (Insumos) - CORRIGIDAS
         // ==================================================================
         
-        async function loadInsumos() {
-            try {
-                const response = await fetch("/api/insumos", { cache: "no-store" });
-                if (!response.ok) { throw new Error(`Erro: ${response.status}`); }
-                insumos = await response.json(); 
-                renderInsumos();
-            } catch (e) {
-                console.error("Erro ao carregar insumos:", e);
-                insumos = []; 
-                renderInsumos();
-            }
-        }
-
         function renderInsumos() {
             insumosTbody.innerHTML = '';
             if (insumos.length === 0) {
@@ -578,44 +777,38 @@
             });
         }
 
-        // ATUALIZADA: Função de Cálculo de Custo por Unidade
         function calculateCustoUnitario() {
             const precoTotal = parseFloat(insumoPrecoTotal.value);
             const quantidadeKg = parseFloat(insumoQuantidadeKg.value);
-            const unidadeSelecionada = insumoUnidade.value.toLowerCase(); // 'g', 'ml', 'un', etc.
+            const unidadeSelecionada = insumoUnidade.value.toLowerCase(); 
 
             const calculoKgGroup = document.getElementById('calculoKgGroup');
             const custoUnitarioGroup = document.getElementById('custoUnitarioGroup');
             
-            // 1. Lógica para cálculo automático (apenas se a unidade for 'g' e o usuário fornecer Preço Total e Kg)
+            // Lógica para cálculo automático (somente 'g')
             if (unidadeSelecionada === 'g') {
-                calculoKgGroup.style.display = 'flex'; // flex para row do bootstrap
+                calculoKgGroup.style.display = 'flex'; 
                 custoUnitarioGroup.classList.remove('col-md-12');
                 custoUnitarioGroup.classList.add('col-md-4');
 
-                if (isNaN(precoTotal) || isNaN(quantidadeKg) || quantidadeKg <= 0) {
-                    insumoCusto.value = '';
-                    return;
+                if (!isNaN(precoTotal) && !isNaN(quantidadeKg) && quantidadeKg > 0) {
+                    const quantidadeGramas = quantidadeKg * 1000;
+                    const custoPorGrama = precoTotal / quantidadeGramas;
+                    insumoCusto.value = custoPorGrama.toFixed(4);
+                } else if (!document.getElementById('insumoId').value) {
+                    // Limpa apenas se estiver adicionando novo e o cálculo falhar
+                    insumoCusto.value = ''; 
                 }
-
-                // 1 kg = 1000g
-                const quantidadeGramas = quantidadeKg * 1000;
-                const custoPorGrama = precoTotal / quantidadeGramas;
-
-                // Limita a 4 casas decimais para precisão de custo por grama (0.0XXX)
-                insumoCusto.value = custoPorGrama.toFixed(4);
             } 
-            // 2. Lógica para unidades que não usam cálculo automático (ex: 'un', 'ml')
+            // Lógica para unidades que precisam de preenchimento manual
             else {
-                // Se a unidade não for 'g', esconde os campos de cálculo e obriga o preenchimento manual do custo
                 calculoKgGroup.style.display = 'none'; 
                 custoUnitarioGroup.classList.remove('col-md-4');
                 custoUnitarioGroup.classList.add('col-md-12');
                 
-                // Apenas limpa o campo de custo se estiver vazio ou se foi preenchido pelo cálculo anterior.
-                // Isso evita apagar um custo manual se o usuário estiver apenas editando o nome.
-                if(insumoCusto.value === '' || !isNaN(parseFloat(insumoPrecoTotal.value))) {
-                    insumoCusto.value = ''; // Espera que o usuário preencha manualmente
+                // Se estiver adicionando e não há valor anterior, limpa o campo
+                if(!document.getElementById('insumoId').value) { 
+                    insumoCusto.value = '';
                 }
             }
         }
@@ -625,25 +818,21 @@
         insumoQuantidadeKg.addEventListener('input', calculateCustoUnitario);
         insumoUnidade.addEventListener('change', calculateCustoUnitario);
 
-        // ATUALIZADO: Limpa campos de cálculo na adição e define o display
         function openAddInsumoModal() {
             document.getElementById('insumoModalLabel').innerText = 'Adicionar Novo Insumo';
             document.getElementById('insumo-form').reset();
             document.getElementById('insumoId').value = ''; 
             
-            // Garante que o estado inicial (g) está correto
             document.getElementById('insumoUnidade').value = 'g'; 
             insumoPrecoTotal.value = '';
             insumoQuantidadeKg.value = '';
             insumoCusto.value = '';
             
-            // Força a renderização inicial para a unidade 'g'
             calculateCustoUnitario(); 
             
             insumoModal.show();
         }
 
-        // ATUALIZADO: Esconde/mostra campos de cálculo na edição e preenche custo/estoque
         function editInsumo(id) {
             const insumo = insumos.find(i => i.id === id);
             if (!insumo) return;
@@ -653,131 +842,133 @@
             document.getElementById('insumoId').value = insumo.id;
             document.getElementById('insumoName').value = insumo.nome;
             
-            // Limpa e esconde campos de cálculo (Preço Total e Kg) na Edição
+            // Limpa campos de cálculo na Edição (já que o custo é o que importa)
             insumoPrecoTotal.value = ''; 
             insumoQuantidadeKg.value = '';
             
-            insumoCusto.value = insumo.custoUnitario;
+            document.getElementById('insumoCusto').value = insumo.custoUnitario;
             document.getElementById('insumoUnidade').value = insumo.unidade;
             document.getElementById('insumoEstoque').value = insumo.estoqueAtual;
 
-            // Ajusta a visibilidade dos campos de cálculo (será 'none' se não for 'g')
-            calculateCustoUnitario(); 
+            calculateCustoUnitario(); // Força a exibição correta dos campos de cálculo/manual
             
             insumoModal.show();
         }
 
-        // ATUALIZADO: Salva Insumo (usando o valor do campo insumoCusto)
+        // CORRIGIDO: Lógica de Salvamento e Atribuição de ID
         saveInsumoBtn.onclick = () => {
             const id = document.getElementById('insumoId').value;
             const nome = document.getElementById('insumoName').value;
-            
-            const custoUnitario = parseFloat(insumoCusto.value);
             const unidade = document.getElementById('insumoUnidade').value;
+            const custoUnitario = parseFloat(document.getElementById('insumoCusto').value);
             const estoqueAtual = parseFloat(document.getElementById('insumoEstoque').value);
             
-            if (!nome || isNaN(custoUnitario) || isNaN(estoqueAtual) || custoUnitario <= 0) {
-                alert("Nome, Custo Unitário (deve ser maior que zero) e Estoque são obrigatórios. Para unidades como 'un' e 'ml', o Custo Unitário deve ser digitado manualmente.");
+            if (!nome || isNaN(custoUnitario) || isNaN(estoqueAtual)) {
+                alert("Nome, Custo Unitário e Estoque são obrigatórios.");
                 return;
             }
 
-            const newInsumoData = { nome, custoUnitario, unidade, estoqueAtual };
+            const novoInsumo = { 
+                // CORREÇÃO: Usa o ID existente ou calcula o novo ID de forma segura
+                id: id ? parseInt(id) : insumos.length > 0 ? Math.max(...insumos.map(i => i.id)) + 1 : 1, 
+                nome, 
+                unidade, 
+                custoUnitario, 
+                estoqueAtual 
+            };
 
             if (id) {
+                // Editando insumo existente
                 const index = insumos.findIndex(i => i.id == id);
                 if (index !== -1) {
-                    insumos[index] = { ...insumos[index], id: parseInt(id), ...newInsumoData };
+                    insumos[index] = novoInsumo;
                     alert("Insumo atualizado localmente. EXPORTE para salvar!");
                 }
             } else {
-                const newId = insumos.length > 0 ? Math.max(...insumos.map(i => i.id)) + 1 : 1;
-                insumos.push({ id: newId, ...newInsumoData });
+                // Adicionando novo insumo
+                insumos.push(novoInsumo);
                 alert("Insumo adicionado localmente. EXPORTE para salvar!");
             }
 
-            renderInsumos();
+            renderInsumos(); 
             insumoModal.hide();
         };
 
         function delInsumo(id) { 
-            if (confirm(`Tem certeza que deseja excluir o Insumo ID ${id}?`)) {
+            if (confirm(`Tem certeza que deseja excluir o insumo ID ${id}?`)) {
                 insumos = insumos.filter(i => i.id !== id);
+                renderInsumos();
                 alert('Insumo excluído localmente. Lembre-se de EXPORTAR!');
-                renderComposition(); 
-                render(); 
-            }
-        }
-
-        async function exportInsumos() {
-            if (!logged) { alert("Você precisa estar logado para exportar os insumos."); return; }
-            if (!confirm("ATENÇÃO: Tem certeza que deseja ATUALIZAR o insumos.json no servidor?")) return;
-
-            try {
-                const response = await fetch('/api/insumos/export', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(insumos, null, 2),
-                });
-
-                const data = await response.json();
-
-                if (response.status === 401) {
-                    alert(`❌ Erro de Autorização. Sessão expirou.`);
-                    checkStatus();
-                } else if (data.success) {
-                    alert(`✅ Sucesso! ${data.message}`);
-                } else {
-                    alert(`❌ Erro ao exportar insumos: ${data.message}`);
-                }
-            } catch (error) {
-                console.error('Erro na requisição de exportação de insumos:', error);
-                alert('❌ Erro de conexão com o servidor.');
             }
         }
         
         // ==================================================================
-        // FUNÇÕES DE MANIPULAÇÃO DE DADOS (COMPOSIÇÃO / FICHA TÉCNICA)
+        // FUNÇÕES DE FICHA TÉCNICA (COMPOSIÇÃO)
         // ==================================================================
+        // (Mantenho a lógica original, que não estava quebrada, apenas dependente de dados)
 
-        // Calcula o custo total de UM PRODUTO (usado na tabela de produtos)
-        function calculateProductCost(productId) {
-            const composition = composicoes[productId] || [];
-            let custoTotal = 0;
+        function renderComposition() {
+            compositionTbody.innerHTML = '';
+            let totalCost = 0;
+            
+            if (!currentProductId || !composicoes[currentProductId]) {
+                totalCostDisplay.innerText = `R$ 0.00`;
+                return;
+            }
 
-            composition.forEach(comp => {
-                const insumo = insumos.find(i => i.id === comp.insumoId);
-                if (insumo) {
-                    custoTotal += comp.uso * insumo.custoUnitario;
-                }
+            currentProductComposition = composicoes[currentProductId];
+
+            currentProductComposition.forEach((comp, index) => {
+                const insumo = insumos.find(i => i.id == comp.insumoId);
+                
+                if (!insumo) return;
+
+                const custoItem = insumo.custoUnitario * comp.uso;
+                totalCost += custoItem;
+                
+                const row = compositionTbody.insertRow();
+                row.innerHTML = `
+                    <td>${insumo.nome}</td>
+                    <td>${insumo.unidade}</td>
+                    <td>R$ ${insumo.custoUnitario.toFixed(4)}</td>
+                    <td>${comp.uso} ${insumo.unidade}</td>
+                    <td>R$ ${custoItem.toFixed(2)}</td>
+                    <td>
+                        <button class="btn btn-sm btn-danger" onclick="removeInsumoFromComposition(${index})">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+                    </td>
+                `;
             });
-            return custoTotal;
+
+            totalCostDisplay.innerText = `R$ ${totalCost.toFixed(2)}`;
+            // Atualiza o custo também no menu (na memória local)
+            const produtoIndex = produtos.findIndex(p => p.id == currentProductId);
+            if (produtoIndex !== -1) {
+                // O dashboard não armazena custo diretamente, mas o recalcula na renderização do menu.
+                // Aqui apenas garantimos que o cálculo na memória está certo.
+            }
+
         }
 
         function openCompositionModal(productId, productName) {
             currentProductId = productId;
             compositionProductName.innerText = productName;
-            document.getElementById('currentProductId').value = productId;
-
-            populateInsumoSelect();
-            currentProductComposition = composicoes[productId] || [];
-            renderComposition();
-            compInsumoUso.value = ''; 
-            compositionModal.show();
-        }
-
-        function populateInsumoSelect() {
-            compInsumoSelect.innerHTML = '<option value="">Selecione um Insumo...</option>';
             
-            const usedInsumoIds = currentProductComposition.map(c => c.insumoId);
-
-            insumos.forEach(i => {
-                if (!usedInsumoIds.includes(i.id)) {
-                    const option = document.createElement('option');
-                    option.value = i.id;
-                    option.innerText = `${i.nome} (R$ ${Number(i.custoUnitario).toFixed(4)}/${i.unidade})`;
-                    compInsumoSelect.appendChild(option);
-                }
-            });
+            // Clonar a composição para edição temporária
+            if (composicoes[productId]) {
+                currentProductComposition = JSON.parse(JSON.stringify(composicoes[productId]));
+            } else {
+                currentProductComposition = [];
+            }
+            
+            // Preenche o Select de Insumos
+            compInsumoSelect.innerHTML = insumos.map(i => `<option value="${i.id}">${i.nome} (${i.unidade}) - R$ ${i.custoUnitario.toFixed(4)}/${i.unidade}</option>`).join('');
+            
+            compInsumoUso.value = '';
+            renderComposition();
+            
+            compositionModal.show();
         }
 
         function addInsumoToComposition() {
@@ -785,228 +976,43 @@
             const uso = parseFloat(compInsumoUso.value);
 
             if (isNaN(insumoId) || isNaN(uso) || uso <= 0) {
-                alert("Selecione um insumo e defina uma quantidade de uso válida (> 0).");
+                alert("Selecione um insumo e insira um valor de uso válido.");
                 return;
             }
-
-            if (!currentProductComposition.find(c => c.insumoId === insumoId)) {
-                currentProductComposition.push({ insumoId, uso });
-                composicoes[currentProductId] = currentProductComposition; // Salva na estrutura global
-                
-                compInsumoSelect.value = '';
-                compInsumoUso.value = '';
-                populateInsumoSelect();
-                renderComposition();
-                render(); // Atualiza a tabela de produtos para mostrar o novo custo
-                alert("Insumo adicionado à ficha técnica! Lembre-se de EXPORTAR TUDO.");
+            
+            // Salva a alteração localmente na variável global `composicoes`
+            if (!composicoes[currentProductId]) {
+                composicoes[currentProductId] = [];
             }
+            
+            // Verifica se o insumo já está na composição
+            const existingIndex = composicoes[currentProductId].findIndex(comp => comp.insumoId === insumoId);
+            
+            if (existingIndex > -1) {
+                composicoes[currentProductId][existingIndex].uso += uso;
+            } else {
+                composicoes[currentProductId].push({ insumoId, uso });
+            }
+
+            // Limpa o formulário de adição
+            compInsumoUso.value = '';
+            
+            renderComposition();
+            render(); // Atualiza a tabela de produtos para mostrar o novo custo
         }
 
-        function removeInsumoFromComposition(insumoIdToRemove) {
+        function removeInsumoFromComposition(index) {
             if (confirm("Tem certeza que deseja remover este insumo da ficha técnica?")) {
-                currentProductComposition = currentProductComposition.filter(c => c.insumoId !== insumoIdToRemove);
-                composicoes[currentProductId] = currentProductComposition;
-
-                populateInsumoSelect();
+                composicoes[currentProductId].splice(index, 1);
                 renderComposition();
                 render(); // Atualiza a tabela de produtos para mostrar o novo custo
-                alert("Insumo removido da ficha técnica! Lembre-se de EXPORTAR TUDO.");
             }
         }
 
-        function renderComposition() {
-            compositionTbody.innerHTML = '';
-            let custoTotal = 0;
-
-            if (currentProductComposition.length === 0) {
-                compositionTbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">Nenhum insumo adicionado a esta ficha técnica.</td></tr>';
-                totalCostDisplay.innerText = 'R$ 0.00';
-                return;
-            }
-
-            currentProductComposition.forEach(comp => {
-                const insumo = insumos.find(i => i.id == comp.insumoId);
-
-                if (insumo) {
-                    const custoLanche = comp.uso * insumo.custoUnitario;
-                    custoTotal += custoLanche;
-
-                    const row = compositionTbody.insertRow();
-                    row.innerHTML = `
-                        <td>${insumo.nome}</td>
-                        <td>${insumo.unidade}</td>
-                        <td>R$ ${Number(insumo.custoUnitario).toFixed(4)}/${insumo.unidade}</td>
-                        <td>${Number(comp.uso).toFixed(2)} ${insumo.unidade}</td>
-                        <td>R$ ${custoLanche.toFixed(2)}</td>
-                        <td>
-                            <button class="btn btn-sm btn-danger" onclick="removeInsumoFromComposition(${insumo.id})">
-                                <i class="fas fa-times"></i>
-                            </button>
-                        </td>
-                    `;
-                } else {
-                    const row = compositionTbody.insertRow();
-                    row.classList.add('table-danger');
-                    row.innerHTML = `<td colspan="5">Insumo ID ${comp.insumoId} (Excluído ou não encontrado)</td>
-                        <td><button class="btn btn-sm btn-danger" onclick="removeInsumoFromComposition(${comp.insumoId})"><i class="fas fa-times"></i> Remover</button></td>`;
-                }
-            });
-
-            totalCostDisplay.innerText = `R$ ${custoTotal.toFixed(2)}`;
-        }
-        
         // ==================================================================
-        // LÓGICA DE SEGURANÇA E EXPORTAÇÃO (ATUALIZADA)
+        // INICIALIZAÇÃO
         // ==================================================================
-        
-        async function loadCompositions() {
-            // Em uma aplicação real, aqui você faria um fetch para carregar o arquivo 'composicoes.json'
-            // Por enquanto, apenas inicia vazio.
-            composicoes = {}; 
-        }
-
-        async function exportCompositions() {
-            if (!logged) { return false; }
-            
-            try {
-                const response = await fetch('/api/composicoes/export', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(composicoes, null, 2),
-                });
-
-                const data = await response.json();
-
-                if (response.status === 401) {
-                    alert(`❌ Erro de Autorização. Sessão expirou na exportação de Composições.`);
-                    checkStatus();
-                    return false;
-                } else if (data.success) {
-                    return true;
-                } else {
-                    alert(`❌ Erro ao exportar composições: ${data.message}`);
-                    return false;
-                }
-            } catch (error) {
-                console.error('Erro na requisição de exportação de composições:', error);
-                alert('❌ Erro de conexão com o servidor na exportação de Composições.');
-                return false;
-            }
-        }
-
-
-        async function checkStatus() {
-            if (document.cookie.includes('auth_session')) {
-                logged = true;
-                loginModal.style.display = "none";
-                currentUser.innerText = "admin"; 
-                logoutBtn.style.display = "inline-block";
-                
-                showSection('products'); 
-                // Carrega insumos e menu antes de carregar e renderizar composições
-                await loadInsumos(); 
-                await loadCompositions(); 
-                await loadMenu(); 
-                render(); // Re-renderiza para garantir que os custos sejam exibidos
-            } else {
-                loginModal.style.display = "flex";
-            }
-        }
-
-        doLoginBtn.onclick = async () => {
-            const user = loginUser.value;
-            const pass = loginPass.value;
-
-            try {
-                const response = await fetch('/api/login', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ user, pass })
-                });
-                
-                const data = await response.json();
-
-                if (data.success) {
-                    logged = true;
-                    currentUser.innerText = user; 
-                    loginModal.style.display = "none";
-                    logoutBtn.style.display = "inline-block";
-                    
-                    showSection('products');
-                    await loadInsumos();
-                    await loadCompositions();
-                    await loadMenu(); 
-                    render();
-                    alert('Login efetuado com sucesso!');
-                } else {
-                    alert(data.message);
-                }
-            } catch (error) {
-                alert('Erro de conexão ao tentar logar com o servidor.');
-            }
-        };
-
-        logoutBtn.onclick = async () => {
-            try {
-                await fetch('/api/logout', { method: 'POST' });
-                logged = false;
-                currentUser.innerText = "—";
-                logoutBtn.style.display = "none";
-                loginModal.style.display = "flex";
-                alert('Você saiu do painel.');
-            } catch (error) {
-                alert('Erro ao fazer logout, mas a sessão local foi encerrada.');
-            }
-        };
-
-        // Evento de Exportação de PRODUTOS e COMPOSIÇÕES (ATUALIZADO)
-        document.getElementById("exportBtn").onclick = async () => {
-            if (!logged) { alert("Você precisa estar logado para exportar para o servidor."); return; }
-            if (!confirm("ATENÇÃO: Tem certeza que deseja exportar e ATUALIZAR TODOS os dados (Produtos e Fichas Técnicas) no servidor?")) return;
-            
-            let exportSuccess = true;
-
-            // 1. Exportar Composições (Fichas Técnicas)
-            const compResult = await exportCompositions();
-            if (!compResult) { exportSuccess = false; }
-            
-            // 2. Exportar Produtos (Cardápio)
-            try {
-                const response = await fetch('/api/export', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(produtos.map(p => ({
-                        id: p.id, name: p.name, desc: p.desc, price: p.price, cat: p.cat, imgUrl: p.imgUrl || "" 
-                    })), null, 2),
-                });
-
-                const data = await response.json();
-
-                if (response.status === 401) {
-                    alert(`❌ Erro de Autorização. Sessão expirou na exportação de Produtos.`);
-                    checkStatus();
-                    exportSuccess = false;
-                } else if (data.success) {
-                    // Sucesso na exportação do menu
-                } else {
-                    alert(`❌ Erro ao exportar Produtos: ${data.message}`);
-                    exportSuccess = false;
-                }
-            } catch (error) {
-                console.error('Erro na requisição de exportação de Produtos:', error);
-                alert('❌ Erro de conexão com o servidor na exportação de Produtos.');
-                exportSuccess = false;
-            }
-
-            if (exportSuccess) {
-                alert("✅ Sucesso! Todos os dados (Produtos e Fichas Técnicas) foram exportados e salvos no servidor.");
-            } else {
-                alert("⚠️ A exportação teve problemas. Verifique os alertas anteriores.");
-            }
-        };
-
-        // Inicializa a verificação de status
-        checkStatus();
+        window.onload = checkAuth;
 
     </script>
 </body>
