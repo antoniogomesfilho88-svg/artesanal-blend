@@ -3,209 +3,276 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Painel Artesanal Blend</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <title>Artesanal Blend - Dashboard</title>
+    <link rel="stylesheet" href="dashboard.css">
     
     <style>
-        /* Estilos básicos para o layout */
-        body { font-family: sans-serif; margin: 0; background-color: #f4f4f4; }
-        .container { max-width: 1200px; margin: 20px auto; padding: 0 20px; }
-        
-        /* Layout Principal */
-        #main-dashboard { display: none; background-color: white; min-height: 100vh; padding-bottom: 50px; }
-        
-        /* Cabeçalho */
-        header { background-color: #333; color: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; }
-        header h1 { margin: 0; font-size: 1.5rem; }
-        .logout-btn { background-color: #dc3545; color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; transition: background-color 0.3s; }
-        .logout-btn:hover { background-color: #c82333; }
-
-        /* Navegação por Abas */
-        .nav-tabs { list-style: none; padding: 0; margin: 20px 0 0 0; border-bottom: 2px solid #ccc; display: flex; }
-        .nav-tabs li { margin-right: 1px; }
-        .nav-tabs a { display: block; padding: 10px 15px; text-decoration: none; color: #555; background-color: #eee; border: 1px solid #ccc; border-bottom: none; border-radius: 5px 5px 0 0; transition: background-color 0.3s; }
-        .nav-tabs a.active { background-color: white; border-color: #ccc; color: #333; border-bottom: 1px solid white; font-weight: bold; }
-        .nav-tabs a:not(.active):hover { background-color: #ddd; }
-
-        /* Conteúdo das Abas */
-        .tab-content { display: none; padding: 20px; border: 1px solid #ccc; border-top: none; background-color: white; }
-        .tab-content.active { display: block; }
-        
-        /* Form e Tabela */
-        .form-group { margin-bottom: 15px; }
-        .form-group label { display: block; margin-bottom: 5px; font-weight: bold; }
-        .form-group input, .form-group select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
-        .btn-primary { background-color: #007bff; color: white; border: none; padding: 10px 15px; border-radius: 4px; cursor: pointer; transition: background-color 0.3s; }
-        .btn-primary:hover { background-color: #0056b3; }
-        
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        table th, table td { border: 1px solid #ddd; padding: 10px; text-align: left; }
-        table th { background-color: #f8f8f8; }
-        .action-buttons button { background: none; border: none; cursor: pointer; margin-right: 5px; color: #007bff; }
-        .action-buttons button:hover { color: #0056b3; }
-
-        /* Destaques (Lucro) */
-        .positive { color: green; font-weight: bold; }
-        .negative { color: red; font-weight: bold; }
-        .resumo-card { background-color: #f0f0f0; padding: 15px; border-radius: 5px; text-align: center; margin-bottom: 20px; }
-        .resumo-card h3 { margin-top: 0; font-size: 1.2rem; color: #555; }
-        .resumo-card p { font-size: 2rem; font-weight: bold; margin: 5px 0 0 0; }
-        
-        /* LOGIN SCREEN STYLES */
+        /* Estilos básicos para a tela de login (pode ser movido para dashboard.css) */
         #login-screen {
-            height: 100vh;
             display: flex;
-            flex-direction: column;
-            align-items: center;
             justify-content: center;
-            background-color: #333; /* Fundo escuro */
-            color: #333;
+            align-items: center;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.9);
+            z-index: 1000;
         }
         .login-box {
             background: white;
             padding: 40px;
-            border-radius: 10px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
             text-align: center;
         }
-        .login-box input {
-            margin: 10px 0;
-            padding: 12px;
-            display: block;
-            width: 250px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-        }
-        .login-box button {
-            width: 100%;
-            padding: 12px;
-            background-color: #28a745; /* Cor de sucesso */
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 1rem;
-            transition: background-color 0.3s;
-        }
-        .login-box button:hover {
-            background-color: #218838;
-        }
+        /* O restante do seu CSS para o dashboard principal deve estar no dashboard.css */
     </style>
-
 </head>
 <body>
 
-    <div id="login-screen" style="display: flex;">
+    <div id="login-screen" style="display: none;">
         <div class="login-box">
-            <h2>Acesso Restrito</h2>
-            <input type="text" id="login-user" placeholder="Usuário (admin)">
-            <input type="password" id="login-pass" placeholder="Senha (1234)">
-            <button id="login-button">Entrar</button>
-            <p style="margin-top: 20px; font-size: small; color: #888;">Credenciais Padrão: admin / 1234</p>
+            <h2>Acesso Restrito - Dashboard</h2>
+            <p>Faça login para gerenciar o cardápio.</p>
+            <input type="text" id="loginUser" placeholder="Usuário" value="admin"><br><br>
+            <input type="password" id="loginPass" placeholder="Senha" value="1234"><br><br>
+            <button id="doLoginBtn">Entrar</button>
+            <p style="margin-top: 15px; font-size: 0.8em;">(User: admin, Pass: 1234)</p>
         </div>
     </div>
 
-
-    <div id="main-dashboard" style="display: none;">
-        
+    <div id="dashboard-content">
         <header>
-            <h1>Painel Artesanal Blend</h1>
-            <button class="logout-btn" onclick="handleLogout()">Sair <i class="fas fa-sign-out-alt"></i></button>
+            <h1>Painel de Controle Artesanal Blend</h1>
+            <div class="user-info">
+                Bem-vindo(a), <span id="currentUser">—</span> |
+                <button id="exportBtn" title="Salvar menu.json no servidor" style="margin-right: 10px;">
+                    Exportar Cardápio
+                </button>
+                <button id="logoutBtn" style="display: none;">
+                    Sair
+                </button>
+            </div>
         </header>
 
-        <div class="container">
-            <ul class="nav-tabs">
-                <li><a href="#" class="active" onclick="showContent('dashboard', this)">Dashboard</a></li>
-                <li><a href="#" onclick="showContent('produtos', this)">Produtos</a></li>
-                <li><a href="#" onclick="showContent('exportar', this)">Exportar</a></li>
-            </ul>
+        <main>
+            <section id="stats">
+                <h2>Estatísticas</h2>
+                </section>
 
-            <div id="dashboard" class="tab-content active">
-                <h2>Resumo Geral</h2>
-                <div style="display: flex; gap: 20px; margin-top: 20px;">
-                    <div class="resumo-card" style="flex: 1;">
-                        <h3>Total de Produtos</h3>
-                        <p id="totalProdutos">0</p>
-                    </div>
-                    <div class="resumo-card" style="flex: 1;">
-                        <h3>Margem Média de Lucro</h3>
-                        <p id="lucroMedio">0%</p>
-                    </div>
-                </div>
-            </div>
+            <section id="product-form">
+                <h2>Adicionar/Editar Produto</h2>
+                </section>
+            
+            <section id="product-list">
+                <h2>Cardápio Atual</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Nome</th>
+                            <th>Preço</th>
+                            <th>Categoria</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="menu-tbody">
+                        </tbody>
+                </table>
+            </section>
+        </main>
+    </div>
 
-            <div id="produtos" class="tab-content">
-                <h2>Gerenciar Produtos</h2>
+    <script>
+        // ==================================================================
+        // VARIÁVEIS GLOBAIS
+        // ==================================================================
+        let produtos = []; // Array que armazena os dados do cardápio
+        let logged = false;
 
-                <form onsubmit="event.preventDefault(); addProduto();">
-                    <input type="hidden" id="prodIdToEdit">
-                    <div style="display: flex; gap: 20px; flex-wrap: wrap;">
-                        <div class="form-group" style="flex: 2;">
-                            <label for="prodNome">Nome do Produto *</label>
-                            <input type="text" id="prodNome" required>
-                        </div>
-                        <div class="form-group" style="flex: 1;">
-                            <label for="prodCat">Categoria</label>
-                            <select id="prodCat">
-                                <option value="Bebidas">Bebidas</option>
-                                <option value="Comidas">Comidas</option>
-                                <option value="Sobremesas">Sobremesas</option>
-                            </select>
-                        </div>
-                        <div class="form-group" style="flex: 1;">
-                            <label for="prodPreco">Preço de Venda (R$) *</label>
-                            <input type="number" id="prodPreco" step="0.01" required>
-                        </div>
-                        <div class="form-group" style="flex: 1;">
-                            <label for="prodCusto">Custo (R$)</label>
-                            <input type="number" id="prodCusto" step="0.01">
-                        </div>
-                        <div class="form-group" style="flex: 2;">
-                            <label for="prodImgUrl">URL da Imagem</label>
-                            <input type="text" id="prodImgUrl" placeholder="Ex: logo.jpg">
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label for="prodDesc">Descrição</label>
-                        <input type="text" id="prodDesc">
-                    </div>
+        // Elementos do DOM (Verifique se os IDs abaixo batem com seu HTML)
+        const loginModal = document.getElementById('login-screen');
+        const loginUser = document.getElementById('loginUser');
+        const loginPass = document.getElementById('loginPass');
+        const doLoginBtn = document.getElementById('doLoginBtn');
+        const logoutBtn = document.getElementById('logoutBtn');
+        const currentUser = document.getElementById('currentUser'); // Elemento para mostrar o usuário
+        const menuTbody = document.getElementById('menu-tbody');
+        
+        // ==================================================================
+        // FUNÇÕES DE MANIPULAÇÃO DE DADOS (CARREGAR E RENDERIZAR)
+        // ==================================================================
+        
+        // NOVO: Função para carregar o menu usando a API segura
+        async function loadMenu() {
+            try {
+                // Chamada à nova API segura
+                const response = await fetch("/api/menu", { cache: "no-store" });
+                
+                if (!response.ok) {
+                    throw new Error(`Erro ao carregar cardápio. Status: ${response.status}`);
+                }
 
-                    <button type="submit" class="btn-primary">Salvar Produto</button>
-                    <button type="button" class="btn-secondary" onclick="clearForm()">Limpar Formulário</button>
-                </form>
+                produtos = await response.json(); 
+                render(); 
+            } catch (e) {
+                console.error("Erro ao carregar cardápio:", e);
+                produtos = []; 
+                render();
+                alert("❌ Erro ao carregar cardápio do servidor. Verifique o console.");
+            }
+        }
+        
+        // Função para renderizar a lista de produtos na tabela
+        function render() {
+            menuTbody.innerHTML = '';
+            if (produtos.length === 0) {
+                menuTbody.innerHTML = '<tr><td colspan="5">Nenhum produto cadastrado.</td></tr>';
+                return;
+            }
 
-                <h3>Lista de Produtos</h3>
-                <div style="overflow-x: auto;">
-                    <table id="produtosTable">
-                        <thead>
-                            <tr>
-                                <th>ID</th>
-                                <th>Nome</th>
-                                <th>Preço</th>
-                                <th>Custo</th>
-                                <th>Lucro %</th>
-                                <th>Categoria</th>
-                                <th>Ações</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            </tbody>
-                    </table>
-                </div>
-            </div>
+            produtos.forEach(p => {
+                const row = menuTbody.insertRow();
+                row.innerHTML = `
+                    <td>${p.id}</td>
+                    <td>${p.name}</td>
+                    <td>R$ ${p.price.toFixed(2)}</td>
+                    <td>${p.cat}</td>
+                    <td>
+                        <button onclick="editP(${p.id})">Editar</button>
+                        <button onclick="delP(${p.id})">Excluir</button>
+                    </td>
+                `;
+            });
+            // Você pode chamar a função de estatísticas aqui: updateStats();
+        }
 
-            <div id="exportar" class="tab-content">
-                <h2>Exportar Dados para o Cardápio</h2>
-                <p>Clique no botão abaixo para gerar o arquivo <code>menu.json</code> no servidor, atualizando o seu cardápio online com as últimas mudanças.</p>
-                <button onclick="exportarMenuJSON()" class="btn-primary" style="background-color: #28a745; margin-top: 10px;">
-                    <i class="fas fa-save"></i> Exportar e Atualizar Cardápio Online
-                </button>
-                <p style="margin-top: 20px; font-style: italic;">
-                    🚨 Atenção: Esta ação deve salvar o menu.json no servidor. Vamos implementar o token de segurança no próximo passo.
-                </p>
-            </div>
+        // Exemplo de função de edição (você deve ter a sua)
+        function editP(id) {
+            alert(`Função Editar Produto ${id} (Implementar lógica do formulário)`);
+            // Lógica para carregar os dados do produto no formulário de edição
+        }
 
+        // Exemplo de função de exclusão (você deve ter a sua)
+        function delP(id) {
+            if (confirm(`Tem certeza que deseja excluir o produto ID ${id}?`)) {
+                produtos = produtos.filter(p => p.id !== id);
+                render();
+                alert('Produto excluído localmente. Não se esqueça de EXPORTAR!');
+            }
+        }
+        
+        // ... (Mantenha todas as suas outras funções aqui: updateStats, saveProduct, etc.) ...
+        
+        // ==================================================================
+        // LÓGICA DE SEGURANÇA (API COM SESSÃO)
+        // ==================================================================
 
-        </div> </div> <script src="dashboard.js"></script>
+        // Função para verificar se o usuário está logado (chamada ao iniciar)
+        async function checkStatus() {
+            // Verifica a existência do cookie. O servidor garante que ele é assinado/seguro.
+            if (document.cookie.includes('auth_session')) {
+                logged = true;
+                loginModal.style.display = "none";
+                // Assumindo que você quer mostrar "admin" após o login
+                currentUser.innerText = "admin"; 
+                logoutBtn.style.display = "inline-block";
+                loadMenu(); // Carrega o cardápio se a sessão estiver ativa
+            } else {
+                loginModal.style.display = "flex";
+            }
+        }
+
+        // Evento de Login que chama a API
+        doLoginBtn.onclick = async () => {
+            const user = loginUser.value;
+            const pass = loginPass.value;
+
+            try {
+                const response = await fetch('/api/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ user, pass })
+                });
+                
+                const data = await response.json();
+
+                if (data.success) {
+                    logged = true;
+                    currentUser.innerText = user; 
+                    loginModal.style.display = "none";
+                    logoutBtn.style.display = "inline-block";
+                    loadMenu(); 
+                    alert('Login efetuado com sucesso!');
+                } else {
+                    alert(data.message);
+                }
+            } catch (error) {
+                alert('Erro de conexão ao tentar logar com o servidor.');
+            }
+        };
+
+        // Evento de Logout que chama a API
+        logoutBtn.onclick = async () => {
+            try {
+                await fetch('/api/logout', { method: 'POST' });
+                logged = false;
+                currentUser.innerText = "—";
+                logoutBtn.style.display = "none";
+                loginModal.style.display = "flex";
+                alert('Você saiu do painel.');
+            } catch (error) {
+                alert('Erro ao fazer logout, mas a sessão local foi encerrada.');
+            }
+        };
+
+        // Evento de Exportação que usa a Sessão (não envia token)
+        document.getElementById("exportBtn").onclick = async () => {
+            if (!logged) {
+                alert("Você precisa estar logado para exportar para o servidor.");
+                return;
+            }
+
+            if (!confirm("Tem certeza que deseja ATUALIZAR o menu.json no servidor?")) return;
+
+            try {
+                const response = await fetch('/api/export', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        // O cookie de sessão é enviado automaticamente!
+                    },
+                    // Mapeie e envie seus produtos (Ajuste o mapeamento se o menu.json tiver mais campos!)
+                    body: JSON.stringify(produtos.map(p => ({
+                        id: p.id, 
+                        name: p.name, 
+                        desc: p.desc,
+                        price: p.price, 
+                        cat: p.cat, 
+                        imgUrl: p.imgUrl 
+                    }), null, 2)),
+                });
+
+                const data = await response.json();
+
+                if (response.status === 401) {
+                     alert(`❌ Erro de Autorização. Sessão expirou. Faça login novamente.`);
+                } else if (data.success) {
+                    alert(`✅ Sucesso! ${data.message}`);
+                } else {
+                    alert(`❌ Erro ao exportar: ${data.message}`);
+                }
+            } catch (error) {
+                console.error('Erro na requisição de exportação:', error);
+                alert('❌ Erro de conexão com o servidor.');
+            }
+        };
+
+        // Inicializa a verificação de status (deve ser a última coisa a ser chamada)
+        checkStatus();
+
+    </script>
 </body>
 </html>
