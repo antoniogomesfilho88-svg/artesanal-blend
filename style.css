@@ -30,25 +30,54 @@ body {
 }
 
 /* ===========================
-   CABEÇALHO
+   CABEÇALHO MODERNO
 =========================== */
 header {
-  text-align: center;
-  padding: 10px;
   background: #111;
   border-bottom: 2px solid var(--red);
+  padding: 15px 10px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
-header img {
-  width: 120px;
-  height: 120px;
+.header-content {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.header-content img.logo {
+  width: 90px;
+  height: 90px;
   border-radius: 50%;
+  border: 2px solid var(--red);
+  object-fit: cover;
 }
 
-header h1 {
-  font-size: 1.3rem;
+.header-content h1 {
+  font-size: 1.8rem;
   color: var(--red);
-  margin-top: 5px;
+  font-weight: 600;
+  letter-spacing: 1px;
+}
+
+/* Responsivo para celular */
+@media (max-width: 480px) {
+  .header-content {
+    flex-direction: column;
+    text-align: center;
+    gap: 6px;
+  }
+
+  .header-content img.logo {
+    width: 75px;
+    height: 75px;
+  }
+
+  .header-content h1 {
+    font-size: 1.3rem;
+  }
 }
 
 /* ===========================
@@ -353,5 +382,6 @@ footer {
     transform: translateY(0);
   }
 }
+
 
 
