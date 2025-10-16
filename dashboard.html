@@ -90,7 +90,7 @@
                         <span class="me-3">Olá, <span id="currentUser">—</span></span>
                         
                         <button id="exportBtn" class="btn btn-sm btn-success me-2">
-                            <i class="fas fa-save me-1"></i> Exportar Cardápio
+                            <i class="fas fa-save me-1"></i> Exportar Tudo
                         </button>
                         
                         <button id="logoutBtn" class="btn btn-sm btn-outline-secondary" style="display: none;">
@@ -116,8 +116,8 @@
                                             <tr>
                                                 <th>ID</th>
                                                 <th>Nome</th>
-                                                <th>Preço</th>
-                                                <th>Categoria</th>
+                                                <th>Preço Venda</th>
+                                                <th>Custo (Ficha)</th>
                                                 <th>Ações</th>
                                             </tr>
                                         </thead>
@@ -160,7 +160,7 @@
 
                     <section id="financeiro-section" class="content-section" style="display: none;">
                         <h4 class="mb-3">Visão Financeira</h4>
-                        <p class="alert alert-info">Esta seção mostrará custos, lucros e relatórios. Necessita da ligação entre Produtos e Insumos.</p>
+                        <p class="alert alert-info">Esta seção mostrará custos, lucros e relatórios baseados nas suas Fichas Técnicas.</p>
                     </section>
 
                 </div>
@@ -182,7 +182,7 @@
                             <input type="text" class="form-control" id="productName" required>
                         </div>
                         <div class="mb-3">
-                            <label for="productPrice" class="form-label">Preço (R$)</label>
+                            <label for="productPrice" class="form-label">Preço Venda (R$)</label>
                             <input type="number" step="0.01" class="form-control" id="productPrice" required>
                         </div>
                         <div class="mb-3">
@@ -201,7 +201,7 @@
                         <div class="mb-3">
                             <label for="productImgUrl" class="form-label">URL da Imagem</label>
                             <input type="url" class="form-control" id="productImgUrl">
-                            <small class="form-text text-muted">Cole o link da imagem (ex: do Imgur).</small>
+                            <small class="form-text text-muted">Cole o link da imagem.</small>
                         </div>
                     </form>
                 </div>
@@ -226,17 +226,31 @@
                             <label for="insumoName" class="form-label">Nome do Insumo</label>
                             <input type="text" class="form-control" id="insumoName" required>
                         </div>
-                        <div class="mb-3">
-                            <label for="insumoCusto" class="form-label">Custo Unitário (R$)</label>
-                            <input type="number" step="0.01" class="form-control" id="insumoCusto" required>
+
+                        <div class="row">
+                            <div class="col-6 mb-3">
+                                <label for="insumoPrecoTotal" class="form-label">Preço Total da Compra (R$)</label>
+                                <input type="number" step="0.01" class="form-control" id="insumoPrecoTotal" oninput="calculateCustoUnitario()">
+                            </div>
+                            <div class="col-6 mb-3">
+                                <label for="insumoQuantidadeKg" class="form-label">Quantidade Total (em Kg)</label>
+                                <input type="number" step="0.001" class="form-control" id="insumoQuantidadeKg" oninput="calculateCustoUnitario()">
+                            </div>
                         </div>
                         <div class="mb-3">
+                            <label for="insumoCusto" class="form-label">Custo Unitário Calculado (R$/unidade)</label>
+                            <input type="number" step="0.0001" class="form-control" id="insumoCusto" required readonly> 
+                            <small class="form-text text-muted">Preenchido automaticamente (R$/grama, R$/ml, etc.).</small>
+                        </div>
+                        
+                        <div class="mb-3">
                             <label for="insumoUnidade" class="form-label">Unidade de Medida (Ex: g, ml, und)</label>
-                            <input type="text" class="form-control" id="insumoUnidade" required>
+                            <input type="text" class="form-control" id="insumoUnidade" required value="g">
                         </div>
                         <div class="mb-3">
                             <label for="insumoEstoque" class="form-label">Estoque Atual</label>
                             <input type="number" step="0.01" class="form-control" id="insumoEstoque" required>
+                            <small class="form-text text-muted">Use a unidade definida acima (Ex: 5000 para 5kg de carne).</small>
                         </div>
                     </form>
                 </div>
@@ -248,6 +262,71 @@
         </div>
     </div>
 
+    <div class="modal fade" id="compositionModal" tabindex="-1" aria-labelledby="compositionModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-info text-white">
+                    <h5 class="modal-title" id="compositionModalLabel">Ficha Técnica: <span id="compositionProductName"></span></h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="currentProductId">
+                    
+                    <div class="row border-bottom pb-3 mb-3">
+                        <div class="col-5">
+                            <label for="compInsumoSelect" class="form-label">Selecionar Insumo</label>
+                            <select class="form-select" id="compInsumoSelect">
+                                <option value="">Selecione um Insumo...</option>
+                                </select>
+                        </div>
+                        <div class="col-3">
+                            <label for="compInsumoUso" class="form-label">Uso por Produto (g, ml ou un)</label>
+                            <input type="number" step="0.01" class="form-control" id="compInsumoUso" placeholder="Ex: 180">
+                        </div>
+                        <div class="col-4 d-flex align-items-end">
+                            <button class="btn btn-success w-100" onclick="addInsumoToComposition()">
+                                <i class="fas fa-plus"></i> Adicionar
+                            </button>
+                        </div>
+                    </div>
+
+                    <h6 class="mt-2">Insumos para este Produto:</h6>
+                    <div class="table-responsive">
+                        <table class="table table-sm table-striped">
+                            <thead class="table-secondary">
+                                <tr>
+                                    <th>Insumo</th>
+                                    <th>Unidade</th>
+                                    <th>Preço por Unidade (R$/unidade)</th>
+                                    <th>Uso por Produto</th>
+                                    <th>Custo por Lanche</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="composition-tbody">
+                                <tr><td colspan="6" class="text-center text-muted">Nenhum insumo adicionado.</td></tr>
+                                </tbody>
+                            <tfoot>
+                                <tr>
+                                    <th colspan="4" class="text-end">CUSTO TOTAL DO PRODUTO:</th>
+                                    <th id="totalCostDisplay" class="text-success fs-5">R$ 0.00</th>
+                                    <th></th>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                    <div class="alert alert-warning mt-3">
+                        **Nota:** O "Preço por Unidade" é definido na seção **Insumos**. Mantenha-o atualizado!
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
     <script>
@@ -257,6 +336,10 @@
         let produtos = []; 
         let insumos = []; 
         let logged = false;
+        // Variável que armazena a composição de TODOS os produtos (estrutura: { produtoId: [{insumoId, uso}] })
+        let composicoes = {}; 
+        let currentProductComposition = []; 
+        let currentProductId = null; 
 
         // Elementos de Segurança
         const loginModal = document.getElementById('login-screen');
@@ -273,8 +356,22 @@
         // Modais e Formulários (Inicialização dos objetos Bootstrap - ESSENCIAL!)
         const productModal = new bootstrap.Modal(document.getElementById('productModal'));
         const insumoModal = new bootstrap.Modal(document.getElementById('insumoModal'));
+        const compositionModal = new bootstrap.Modal(document.getElementById('compositionModal')); // NOVO MODAL
+        
         const saveProductBtn = document.getElementById('saveProductBtn');
         const saveInsumoBtn = document.getElementById('saveInsumoBtn');
+
+        // ELEMENTOS DO MODAL DE INSUMO (PARA CÁLCULO)
+        const insumoPrecoTotal = document.getElementById('insumoPrecoTotal');
+        const insumoQuantidadeKg = document.getElementById('insumoQuantidadeKg');
+        const insumoCusto = document.getElementById('insumoCusto');
+
+        // ELEMENTOS DO MODAL DE COMPOSIÇÃO (FICHA TÉCNICA)
+        const compInsumoSelect = document.getElementById('compInsumoSelect');
+        const compInsumoUso = document.getElementById('compInsumoUso');
+        const compositionTbody = document.getElementById('composition-tbody');
+        const compositionProductName = document.getElementById('compositionProductName');
+        const totalCostDisplay = document.getElementById('totalCostDisplay');
         
         // ==================================================================
         // FUNÇÕES DE NAVEGAÇÃO E UX
@@ -316,6 +413,7 @@
             }
         }
         
+        // ATUALIZADO: Inclui botão "Ficha" e exibe Custo
         function render() {
             menuTbody.innerHTML = '';
             if (produtos.length === 0) {
@@ -324,21 +422,25 @@
             }
 
             produtos.forEach(p => {
+                const custo = calculateProductCost(p.id); // Calcula o custo do produto
+                
                 const row = menuTbody.insertRow();
                 row.innerHTML = `
                     <td>${p.id}</td>
                     <td>${p.name}</td>
                     <td>R$ ${Number(p.price).toFixed(2)}</td>
-                    <td>${p.cat}</td>
+                    <td>R$ ${custo.toFixed(2)}</td>
                     <td>
-                        <button class="btn btn-sm btn-warning me-1" onclick="editP(${p.id})"><i class="fas fa-edit"></i> Editar</button>
-                        <button class="btn btn-sm btn-danger" onclick="delP(${p.id})"><i class="fas fa-trash-alt"></i> Excluir</button>
+                        <button class="btn btn-sm btn-info me-1" onclick="openCompositionModal(${p.id}, '${p.name.replace(/'/g, "\\'")}')" title="Gerenciar Ficha Técnica">
+                            <i class="fas fa-receipt"></i> Ficha
+                        </button>
+                        <button class="btn btn-sm btn-warning me-1" onclick="editP(${p.id})"><i class="fas fa-edit"></i></button>
+                        <button class="btn btn-sm btn-danger" onclick="delP(${p.id})"><i class="fas fa-trash-alt"></i></button>
                     </td>
                 `;
             });
         }
-
-        // CORRIGIDO: Abre o modal para ADIÇÃO
+        
         function openAddProductModal() {
             document.getElementById('productModalLabel').innerText = 'Adicionar Novo Produto';
             document.getElementById('product-form').reset(); 
@@ -346,7 +448,6 @@
             productModal.show();
         }
 
-        // CORRIGIDO: Abre o modal para EDIÇÃO
         function editP(id) {
             const produto = produtos.find(p => p.id === id);
             if (!produto) return;
@@ -363,7 +464,6 @@
             productModal.show();
         }
 
-        // CORRIGIDO: Salva Produto (Adicionar ou Editar)
         saveProductBtn.onclick = () => {
             const id = document.getElementById('productId').value;
             const name = document.getElementById('productName').value;
@@ -378,14 +478,12 @@
             }
 
             if (id) {
-                // EDIÇÃO
                 const index = produtos.findIndex(p => p.id == id);
                 if (index !== -1) {
                     produtos[index] = { ...produtos[index], name, price, cat, desc, imgUrl };
                     alert("Produto atualizado localmente. EXPORTE para salvar!");
                 }
             } else {
-                // ADIÇÃO
                 const newId = produtos.length > 0 ? Math.max(...produtos.map(p => p.id)) + 1 : 1;
                 produtos.push({ id: newId, name, price, cat, desc, imgUrl });
                 alert("Produto adicionado localmente. EXPORTE para salvar!");
@@ -398,15 +496,16 @@
         function delP(id) { 
             if (confirm(`Tem certeza que deseja excluir o produto ID ${id}?`)) {
                 produtos = produtos.filter(p => p.id !== id);
+                delete composicoes[id]; // Remove a composição do produto excluído
                 render();
                 alert('Produto excluído localmente. Lembre-se de EXPORTAR!');
             }
         }
-        
+
         // ==================================================================
         // FUNÇÕES DE MANIPULAÇÃO DE DADOS (INSUMOS)
         // ==================================================================
-
+        
         async function loadInsumos() {
             try {
                 const response = await fetch("/api/insumos", { cache: "no-store" });
@@ -432,7 +531,7 @@
                 row.innerHTML = `
                     <td>${i.id}</td>
                     <td>${i.nome}</td>
-                    <td>R$ ${Number(i.custoUnitario).toFixed(2)} / ${i.unidade}</td>
+                    <td>R$ ${Number(i.custoUnitario).toFixed(4)} / ${i.unidade}</td>
                     <td>${Number(i.estoqueAtual).toFixed(2)} ${i.unidade}</td>
                     <td>
                         <button class="btn btn-sm btn-warning me-1" onclick="editInsumo(${i.id})"><i class="fas fa-edit"></i></button>
@@ -441,16 +540,43 @@
                 `;
             });
         }
+
+        // NOVO: Função de Cálculo de Custo por Grama/Unidade
+        function calculateCustoUnitario() {
+            const precoTotal = parseFloat(insumoPrecoTotal.value);
+            const quantidadeKg = parseFloat(insumoQuantidadeKg.value);
+
+            // Se for inserir gramas (unidade mais comum)
+            if (insumoUnidade.value.toLowerCase() === 'g') {
+                if (isNaN(precoTotal) || isNaN(quantidadeKg) || quantidadeKg <= 0) {
+                    insumoCusto.value = '';
+                    return;
+                }
+
+                // 1 kg = 1000g
+                const quantidadeGramas = quantidadeKg * 1000;
+                const custoPorGrama = precoTotal / quantidadeGramas;
+
+                // Limita a 4 casas decimais para precisão de custo por grama (0.0XXX)
+                insumoCusto.value = custoPorGrama.toFixed(4);
+            } else {
+                 // Se for 'un' ou 'ml', o cálculo é diferente. Deixa para o usuário calcular e digitar o custo unitário.
+                 insumoCusto.value = ''; 
+            }
+        }
         
-        // CORRIGIDO: Abre o modal para ADIÇÃO de Insumo
+        // ATUALIZADO: Limpa campos de cálculo na adição
         function openAddInsumoModal() {
             document.getElementById('insumoModalLabel').innerText = 'Adicionar Novo Insumo';
             document.getElementById('insumo-form').reset();
             document.getElementById('insumoId').value = ''; 
+            insumoPrecoTotal.value = '';
+            insumoQuantidadeKg.value = '';
+            insumoCusto.value = '';
             insumoModal.show();
         }
 
-        // CORRIGIDO: Abre o modal para EDIÇÃO de Insumo
+        // ATUALIZADO: Esconde campos de cálculo na edição e preenche custo/estoque
         function editInsumo(id) {
             const insumo = insumos.find(i => i.id === id);
             if (!insumo) return;
@@ -459,37 +585,41 @@
             
             document.getElementById('insumoId').value = insumo.id;
             document.getElementById('insumoName').value = insumo.nome;
-            document.getElementById('insumoCusto').value = insumo.custoUnitario;
+            
+            // Na edição, não mostramos os campos de cálculo (Preço Total e Kg)
+            insumoPrecoTotal.value = ''; 
+            insumoQuantidadeKg.value = '';
+            
+            insumoCusto.value = insumo.custoUnitario;
             document.getElementById('insumoUnidade').value = insumo.unidade;
             document.getElementById('insumoEstoque').value = insumo.estoqueAtual;
 
             insumoModal.show();
         }
 
-        // CORRIGIDO: Salva Insumo (Adicionar ou Editar)
+        // ATUALIZADO: Salva Insumo (usando o valor do campo insumoCusto)
         saveInsumoBtn.onclick = () => {
             const id = document.getElementById('insumoId').value;
             const nome = document.getElementById('insumoName').value;
-            const custoUnitario = parseFloat(document.getElementById('insumoCusto').value);
+            
+            const custoUnitario = parseFloat(insumoCusto.value);
             const unidade = document.getElementById('insumoUnidade').value;
             const estoqueAtual = parseFloat(document.getElementById('insumoEstoque').value);
             
-            if (!nome || isNaN(custoUnitario) || isNaN(estoqueAtual)) {
-                alert("Nome, Custo e Estoque são obrigatórios.");
+            if (!nome || isNaN(custoUnitario) || isNaN(estoqueAtual) || custoUnitario <= 0) {
+                alert("Nome, Custo Unitário (deve ser maior que zero) e Estoque são obrigatórios. Use o cálculo de Kg/R$ ou digite manualmente.");
                 return;
             }
 
             const newInsumoData = { nome, custoUnitario, unidade, estoqueAtual };
 
             if (id) {
-                // EDIÇÃO
                 const index = insumos.findIndex(i => i.id == id);
                 if (index !== -1) {
                     insumos[index] = { ...insumos[index], id: parseInt(id), ...newInsumoData };
                     alert("Insumo atualizado localmente. EXPORTE para salvar!");
                 }
             } else {
-                // ADIÇÃO
                 const newId = insumos.length > 0 ? Math.max(...insumos.map(i => i.id)) + 1 : 1;
                 insumos.push({ id: newId, ...newInsumoData });
                 alert("Insumo adicionado localmente. EXPORTE para salvar!");
@@ -502,12 +632,13 @@
         function delInsumo(id) { 
             if (confirm(`Tem certeza que deseja excluir o Insumo ID ${id}?`)) {
                 insumos = insumos.filter(i => i.id !== id);
-                renderInsumos();
+                // ATENÇÃO: Se um insumo for excluído, ele pode quebrar fichas técnicas existentes.
                 alert('Insumo excluído localmente. Lembre-se de EXPORTAR!');
+                renderComposition(); // Re-renderiza a ficha caso o modal esteja aberto
+                render(); // Re-renderiza a lista de produtos
             }
         }
 
-        // Função de Exportação de Insumos
         async function exportInsumos() {
             if (!logged) { alert("Você precisa estar logado para exportar os insumos."); return; }
             if (!confirm("ATENÇÃO: Tem certeza que deseja ATUALIZAR o insumos.json no servidor?")) return;
@@ -534,11 +665,169 @@
                 alert('❌ Erro de conexão com o servidor.');
             }
         }
-
-
+        
         // ==================================================================
-        // LÓGICA DE SEGURANÇA (API COM SESSÃO)
+        // FUNÇÕES DE MANIPULAÇÃO DE DADOS (COMPOSIÇÃO / FICHA TÉCNICA) - NOVO
         // ==================================================================
+
+        // Calcula o custo total de UM PRODUTO (usado na tabela de produtos)
+        function calculateProductCost(productId) {
+            const composition = composicoes[productId] || [];
+            let custoTotal = 0;
+
+            composition.forEach(comp => {
+                const insumo = insumos.find(i => i.id === comp.insumoId);
+                if (insumo) {
+                    custoTotal += comp.uso * insumo.custoUnitario;
+                }
+            });
+            return custoTotal;
+        }
+
+        function openCompositionModal(productId, productName) {
+            currentProductId = productId;
+            compositionProductName.innerText = productName;
+            document.getElementById('currentProductId').value = productId;
+
+            populateInsumoSelect();
+            currentProductComposition = composicoes[productId] || [];
+            renderComposition();
+            compInsumoUso.value = ''; 
+            compositionModal.show();
+        }
+
+        function populateInsumoSelect() {
+            compInsumoSelect.innerHTML = '<option value="">Selecione um Insumo...</option>';
+            
+            const usedInsumoIds = currentProductComposition.map(c => c.insumoId);
+
+            insumos.forEach(i => {
+                if (!usedInsumoIds.includes(i.id)) {
+                    const option = document.createElement('option');
+                    option.value = i.id;
+                    option.innerText = `${i.nome} (R$ ${Number(i.custoUnitario).toFixed(4)}/${i.unidade})`;
+                    compInsumoSelect.appendChild(option);
+                }
+            });
+        }
+
+        function addInsumoToComposition() {
+            const insumoId = parseInt(compInsumoSelect.value);
+            const uso = parseFloat(compInsumoUso.value);
+
+            if (isNaN(insumoId) || isNaN(uso) || uso <= 0) {
+                alert("Selecione um insumo e defina uma quantidade de uso válida (> 0).");
+                return;
+            }
+
+            if (!currentProductComposition.find(c => c.insumoId === insumoId)) {
+                currentProductComposition.push({ insumoId, uso });
+                composicoes[currentProductId] = currentProductComposition; // Salva na estrutura global
+                
+                compInsumoSelect.value = '';
+                compInsumoUso.value = '';
+                populateInsumoSelect();
+                renderComposition();
+                render(); // Atualiza a tabela de produtos para mostrar o novo custo
+                alert("Insumo adicionado à ficha técnica! Lembre-se de EXPORTAR TUDO.");
+            }
+        }
+
+        function removeInsumoFromComposition(insumoIdToRemove) {
+            if (confirm("Tem certeza que deseja remover este insumo da ficha técnica?")) {
+                currentProductComposition = currentProductComposition.filter(c => c.insumoId !== insumoIdToRemove);
+                composicoes[currentProductId] = currentProductComposition;
+
+                populateInsumoSelect();
+                renderComposition();
+                render(); // Atualiza a tabela de produtos para mostrar o novo custo
+                alert("Insumo removido da ficha técnica! Lembre-se de EXPORTAR TUDO.");
+            }
+        }
+
+        function renderComposition() {
+            compositionTbody.innerHTML = '';
+            let custoTotal = 0;
+
+            if (currentProductComposition.length === 0) {
+                compositionTbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">Nenhum insumo adicionado a esta ficha técnica.</td></tr>';
+                totalCostDisplay.innerText = 'R$ 0.00';
+                return;
+            }
+
+            currentProductComposition.forEach(comp => {
+                const insumo = insumos.find(i => i.id == comp.insumoId);
+
+                if (insumo) {
+                    const custoLanche = comp.uso * insumo.custoUnitario;
+                    custoTotal += custoLanche;
+
+                    const row = compositionTbody.insertRow();
+                    row.innerHTML = `
+                        <td>${insumo.nome}</td>
+                        <td>${insumo.unidade}</td>
+                        <td>R$ ${Number(insumo.custoUnitario).toFixed(4)}/${insumo.unidade}</td>
+                        <td>${Number(comp.uso).toFixed(2)} ${insumo.unidade}</td>
+                        <td>R$ ${custoLanche.toFixed(2)}</td>
+                        <td>
+                            <button class="btn btn-sm btn-danger" onclick="removeInsumoFromComposition(${insumo.id})">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </td>
+                    `;
+                } else {
+                    // Trata caso onde o Insumo foi excluído mas ainda está na ficha
+                    const row = compositionTbody.insertRow();
+                    row.classList.add('table-danger');
+                    row.innerHTML = `<td colspan="5">Insumo ID ${comp.insumoId} (Excluído)</td>
+                    <td><button class="btn btn-sm btn-danger" onclick="removeInsumoFromComposition(${comp.insumoId})"><i class="fas fa-times"></i> Remover</button></td>`;
+                }
+            });
+
+            totalCostDisplay.innerText = `R$ ${custoTotal.toFixed(2)}`;
+        }
+        
+        // ==================================================================
+        // LÓGICA DE SEGURANÇA E EXPORTAÇÃO (ATUALIZADA)
+        // ==================================================================
+        
+        async function loadCompositions() {
+            // Se você tiver uma API para carregar as composições salvas, implemente aqui.
+            // Por enquanto, apenas inicia vazio.
+            // Ex: const response = await fetch("/api/composicoes"); composicoes = await response.json();
+            composicoes = {}; 
+        }
+
+        async function exportCompositions() {
+            if (!logged) { alert("Você precisa estar logado para exportar as composições."); return false; }
+            
+            try {
+                const response = await fetch('/api/composicoes/export', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(composicoes, null, 2),
+                });
+
+                const data = await response.json();
+
+                if (response.status === 401) {
+                    alert(`❌ Erro de Autorização. Sessão expirou.`);
+                    checkStatus();
+                    return false;
+                } else if (data.success) {
+                    // Não mostra alerta aqui, será agrupado no Exportar Tudo.
+                    return true;
+                } else {
+                    alert(`❌ Erro ao exportar composições: ${data.message}`);
+                    return false;
+                }
+            } catch (error) {
+                console.error('Erro na requisição de exportação de composições:', error);
+                alert('❌ Erro de conexão com o servidor na exportação de Composições.');
+                return false;
+            }
+        }
+
 
         async function checkStatus() {
             if (document.cookie.includes('auth_session')) {
@@ -548,8 +837,10 @@
                 logoutBtn.style.display = "inline-block";
                 
                 showSection('products'); 
-                loadMenu(); 
-                loadInsumos(); 
+                await loadInsumos(); 
+                await loadMenu(); 
+                await loadCompositions(); // Carrega composições
+                render(); // Re-renderiza para mostrar custos
             } else {
                 loginModal.style.display = "flex";
             }
@@ -575,8 +866,10 @@
                     logoutBtn.style.display = "inline-block";
                     
                     showSection('products');
-                    loadMenu(); 
-                    loadInsumos();
+                    await loadInsumos();
+                    await loadMenu(); 
+                    await loadCompositions();
+                    render();
                     alert('Login efetuado com sucesso!');
                 } else {
                     alert(data.message);
@@ -599,11 +892,18 @@
             }
         };
 
-        // Evento de Exportação de PRODUTOS
+        // Evento de Exportação de PRODUTOS e COMPOSIÇÕES (ATUALIZADO)
         document.getElementById("exportBtn").onclick = async () => {
             if (!logged) { alert("Você precisa estar logado para exportar para o servidor."); return; }
-            if (!confirm("ATENÇÃO: Tem certeza que deseja ATUALIZAR o menu.json no servidor?")) return;
+            if (!confirm("ATENÇÃO: Tem certeza que deseja exportar e ATUALIZAR TODOS os dados (Produtos e Fichas) no servidor?")) return;
+            
+            let exportSuccess = true;
 
+            // 1. Exportar Composições (Fichas Técnicas)
+            const compResult = await exportCompositions();
+            if (!compResult) { exportSuccess = false; }
+            
+            // 2. Exportar Produtos (Cardápio)
             try {
                 const response = await fetch('/api/export', {
                     method: 'POST',
@@ -618,14 +918,23 @@
                 if (response.status === 401) {
                     alert(`❌ Erro de Autorização. Sessão expirou.`);
                     checkStatus();
+                    exportSuccess = false;
                 } else if (data.success) {
-                    alert(`✅ Sucesso! ${data.message}`);
+                    // Sucesso na exportação do menu
                 } else {
-                    alert(`❌ Erro ao exportar: ${data.message}`);
+                    alert(`❌ Erro ao exportar Produtos: ${data.message}`);
+                    exportSuccess = false;
                 }
             } catch (error) {
-                console.error('Erro na requisição de exportação:', error);
-                alert('❌ Erro de conexão com o servidor.');
+                console.error('Erro na requisição de exportação de Produtos:', error);
+                alert('❌ Erro de conexão com o servidor na exportação de Produtos.');
+                exportSuccess = false;
+            }
+
+            if (exportSuccess) {
+                alert("✅ Sucesso! Todos os dados (Produtos e Fichas Técnicas) foram exportados e salvos no servidor.");
+            } else {
+                alert("⚠️ A exportação teve problemas. Verifique os alertas anteriores.");
             }
         };
 
