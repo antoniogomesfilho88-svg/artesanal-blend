@@ -1,8 +1,13 @@
 const LS_KEY = 'blendDashboard';
+const LS_SESSION_KEY = 'dashboardSession'; // Nova chave para a sessão
+const ADMIN_USER = 'admin';
+const ADMIN_PASS = '1234'; // ATENÇÃO: Em produção, o ideal é não ter a senha em texto claro.
+
 let state = { produtos: [] };
 
 const money = v => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
+// Funções de Estado (Produtos)
 function saveState() { localStorage.setItem(LS_KEY, JSON.stringify(state)); }
 function loadState() {
   const data = localStorage.getItem(LS_KEY);
@@ -10,7 +15,45 @@ function loadState() {
   else saveState();
 }
 
+// === FUNÇÕES DE LOGIN ===
+function checkSession() {
+  const isLoggedIn = localStorage.getItem(LS_SESSION_KEY) === 'true';
+  if (isLoggedIn) {
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('main-dashboard').style.display = 'block';
+  } else {
+    document.getElementById('main-dashboard').style.display = 'none';
+    document.getElementById('login-screen').style.display = 'flex';
+  }
+  return isLoggedIn;
+}
+
+function handleLogin() {
+  const user = document.getElementById('login-user').value.trim();
+  const pass = document.getElementById('login-pass').value.trim();
+
+  if (user === ADMIN_USER && pass === ADMIN_PASS) {
+    localStorage.setItem(LS_SESSION_KEY, 'true');
+    checkSession();
+    loadState(); // Carrega os dados só após o login
+    showContent('dashboard', document.querySelector('.nav-tabs a')); // Redireciona para o dashboard
+    alert('Login realizado com sucesso!');
+  } else {
+    alert('Usuário ou senha inválidos.');
+  }
+}
+
+function handleLogout() {
+  localStorage.removeItem(LS_SESSION_KEY);
+  checkSession();
+  document.getElementById('login-user').value = '';
+  document.getElementById('login-pass').value = '';
+  alert('Você saiu do painel.');
+}
+// === FIM DAS FUNÇÕES DE LOGIN ===
+
 function showContent(tabId, el) {
+  if (!checkSession()) return; // Protege contra acesso direto
   document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
   document.getElementById(tabId).classList.add('active');
   document.querySelectorAll('.nav-tabs a').forEach(a => a.classList.remove('active'));
@@ -19,8 +62,11 @@ function showContent(tabId, el) {
   if (tabId === 'dashboard') updateResumo();
 }
 
+/* === O RESTANTE DO SEU CÓDIGO (PRODUTOS, RESUMO, EXPORTAR) VAI AQUI === */
+
 /* === PRODUTOS === */
 function renderProdutos() {
+  // ... (o conteúdo da sua função renderProdutos permanece o mesmo)
   const tableBody = document.querySelector('#produtosTable tbody');
   tableBody.innerHTML = '';
   state.produtos.sort((a, b) => a.id - b.id);
@@ -43,6 +89,7 @@ function renderProdutos() {
 }
 
 function addProduto() {
+  // ... (o conteúdo da sua função addProduto permanece o mesmo)
   const id = document.getElementById('prodIdToEdit').value;
   const nome = document.getElementById('prodNome').value.trim();
   const desc = document.getElementById('prodDesc').value.trim();
@@ -66,6 +113,7 @@ function addProduto() {
 }
 
 function editProduto(id) {
+  // ... (o conteúdo da sua função editProduto permanece o mesmo)
   const p = state.produtos.find(p => p.id === id);
   if (!p) return;
   document.getElementById('prodIdToEdit').value = p.id;
@@ -78,6 +126,7 @@ function editProduto(id) {
 }
 
 function deleteProduto(id) {
+  // ... (o conteúdo da sua função deleteProduto permanece o mesmo)
   if (confirm('Excluir produto?')) {
     state.produtos = state.produtos.filter(p => p.id !== id);
     saveState(); renderProdutos();
@@ -90,13 +139,15 @@ function clearForm() {
 
 /* === RESUMO === */
 function updateResumo() {
+  // ... (o conteúdo da sua função updateResumo permanece o mesmo)
   document.getElementById('totalProdutos').textContent = state.produtos.length;
-  const lucroMedio = state.produtos.length ? 
+  const lucroMedio = state.produtos.length ?
     (state.produtos.reduce((s,p)=>(s+(p.preco-p.custo)/p.preco*100),0)/state.produtos.length).toFixed(1) : 0;
   document.getElementById('lucroMedio').textContent = `${lucroMedio}%`;
 }
 
 /* === EXPORTAR MENU.JSON === */
+// Esta função será substituída no próximo passo pela versão com token.
 function exportarMenuJSON() {
   const produtos = state.produtos.map(p => ({
     id: p.id, name: p.nome, desc: p.descricao,
@@ -107,8 +158,14 @@ function exportarMenuJSON() {
   const a = document.createElement("a");
   a.href = url; a.download = "menu.json"; a.click();
   URL.revokeObjectURL(url);
-  alert("✅ Arquivo menu.json exportado com sucesso!");
+  alert("✅ Arquivo menu.json exportado com sucesso! (Ainda não salvo no servidor)");
 }
 
-loadState();
-renderProdutos();
+// INICIALIZAÇÃO
+// Não chame loadState/renderProdutos aqui. A função checkSession fará isso após o login.
+document.addEventListener('DOMContentLoaded', () => {
+  checkSession();
+  // Adiciona o listener para o botão de login (se você estiver usando um no HTML)
+  const loginButton = document.getElementById('login-button');
+  if (loginButton) loginButton.addEventListener('click', handleLogin);
+});
