@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "Servidor Node.js para o dashboard e cardápio Artesanal Blend.",
   "main": "server.js",
-  "type": "module",  <-- Linha essencial para usar 'import'
+  "type": "module",  
   "scripts": {
     "start": "node server.js",
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -14,3 +14,4 @@
     "cors": "^2.8.5"
   }
 }
+
