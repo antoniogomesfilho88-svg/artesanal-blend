@@ -3,7 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Artesanal Blend - Dashboard</title>
+    <title>Artesanal Blend - Dashboard Profissional</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+
     <link rel="stylesheet" href="dashboard.css">
     
     <style>
@@ -27,88 +31,172 @@
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
             text-align: center;
         }
-        /* O restante do seu CSS para o dashboard principal deve estar no dashboard.css */
+        /* Estilo da Sidebar (Para melhorar o contraste no tema dark) */
+        #sidebar {
+            /* Fixa a barra lateral para telas maiores */
+            height: 100vh;
+            position: sticky;
+            top: 0;
+        }
+        .nav-link.active {
+            background-color: #0d6efd !important; /* Cor primária do Bootstrap */
+            border-radius: 5px;
+        }
     </style>
 </head>
 <body>
 
     <div id="login-screen" style="display: none;">
         <div class="login-box">
-            <h2>Acesso Restrito - Dashboard</h2>
+            <h2>Acesso Restrito - Painel</h2>
             <p>Faça login para gerenciar o cardápio.</p>
-            <input type="text" id="loginUser" placeholder="Usuário" value="admin"><br><br>
-            <input type="password" id="loginPass" placeholder="Senha"><br><br>
-            <button id="doLoginBtn">Entrar</button>
-            
+            <input type="text" id="loginUser" class="form-control mb-3" placeholder="Usuário" value="admin">
+            <input type="password" id="loginPass" class="form-control mb-4" placeholder="Senha">
+            <button id="doLoginBtn" class="btn btn-primary w-100">Entrar</button>
         </div>
     </div>
 
-    <div id="dashboard-content">
-        <header>
-            <h1>Painel de Controle Artesanal Blend</h1>
-            <div class="user-info">
-                Bem-vindo(a), <span id="currentUser">—</span> |
-                <button id="exportBtn" title="Salvar menu.json no servidor" style="margin-right: 10px;">
-                    Exportar Cardápio
-                </button>
-                <button id="logoutBtn" style="display: none;">
-                    Sair
-                </button>
-            </div>
-        </header>
-
-        <main>
-            <section id="stats">
-                <h2>Estatísticas</h2>
-                </section>
-
-            <section id="product-form">
-                <h2>Adicionar/Editar Produto</h2>
-                </section>
+    <div id="dashboard-content" class="container-fluid">
+        <div class="row min-vh-100">
             
-            <section id="product-list">
-                <h2>Cardápio Atual</h2>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>Nome</th>
-                            <th>Preço</th>
-                            <th>Categoria</th>
-                            <th>Ações</th>
-                        </tr>
-                    </thead>
-                    <tbody id="menu-tbody">
-                        </tbody>
-                </table>
-            </section>
-        </main>
+            <nav id="sidebar" class="col-md-3 col-lg-2 d-md-block bg-dark sidebar collapse p-0">
+                <div class="position-sticky pt-3">
+                    <h5 class="text-white text-center mb-4">Artesanal Blend</h5>
+                    <ul class="nav flex-column px-3">
+                        <li class="nav-item">
+                            <a class="nav-link text-white active" href="#" onclick="showSection('products')">
+                                <i class="fas fa-burger fa-fw me-2"></i> Produtos
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-white" href="#" onclick="showSection('insumos')">
+                                <i class="fas fa-list-alt fa-fw me-2"></i> Insumos
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-white" href="#" onclick="showSection('financeiro')">
+                                <i class="fas fa-dollar-sign fa-fw me-2"></i> Financeiro
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
+
+            <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 bg-light">
+                
+                <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                    <h1 class="h2" id="main-title">Gerenciamento de Produtos</h1>
+                    <div class="btn-toolbar mb-2 mb-md-0">
+                        <span class="me-3">Olá, <span id="currentUser">—</span></span>
+                        <button id="exportBtn" class="btn btn-sm btn-success me-2">
+                            <i class="fas fa-save me-1"></i> Exportar Cardápio
+                        </button>
+                        <button id="logoutBtn" class="btn btn-sm btn-outline-secondary" style="display: none;">
+                            <i class="fas fa-sign-out-alt me-1"></i> Sair
+                        </button>
+                    </div>
+                </div>
+
+                <div id="sections-container">
+                    
+                    <section id="products-section" class="content-section">
+                        <div class="card mb-4">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <h5>Lista de Produtos</h5>
+                                <button class="btn btn-primary btn-sm" onclick="openAddProductModal()">
+                                    <i class="fas fa-plus me-1"></i> Adicionar Produto
+                                </button>
+                            </div>
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table table-striped table-hover">
+                                        <thead class="table-dark">
+                                            <tr>
+                                                <th>ID</th>
+                                                <th>Nome</th>
+                                                <th>Preço</th>
+                                                <th>Categoria</th>
+                                                <th>Ações</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="menu-tbody">
+                                            </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+                    
+                    <section id="insumos-section" class="content-section" style="display: none;">
+                        <h4 class="mb-3">Gestão de Insumos e Estoque</h4>
+                        <p class="alert alert-info">A lógica de insumos e financeiro será implementada após a confirmação do novo visual.</p>
+                        </section>
+
+                    <section id="financeiro-section" class="content-section" style="display: none;">
+                        <h4 class="mb-3">Visão Financeira</h4>
+                         <p class="alert alert-info">Esta seção mostrará custos, lucros e relatórios.</p>
+                        </section>
+
+                </div>
+            </main>
+        </div>
     </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
     <script>
         // ==================================================================
-        // VARIÁVEIS GLOBAIS
+        // VARIÁVEIS GLOBAIS E ELEMENTOS DOM
         // ==================================================================
-        let produtos = []; // Array que armazena os dados do cardápio
+        let produtos = []; 
         let logged = false;
 
-        // Elementos do DOM (Verifique se os IDs abaixo batem com seu HTML)
         const loginModal = document.getElementById('login-screen');
         const loginUser = document.getElementById('loginUser');
         const loginPass = document.getElementById('loginPass');
         const doLoginBtn = document.getElementById('doLoginBtn');
         const logoutBtn = document.getElementById('logoutBtn');
-        const currentUser = document.getElementById('currentUser'); // Elemento para mostrar o usuário
+        const currentUser = document.getElementById('currentUser');
         const menuTbody = document.getElementById('menu-tbody');
         
+        // ==================================================================
+        // FUNÇÕES DE NAVEGAÇÃO E UX
+        // ==================================================================
+        
+        // FUNÇÃO DE NAVEGAÇÃO: Alterna as seções do Dashboard
+        function showSection(sectionId) {
+            document.querySelectorAll('.content-section').forEach(section => {
+                section.style.display = 'none';
+            });
+            document.getElementById(sectionId + '-section').style.display = 'block';
+
+            // Atualiza o título e o link ativo da sidebar
+            const titleMap = {
+                'products': 'Gerenciamento de Produtos',
+                'insumos': 'Gestão de Insumos',
+                'financeiro': 'Visão Financeira'
+            };
+            document.getElementById('main-title').innerText = titleMap[sectionId] || 'Dashboard';
+            
+            document.querySelectorAll('#sidebar .nav-link').forEach(link => {
+                link.classList.remove('active');
+            });
+            document.querySelector(`[onclick="showSection('${sectionId}')"]`).classList.add('active');
+        }
+
+        // Função placeholder para o botão "Adicionar Produto" (Implementação futura)
+        function openAddProductModal() {
+            alert("Abrir Modal de Adição de Produto (Funcionalidade a ser implementada)");
+            // Aqui você abrirá um modal Bootstrap ou exibirá o formulário.
+        }
+
         // ==================================================================
         // FUNÇÕES DE MANIPULAÇÃO DE DADOS (CARREGAR E RENDERIZAR)
         // ==================================================================
         
-        // NOVO: Função para carregar o menu usando a API segura
+        // Função para carregar o menu usando a API segura
         async function loadMenu() {
             try {
-                // Chamada à nova API segura
                 const response = await fetch("/api/menu", { cache: "no-store" });
                 
                 if (!response.ok) {
@@ -121,7 +209,7 @@
                 console.error("Erro ao carregar cardápio:", e);
                 produtos = []; 
                 render();
-                alert("❌ Erro ao carregar cardápio do servidor. Verifique o console.");
+                // alert("❌ Erro ao carregar cardápio do servidor. Verifique o console.");
             }
         }
         
@@ -129,7 +217,7 @@
         function render() {
             menuTbody.innerHTML = '';
             if (produtos.length === 0) {
-                menuTbody.innerHTML = '<tr><td colspan="5">Nenhum produto cadastrado.</td></tr>';
+                menuTbody.innerHTML = '<tr><td colspan="5" class="text-center">Nenhum produto cadastrado.</td></tr>';
                 return;
             }
 
@@ -138,48 +226,44 @@
                 row.innerHTML = `
                     <td>${p.id}</td>
                     <td>${p.name}</td>
-                    <td>R$ ${p.price.toFixed(2)}</td>
+                    <td>R$ ${Number(p.price).toFixed(2)}</td>
                     <td>${p.cat}</td>
                     <td>
-                        <button onclick="editP(${p.id})">Editar</button>
-                        <button onclick="delP(${p.id})">Excluir</button>
+                        <button class="btn btn-sm btn-warning me-1" onclick="editP(${p.id})"><i class="fas fa-edit"></i> Editar</button>
+                        <button class="btn btn-sm btn-danger" onclick="delP(${p.id})"><i class="fas fa-trash-alt"></i> Excluir</button>
                     </td>
                 `;
             });
-            // Você pode chamar a função de estatísticas aqui: updateStats();
         }
 
-        // Exemplo de função de edição (você deve ter a sua)
+        // Exemplo de função de edição
         function editP(id) {
             alert(`Função Editar Produto ${id} (Implementar lógica do formulário)`);
-            // Lógica para carregar os dados do produto no formulário de edição
         }
 
-        // Exemplo de função de exclusão (você deve ter a sua)
+        // Exemplo de função de exclusão
         function delP(id) {
             if (confirm(`Tem certeza que deseja excluir o produto ID ${id}?`)) {
                 produtos = produtos.filter(p => p.id !== id);
                 render();
-                alert('Produto excluído localmente. Não se esqueça de EXPORTAR!');
+                alert('Produto excluído localmente. Não se esqueça de EXPORTAR para salvar!');
             }
         }
-        
-        // ... (Mantenha todas as suas outras funções aqui: updateStats, saveProduct, etc.) ...
         
         // ==================================================================
         // LÓGICA DE SEGURANÇA (API COM SESSÃO)
         // ==================================================================
 
-        // Função para verificar se o usuário está logado (chamada ao iniciar)
+        // Função para verificar se o usuário está logado
         async function checkStatus() {
-            // Verifica a existência do cookie. O servidor garante que ele é assinado/seguro.
             if (document.cookie.includes('auth_session')) {
                 logged = true;
                 loginModal.style.display = "none";
-                // Assumindo que você quer mostrar "admin" após o login
                 currentUser.innerText = "admin"; 
                 logoutBtn.style.display = "inline-block";
-                loadMenu(); // Carrega o cardápio se a sessão estiver ativa
+                
+                showSection('products'); // Abre a seção de produtos
+                loadMenu(); // Carrega o cardápio
             } else {
                 loginModal.style.display = "flex";
             }
@@ -204,6 +288,8 @@
                     currentUser.innerText = user; 
                     loginModal.style.display = "none";
                     logoutBtn.style.display = "inline-block";
+                    
+                    showSection('products'); // Abre a seção de produtos
                     loadMenu(); 
                     alert('Login efetuado com sucesso!');
                 } else {
@@ -228,37 +314,35 @@
             }
         };
 
-        // Evento de Exportação que usa a Sessão (não envia token)
+        // Evento de Exportação que usa a Sessão (PROTEGIDO)
         document.getElementById("exportBtn").onclick = async () => {
             if (!logged) {
                 alert("Você precisa estar logado para exportar para o servidor.");
                 return;
             }
 
-            if (!confirm("Tem certeza que deseja ATUALIZAR o menu.json no servidor?")) return;
+            if (!confirm("ATENÇÃO: Tem certeza que deseja ATUALIZAR o menu.json no servidor?")) return;
 
             try {
                 const response = await fetch('/api/export', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        // O cookie de sessão é enviado automaticamente!
-                    },
-                    // Mapeie e envie seus produtos (Ajuste o mapeamento se o menu.json tiver mais campos!)
+                    headers: { 'Content-Type': 'application/json' },
+                    // Mapeia os dados dos produtos para salvar
                     body: JSON.stringify(produtos.map(p => ({
                         id: p.id, 
                         name: p.name, 
                         desc: p.desc,
                         price: p.price, 
                         cat: p.cat, 
-                        imgUrl: p.imgUrl 
-                    }), null, 2)),
+                        imgUrl: p.imgUrl || "" // Garante que a imagem está no objeto
+                    })), null, 2),
                 });
 
                 const data = await response.json();
 
                 if (response.status === 401) {
                      alert(`❌ Erro de Autorização. Sessão expirou. Faça login novamente.`);
+                     checkStatus(); // Volta para a tela de login
                 } else if (data.success) {
                     alert(`✅ Sucesso! ${data.message}`);
                 } else {
@@ -276,5 +360,3 @@
     </script>
 </body>
 </html>
-
-
