@@ -1,217 +1,211 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Dashboard - Artesanal Blend (Modo Claro)</title>
-<style>
-:root {
-  --bg:#f9f9f9;
-  --panel:#e3e3e3;
-  --accent:#3b82f6;
-  --muted:#666;
-  --text:#222;
-  --border:#ccc;
-  --success:#22c55e;
-}
-html,body {
-  margin:0; padding:0; font-family:Inter, system-ui, Arial, sans-serif;
-  background:var(--bg); color:var(--text);
-}
-.wrap { max-width:1200px; margin:auto; padding:20px; }
-header {
-  display:flex; align-items:center; justify-content:space-between;
-  margin-bottom:16px; background:#fff; border:1px solid var(--border); border-radius:8px; padding:10px 16px;
-}
-header h1 { font-size:22px; margin:0; color:var(--text); }
-header img { width:64px; border-radius:8px; }
-button {
-  cursor:pointer; border:none; border-radius:8px; padding:8px 12px;
-  background:var(--accent); color:#fff; font-weight:500; transition:0.2s;
-}
-button:hover { opacity:0.9; }
-button.ghost { background:#fff; color:var(--text); border:1px solid var(--border); }
-.grid { display:grid; grid-template-columns: 1fr 380px; gap:16px; }
-@media(max-width:900px){ .grid{ grid-template-columns:1fr; } }
-.panel {
-  background:var(--panel); padding:14px; border-radius:10px; box-shadow:0 2px 5px rgba(0,0,0,0.1);
-}
-.panel h2 { margin-top:0; color:var(--text); }
-table { width:100%; border-collapse:collapse; }
-th,td { padding:8px; border-bottom:1px solid var(--border); text-align:left; font-size:14px; }
-th { color:var(--muted); }
-input[type=text], input[type=number], select, textarea {
-  width:100%; padding:8px; border:1px solid var(--border); border-radius:6px; background:#fff; color:var(--text);
-}
-textarea { min-height:70px; resize:vertical; }
-label { font-size:13px; color:var(--muted); display:block; margin-bottom:4px; }
-.form-actions { display:flex; gap:8px; margin-top:8px; }
-.img-preview {
-  width:100%; height:150px; background:#fff; border:1px solid var(--border);
-  border-radius:8px; display:flex; align-items:center; justify-content:center; overflow:hidden; color:var(--muted);
-}
-.img-preview img { width:100%; height:100%; object-fit:cover; }
-.tools { display:flex; flex-wrap:wrap; gap:8px; margin-top:10px; }
-.hint { font-size:12px; color:var(--muted); margin-top:4px; }
-.stat { display:flex; align-items:center; gap:10px; margin-bottom:8px; }
-.stat .num { font-size:18px; font-weight:600; color:var(--accent); }
-.chart-wrap { background:#fff; border-radius:8px; padding:8px; margin-top:8px; border:1px solid var(--border); }
-.login-backdrop {
-  position:fixed; inset:0; background:rgba(0,0,0,0.5); display:flex; align-items:center; justify-content:center; z-index:99;
-}
-.login-box {
-  background:#fff; padding:20px; border-radius:8px; width:300px; box-shadow:0 2px 8px rgba(0,0,0,0.3);
-}
-.login-box h3 { margin-top:0; color:var(--text); }
-.muted { color:var(--muted); font-size:13px; }
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel Artesanal Blend</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    
+    <style>
+        /* Estilos básicos para o layout */
+        body { font-family: sans-serif; margin: 0; background-color: #f4f4f4; }
+        .container { max-width: 1200px; margin: 20px auto; padding: 0 20px; }
+        
+        /* Layout Principal */
+        #main-dashboard { display: none; background-color: white; min-height: 100vh; padding-bottom: 50px; }
+        
+        /* Cabeçalho */
+        header { background-color: #333; color: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; }
+        header h1 { margin: 0; font-size: 1.5rem; }
+        .logout-btn { background-color: #dc3545; color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; transition: background-color 0.3s; }
+        .logout-btn:hover { background-color: #c82333; }
+
+        /* Navegação por Abas */
+        .nav-tabs { list-style: none; padding: 0; margin: 20px 0 0 0; border-bottom: 2px solid #ccc; display: flex; }
+        .nav-tabs li { margin-right: 1px; }
+        .nav-tabs a { display: block; padding: 10px 15px; text-decoration: none; color: #555; background-color: #eee; border: 1px solid #ccc; border-bottom: none; border-radius: 5px 5px 0 0; transition: background-color 0.3s; }
+        .nav-tabs a.active { background-color: white; border-color: #ccc; color: #333; border-bottom: 1px solid white; font-weight: bold; }
+        .nav-tabs a:not(.active):hover { background-color: #ddd; }
+
+        /* Conteúdo das Abas */
+        .tab-content { display: none; padding: 20px; border: 1px solid #ccc; border-top: none; background-color: white; }
+        .tab-content.active { display: block; }
+        
+        /* Form e Tabela */
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 5px; font-weight: bold; }
+        .form-group input, .form-group select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+        .btn-primary { background-color: #007bff; color: white; border: none; padding: 10px 15px; border-radius: 4px; cursor: pointer; transition: background-color 0.3s; }
+        .btn-primary:hover { background-color: #0056b3; }
+        
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        table th, table td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+        table th { background-color: #f8f8f8; }
+        .action-buttons button { background: none; border: none; cursor: pointer; margin-right: 5px; color: #007bff; }
+        .action-buttons button:hover { color: #0056b3; }
+
+        /* Destaques (Lucro) */
+        .positive { color: green; font-weight: bold; }
+        .negative { color: red; font-weight: bold; }
+        .resumo-card { background-color: #f0f0f0; padding: 15px; border-radius: 5px; text-align: center; margin-bottom: 20px; }
+        .resumo-card h3 { margin-top: 0; font-size: 1.2rem; color: #555; }
+        .resumo-card p { font-size: 2rem; font-weight: bold; margin: 5px 0 0 0; }
+        
+        /* LOGIN SCREEN STYLES */
+        #login-screen {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background-color: #333; /* Fundo escuro */
+            color: #333;
+        }
+        .login-box {
+            background: white;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            text-align: center;
+        }
+        .login-box input {
+            margin: 10px 0;
+            padding: 12px;
+            display: block;
+            width: 250px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        .login-box button {
+            width: 100%;
+            padding: 12px;
+            background-color: #28a745; /* Cor de sucesso */
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background-color 0.3s;
+        }
+        .login-box button:hover {
+            background-color: #218838;
+        }
+    </style>
+
 </head>
 <body>
-<div class="wrap">
-  <header>
-    <div style="display:flex;align-items:center;gap:12px;">
-      <img src="logo.jpg" alt="logo">
-      <h1>Dashboard — Artesanal Blend</h1>
-    </div>
-    <div>
-      <span class="muted">Usuário: <b id="currentUser">—</b></span>
-      <button id="logoutBtn" class="ghost" style="display:none">Logout</button>
-    </div>
-  </header>
 
-  <div class="grid">
-    <div>
-      <div class="panel">
-        <h2>Produtos</h2>
-        <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px;">
-          <input id="searchInput" type="text" placeholder="Buscar produto..." style="flex:1;">
-          <select id="filterCat">
-            <option value="">Todas as categorias</option>
-          </select>
-          <button id="newBtn">Novo</button>
+    <div id="login-screen" style="display: flex;">
+        <div class="login-box">
+            <h2>Acesso Restrito</h2>
+            <input type="text" id="login-user" placeholder="Usuário (admin)">
+            <input type="password" id="login-pass" placeholder="Senha (1234)">
+            <button id="login-button">Entrar</button>
+            <p style="margin-top: 20px; font-size: small; color: #888;">Credenciais Padrão: admin / 1234</p>
         </div>
-
-        <div style="overflow:auto;max-height:350px;">
-          <table id="prodTable">
-            <thead><tr><th>ID</th><th>Nome</th><th>Categoria</th><th>Preço</th><th>Imagem</th><th>Ações</th></tr></thead>
-            <tbody></tbody>
-          </table>
-        </div>
-
-        <div class="tools">
-          <input id="importFile" type="file" accept=".json" />
-          <button id="importBtn" class="ghost">Importar</button>
-          <button id="exportBtn">Exportar</button>
-          <button id="saveLocalBtn" class="ghost">Salvar Local</button>
-          <button id="restoreLocalBtn" class="ghost">Restaurar</button>
-        </div>
-      </div>
-
-      <div class="panel" style="margin-top:12px;">
-        <h2 id="formTitle">Adicionar / Editar Produto</h2>
-        <form id="prodForm">
-          <input id="prodId" type="hidden" />
-          <label>Nome</label><input id="prodName" type="text" required />
-          <label>Preço (R$)</label><input id="prodPrice" type="number" step="0.01" required />
-          <label>Categoria</label>
-          <select id="prodCat">
-            <option>Hambúrgueres</option><option>Combos</option>
-            <option>Acompanhamentos</option><option>Adicionais</option><option>Bebidas</option>
-          </select>
-          <label>Imagem (URL ou caminho)</label><input id="prodImg" type="text" />
-          <label>Arquivo de imagem</label><input id="prodImgFile" type="file" accept="image/*" />
-          <label>Descrição</label><textarea id="prodDesc"></textarea>
-          <div class="img-preview" id="imgPreview">Preview</div>
-          <div class="form-actions">
-            <button type="submit">Salvar</button>
-            <button type="button" id="cancelBtn" class="ghost">Cancelar</button>
-          </div>
-        </form>
-      </div>
     </div>
 
-    <div>
-      <div class="panel">
-        <h2>Estatísticas</h2>
-        <div class="stat"><div class="num" id="statCount">0</div><div>Total de produtos</div></div>
-        <div class="stat"><div class="num" id="statAvg">R$ 0,00</div><div>Preço médio</div></div>
-        <div class="chart-wrap"><canvas id="catChart" width="320" height="200"></canvas></div>
-      </div>
 
-      <div class="panel" style="margin-top:12px;">
-        <h2>Login</h2>
-        <button id="openLoginBtn" class="ghost">🔐 Fazer login</button>
-      </div>
-    </div>
-  </div>
-</div>
+    <div id="main-dashboard" style="display: none;">
+        
+        <header>
+            <h1>Painel Artesanal Blend</h1>
+            <button class="logout-btn" onclick="handleLogout()">Sair <i class="fas fa-sign-out-alt"></i></button>
+        </header>
 
-<!-- login modal -->
-<div id="loginModal" class="login-backdrop" style="display:none">
-  <div class="login-box">
-    <h3>Entrar</h3>
-    <label>Usuário</label><input id="loginUser" type="text">
-    <label>Senha</label><input id="loginPass" type="password">
-    <div style="display:flex;gap:8px;margin-top:10px;">
-      <button id="doLoginBtn">Entrar</button>
-      <button id="closeLoginBtn" class="ghost">Cancelar</button>
-    </div>
-  </div>
-</div>
+        <div class="container">
+            <ul class="nav-tabs">
+                <li><a href="#" class="active" onclick="showContent('dashboard', this)">Dashboard</a></li>
+                <li><a href="#" onclick="showContent('produtos', this)">Produtos</a></li>
+                <li><a href="#" onclick="showContent('exportar', this)">Exportar</a></li>
+            </ul>
 
-<script>
-const CREDENTIALS={user:"admin",pass:"1234"};
-let produtos=[];
-const tBody=document.querySelector("#prodTable tbody");
-const form=document.getElementById("prodForm");
-const imgInput=document.getElementById("prodImg");
-const imgFile=document.getElementById("prodImgFile");
-const imgPreview=document.getElementById("imgPreview");
-const currentUser=document.getElementById("currentUser");
-const loginModal=document.getElementById("loginModal");
-let logged=false;
-async function loadMenu(){
- try{
-  const r=await fetch("menu.json",{cache:"no-store"});
-  produtos=await r.json(); render();
- }catch(e){produtos=[];render();}
-}
-function render(list=produtos){
- tBody.innerHTML="";
- list.forEach(p=>{
-  const tr=document.createElement("tr");
-  tr.innerHTML=`<td>${p.id}</td><td>${p.name}</td><td>${p.cat}</td><td>R$ ${p.price.toFixed(2)}</td><td>${p.imgUrl||""}</td>
-  <td><button onclick="editP(${p.id})" class="ghost">✏️</button>
-  <button onclick="delP(${p.id})" class="ghost">🗑️</button></td>`;
-  tBody.appendChild(tr);
- });
- updateStats();
-}
-function uid(){return produtos.length?Math.max(...produtos.map(p=>p.id))+1:1;}
-form.onsubmit=e=>{
- e.preventDefault();
- const id=form.querySelector("#prodId").value;
- const n={id:id?Number(id):uid(),name:prodName.value,price:parseFloat(prodPrice.value)||0,cat:prodCat.value,desc:prodDesc.value,imgUrl:imgInput.value};
- if(id){const i=produtos.findIndex(p=>p.id==id);produtos[i]=n;} else produtos.push(n);
- form.reset();imgPreview.innerHTML="Preview";render();
-}
-function editP(id){const p=produtos.find(x=>x.id==id);if(!p)return;prodId.value=p.id;prodName.value=p.name;prodPrice.value=p.price;prodCat.value=p.cat;prodImg.value=p.imgUrl;prodDesc.value=p.desc;previewImg(p.imgUrl);}
-function delP(id){if(confirm("Excluir produto?")){produtos=produtos.filter(p=>p.id!=id);render();}}
-function updateStats(){statCount.innerText=produtos.length;const avg=produtos.length?produtos.reduce((s,p)=>s+p.price,0)/produtos.length:0;statAvg.innerText=`R$ ${avg.toFixed(2)}`;}
-function previewImg(src){if(!src){imgPreview.innerText="Preview";return;}imgPreview.innerHTML=`<img src="${src}" alt="">`;}
-imgInput.oninput=()=>previewImg(imgInput.value);
-imgFile.onchange=e=>{const f=e.target.files[0];if(f){imgInput.value="imagens/"+f.name;const r=new FileReader();r.onload=x=>imgPreview.innerHTML=`<img src="${x.target.result}">`;r.readAsDataURL(f);alert("Copie o arquivo para a pasta imagens/");}};
-document.getElementById("exportBtn").onclick=()=>{const blob=new Blob([JSON.stringify(produtos,null,2)],{type:"application/json"});const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="menu.json";a.click();};
-document.getElementById("importBtn").onclick=()=>document.getElementById("importFile").click();
-document.getElementById("importFile").onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=x=>{produtos=JSON.parse(x.target.result);render();};r.readAsText(f);};
-document.getElementById("saveLocalBtn").onclick=()=>{localStorage.setItem("menu_backup",JSON.stringify(produtos));alert("Salvo localmente");};
-document.getElementById("restoreLocalBtn").onclick=()=>{const d=localStorage.getItem("menu_backup");if(d){produtos=JSON.parse(d);render();}};
-openLoginBtn.onclick=()=>loginModal.style.display="flex";
-closeLoginBtn.onclick=()=>loginModal.style.display="none";
-doLoginBtn.onclick=()=>{if(loginUser.value==CREDENTIALS.user&&loginPass.value==CREDENTIALS.pass){logged=true;currentUser.innerText=loginUser.value;loginModal.style.display="none";logoutBtn.style.display="inline-block";alert("Login efetuado!");}else alert("Usuário/senha incorretos");};
-logoutBtn.onclick=()=>{logged=false;currentUser.innerText="—";logoutBtn.style.display="none";};
-function drawChart(){const ctx=catChart.getContext("2d");ctx.clearRect(0,0,320,200);const cts={};produtos.forEach(p=>cts[p.cat]=(cts[p.cat]||0)+1);const keys=Object.keys(cts);if(keys.length==0){ctx.fillText("Sem dados",10,20);return;}const vals=Object.values(cts);const w=320,h=200,pad=10;const bw=(w-pad*2)/vals.length*0.6;const max=Math.max(...vals);keys.forEach((k,i)=>{const x=pad+i*((w-pad*2)/vals.length);const bh=(vals[i]/max)*(h-50);ctx.fillStyle=varAccent;ctx.fillRect(x+10,h-bh-30,bw,bh);ctx.fillStyle="#000";ctx.fillText(vals[i],x+15,h-bh-35);ctx.fillText(k,x+10,h-10);});}
-loadMenu();
-</script>
+            <div id="dashboard" class="tab-content active">
+                <h2>Resumo Geral</h2>
+                <div style="display: flex; gap: 20px; margin-top: 20px;">
+                    <div class="resumo-card" style="flex: 1;">
+                        <h3>Total de Produtos</h3>
+                        <p id="totalProdutos">0</p>
+                    </div>
+                    <div class="resumo-card" style="flex: 1;">
+                        <h3>Margem Média de Lucro</h3>
+                        <p id="lucroMedio">0%</p>
+                    </div>
+                </div>
+            </div>
+
+            <div id="produtos" class="tab-content">
+                <h2>Gerenciar Produtos</h2>
+
+                <form onsubmit="event.preventDefault(); addProduto();">
+                    <input type="hidden" id="prodIdToEdit">
+                    <div style="display: flex; gap: 20px; flex-wrap: wrap;">
+                        <div class="form-group" style="flex: 2;">
+                            <label for="prodNome">Nome do Produto *</label>
+                            <input type="text" id="prodNome" required>
+                        </div>
+                        <div class="form-group" style="flex: 1;">
+                            <label for="prodCat">Categoria</label>
+                            <select id="prodCat">
+                                <option value="Bebidas">Bebidas</option>
+                                <option value="Comidas">Comidas</option>
+                                <option value="Sobremesas">Sobremesas</option>
+                            </select>
+                        </div>
+                        <div class="form-group" style="flex: 1;">
+                            <label for="prodPreco">Preço de Venda (R$) *</label>
+                            <input type="number" id="prodPreco" step="0.01" required>
+                        </div>
+                        <div class="form-group" style="flex: 1;">
+                            <label for="prodCusto">Custo (R$)</label>
+                            <input type="number" id="prodCusto" step="0.01">
+                        </div>
+                        <div class="form-group" style="flex: 2;">
+                            <label for="prodImgUrl">URL da Imagem</label>
+                            <input type="text" id="prodImgUrl" placeholder="Ex: logo.jpg">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="prodDesc">Descrição</label>
+                        <input type="text" id="prodDesc">
+                    </div>
+
+                    <button type="submit" class="btn-primary">Salvar Produto</button>
+                    <button type="button" class="btn-secondary" onclick="clearForm()">Limpar Formulário</button>
+                </form>
+
+                <h3>Lista de Produtos</h3>
+                <div style="overflow-x: auto;">
+                    <table id="produtosTable">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Nome</th>
+                                <th>Preço</th>
+                                <th>Custo</th>
+                                <th>Lucro %</th>
+                                <th>Categoria</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div id="exportar" class="tab-content">
+                <h2>Exportar Dados para o Cardápio</h2>
+                <p>Clique no botão abaixo para gerar o arquivo <code>menu.json</code> no servidor, atualizando o seu cardápio online com as últimas mudanças.</p>
+                <button onclick="exportarMenuJSON()" class="btn-primary" style="background-color: #28a745; margin-top: 10px;">
+                    <i class="fas fa-save"></i> Exportar e Atualizar Cardápio Online
+                </button>
+                <p style="margin-top: 20px; font-style: italic;">
+                    🚨 Atenção: Esta ação deve salvar o menu.json no servidor. Vamos implementar o token de segurança no próximo passo.
+                </p>
+            </div>
+
+
+        </div> </div> <script src="dashboard.js"></script>
 </body>
 </html>
