@@ -88,9 +88,11 @@
                     <h1 class="h2" id="main-title">Gerenciamento de Produtos</h1>
                     <div class="btn-toolbar mb-2 mb-md-0">
                         <span class="me-3">Olá, <span id="currentUser">—</span></span>
+                        
                         <button id="exportBtn" class="btn btn-sm btn-success me-2">
                             <i class="fas fa-save me-1"></i> Exportar Cardápio
                         </button>
+                        
                         <button id="logoutBtn" class="btn btn-sm btn-outline-secondary" style="display: none;">
                             <i class="fas fa-sign-out-alt me-1"></i> Sair
                         </button>
@@ -129,13 +131,37 @@
                     
                     <section id="insumos-section" class="content-section" style="display: none;">
                         <h4 class="mb-3">Gestão de Insumos e Estoque</h4>
-                        <p class="alert alert-info">A lógica de insumos e financeiro será implementada após a confirmação do novo visual.</p>
-                        </section>
+                        
+                        <div class="d-flex justify-content-end mb-3">
+                            <button class="btn btn-success me-2" onclick="exportInsumos()">
+                                <i class="fas fa-save me-1"></i> Exportar Insumos
+                            </button>
+                            <button class="btn btn-primary" onclick="openAddInsumoModal()">
+                                <i class="fas fa-plus me-1"></i> Adicionar Insumo
+                            </button>
+                        </div>
+                        
+                        <div class="table-responsive">
+                            <table class="table table-striped table-hover">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Nome</th>
+                                        <th>Custo Unitário</th>
+                                        <th>Estoque Atual</th>
+                                        <th>Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="insumos-tbody">
+                                    </tbody>
+                            </table>
+                        </div>
+                    </section>
 
                     <section id="financeiro-section" class="content-section" style="display: none;">
                         <h4 class="mb-3">Visão Financeira</h4>
-                         <p class="alert alert-info">Esta seção mostrará custos, lucros e relatórios.</p>
-                        </section>
+                         <p class="alert alert-info">Esta seção mostrará custos, lucros e relatórios. Necessita da ligação entre Produtos e Insumos.</p>
+                    </section>
 
                 </div>
             </main>
@@ -149,6 +175,7 @@
         // VARIÁVEIS GLOBAIS E ELEMENTOS DOM
         // ==================================================================
         let produtos = []; 
+        let insumos = []; // NOVO: Array para insumos
         let logged = false;
 
         const loginModal = document.getElementById('login-screen');
@@ -157,7 +184,10 @@
         const doLoginBtn = document.getElementById('doLoginBtn');
         const logoutBtn = document.getElementById('logoutBtn');
         const currentUser = document.getElementById('currentUser');
+        
+        // Tabelas
         const menuTbody = document.getElementById('menu-tbody');
+        const insumosTbody = document.getElementById('insumos-tbody'); // Novo elemento
         
         // ==================================================================
         // FUNÇÕES DE NAVEGAÇÃO E UX
@@ -184,36 +214,27 @@
             document.querySelector(`[onclick="showSection('${sectionId}')"]`).classList.add('active');
         }
 
-        // Função placeholder para o botão "Adicionar Produto" (Implementação futura)
-        function openAddProductModal() {
-            alert("Abrir Modal de Adição de Produto (Funcionalidade a ser implementada)");
-            // Aqui você abrirá um modal Bootstrap ou exibirá o formulário.
-        }
+        // Funções placeholder (serão implementadas com formulários)
+        function openAddProductModal() { alert("Abrir Modal de Adição de Produto"); }
+        function openAddInsumoModal() { alert("Abrir Modal de Adição de Insumo"); }
 
         // ==================================================================
-        // FUNÇÕES DE MANIPULAÇÃO DE DADOS (CARREGAR E RENDERIZAR)
+        // FUNÇÕES DE MANIPULAÇÃO DE DADOS (PRODUTOS)
         // ==================================================================
         
-        // Função para carregar o menu usando a API segura
         async function loadMenu() {
             try {
                 const response = await fetch("/api/menu", { cache: "no-store" });
-                
-                if (!response.ok) {
-                    throw new Error(`Erro ao carregar cardápio. Status: ${response.status}`);
-                }
-
+                if (!response.ok) { throw new Error(`Erro: ${response.status}`); }
                 produtos = await response.json(); 
                 render(); 
             } catch (e) {
                 console.error("Erro ao carregar cardápio:", e);
                 produtos = []; 
                 render();
-                // alert("❌ Erro ao carregar cardápio do servidor. Verifique o console.");
             }
         }
         
-        // Função para renderizar a lista de produtos na tabela
         function render() {
             menuTbody.innerHTML = '';
             if (produtos.length === 0) {
@@ -236,25 +257,98 @@
             });
         }
 
-        // Exemplo de função de edição
-        function editP(id) {
-            alert(`Função Editar Produto ${id} (Implementar lógica do formulário)`);
-        }
-
-        // Exemplo de função de exclusão
-        function delP(id) {
+        function editP(id) { alert(`Função Editar Produto ${id} (Aguardando implementação do formulário)`); }
+        function delP(id) { 
             if (confirm(`Tem certeza que deseja excluir o produto ID ${id}?`)) {
                 produtos = produtos.filter(p => p.id !== id);
                 render();
-                alert('Produto excluído localmente. Não se esqueça de EXPORTAR para salvar!');
+                alert('Produto excluído localmente. Lembre-se de EXPORTAR!');
             }
         }
         
         // ==================================================================
+        // FUNÇÕES DE MANIPULAÇÃO DE DADOS (INSUMOS)
+        // ==================================================================
+
+        // Função para carregar a lista de insumos
+        async function loadInsumos() {
+            try {
+                const response = await fetch("/api/insumos", { cache: "no-store" });
+                if (!response.ok) { throw new Error(`Erro: ${response.status}`); }
+                insumos = await response.json(); 
+                renderInsumos();
+            } catch (e) {
+                console.error("Erro ao carregar insumos:", e);
+                insumos = []; 
+                renderInsumos();
+            }
+        }
+
+        // Função para renderizar a lista de insumos
+        function renderInsumos() {
+            insumosTbody.innerHTML = '';
+            if (insumos.length === 0) {
+                insumosTbody.innerHTML = '<tr><td colspan="5" class="text-center">Nenhum insumo cadastrado.</td></tr>';
+                return;
+            }
+
+            insumos.forEach(i => {
+                const row = insumosTbody.insertRow();
+                row.innerHTML = `
+                    <td>${i.id}</td>
+                    <td>${i.nome}</td>
+                    <td>R$ ${Number(i.custoUnitario).toFixed(2)} / ${i.unidade}</td>
+                    <td>${Number(i.estoqueAtual).toFixed(2)} ${i.unidade}</td>
+                    <td>
+                        <button class="btn btn-sm btn-warning me-1" onclick="editInsumo(${i.id})"><i class="fas fa-edit"></i></button>
+                        <button class="btn btn-sm btn-danger" onclick="delInsumo(${i.id})"><i class="fas fa-trash-alt"></i></button>
+                    </td>
+                `;
+            });
+        }
+
+        // Função de Exportação de Insumos (Chama a nova ROTA 6 no servidor)
+        async function exportInsumos() {
+            if (!logged) { alert("Você precisa estar logado para exportar os insumos."); return; }
+            if (!confirm("ATENÇÃO: Tem certeza que deseja ATUALIZAR o insumos.json no servidor?")) return;
+
+            try {
+                const response = await fetch('/api/insumos/export', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(insumos, null, 2),
+                });
+
+                const data = await response.json();
+
+                if (response.status === 401) {
+                     alert(`❌ Erro de Autorização. Sessão expirou.`);
+                     checkStatus();
+                } else if (data.success) {
+                    alert(`✅ Sucesso! ${data.message}`);
+                } else {
+                    alert(`❌ Erro ao exportar insumos: ${data.message}`);
+                }
+            } catch (error) {
+                console.error('Erro na requisição de exportação de insumos:', error);
+                alert('❌ Erro de conexão com o servidor.');
+            }
+        }
+
+        function editInsumo(id) { alert(`Editar Insumo ${id} (Aguardando implementação do formulário)`); }
+        function delInsumo(id) { 
+            if (confirm(`Tem certeza que deseja excluir o Insumo ID ${id}?`)) {
+                insumos = insumos.filter(i => i.id !== id);
+                renderInsumos();
+                alert('Insumo excluído localmente. Lembre-se de EXPORTAR!');
+            }
+        }
+
+
+        // ==================================================================
         // LÓGICA DE SEGURANÇA (API COM SESSÃO)
         // ==================================================================
 
-        // Função para verificar se o usuário está logado
         async function checkStatus() {
             if (document.cookie.includes('auth_session')) {
                 logged = true;
@@ -263,13 +357,13 @@
                 logoutBtn.style.display = "inline-block";
                 
                 showSection('products'); // Abre a seção de produtos
-                loadMenu(); // Carrega o cardápio
+                loadMenu(); 
+                loadInsumos(); // Carrega os insumos
             } else {
                 loginModal.style.display = "flex";
             }
         }
 
-        // Evento de Login que chama a API
         doLoginBtn.onclick = async () => {
             const user = loginUser.value;
             const pass = loginPass.value;
@@ -289,8 +383,9 @@
                     loginModal.style.display = "none";
                     logoutBtn.style.display = "inline-block";
                     
-                    showSection('products'); // Abre a seção de produtos
+                    showSection('products');
                     loadMenu(); 
+                    loadInsumos();
                     alert('Login efetuado com sucesso!');
                 } else {
                     alert(data.message);
@@ -300,7 +395,6 @@
             }
         };
 
-        // Evento de Logout que chama a API
         logoutBtn.onclick = async () => {
             try {
                 await fetch('/api/logout', { method: 'POST' });
@@ -314,35 +408,25 @@
             }
         };
 
-        // Evento de Exportação que usa a Sessão (PROTEGIDO)
+        // Evento de Exportação de PRODUTOS
         document.getElementById("exportBtn").onclick = async () => {
-            if (!logged) {
-                alert("Você precisa estar logado para exportar para o servidor.");
-                return;
-            }
-
+            if (!logged) { alert("Você precisa estar logado para exportar para o servidor."); return; }
             if (!confirm("ATENÇÃO: Tem certeza que deseja ATUALIZAR o menu.json no servidor?")) return;
 
             try {
                 const response = await fetch('/api/export', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    // Mapeia os dados dos produtos para salvar
                     body: JSON.stringify(produtos.map(p => ({
-                        id: p.id, 
-                        name: p.name, 
-                        desc: p.desc,
-                        price: p.price, 
-                        cat: p.cat, 
-                        imgUrl: p.imgUrl || "" // Garante que a imagem está no objeto
+                        id: p.id, name: p.name, desc: p.desc, price: p.price, cat: p.cat, imgUrl: p.imgUrl || "" 
                     })), null, 2),
                 });
 
                 const data = await response.json();
 
                 if (response.status === 401) {
-                     alert(`❌ Erro de Autorização. Sessão expirou. Faça login novamente.`);
-                     checkStatus(); // Volta para a tela de login
+                     alert(`❌ Erro de Autorização. Sessão expirou.`);
+                     checkStatus();
                 } else if (data.success) {
                     alert(`✅ Sucesso! ${data.message}`);
                 } else {
@@ -354,7 +438,7 @@
             }
         };
 
-        // Inicializa a verificação de status (deve ser a última coisa a ser chamada)
+        // Inicializa a verificação de status
         checkStatus();
 
     </script>
