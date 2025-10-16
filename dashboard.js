@@ -86,13 +86,18 @@
             });
         }
         
-        // NOVO: Abre o modal para ADIÇÃO
-        function openAddProductModal() {
-            document.getElementById('productModalLabel').innerText = 'Adicionar Novo Produto';
-            document.getElementById('product-form').reset();
-            document.getElementById('productId').value = ''; 
-            productModal.show();
-        }
+       // NOVO: Abre o modal para ADIÇÃO
+function openAddProductModal() {
+    // 1. Configura o título do modal
+    document.getElementById('productModalLabel').innerText = 'Adicionar Novo Produto';
+    // 2. Limpa o formulário
+    document.getElementById('product-form').reset(); 
+    // 3. Define o ID como vazio para indicar ADIÇÃO
+    document.getElementById('productId').value = ''; 
+    
+    // 4. Abre o popup usando o objeto Bootstrap
+    productModal.show();
+}
 
         // NOVO: Abre o modal para EDIÇÃO
         function editP(id) {
@@ -271,3 +276,4 @@
         checkStatus();
 
     </script>
+
