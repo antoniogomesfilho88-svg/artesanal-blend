@@ -1,0 +1,23 @@
+[
+  {
+    "id": 1,
+    "nome": "Carne Moída (kg)",
+    "custoUnitario": 25.00,
+    "unidade": "kg",
+    "estoqueAtual": 5.0
+  },
+  {
+    "id": 2,
+    "nome": "Pão de Hambúrguer (un)",
+    "custoUnitario": 1.50,
+    "unidade": "unidade",
+    "estoqueAtual": 100.0
+  },
+  {
+    "id": 3,
+    "nome": "Queijo Cheddar (kg)",
+    "custoUnitario": 35.00,
+    "unidade": "kg",
+    "estoqueAtual": 2.5
+  }
+]
