@@ -22,7 +22,7 @@ app.use(cookieParser());
 app.use(cors({ origin: '*', credentials: true })); // Permite conexões do seu front-end
 
 // Servir arquivos estáticos (HTML, JS, CSS do painel) - Assumindo que estão em 'public'
-app.use(express.static(join(__dirname, 'public')));
+app.use(express.static(join(__dirname)));
 
 // ==================================================================
 // SIMULAÇÃO DE BANCO DE DADOS (CARREGAMENTO DOS JSONs)
@@ -157,3 +157,4 @@ app.post('/api/composicoes/export', isAuthenticated, (req, res) => {
 app.listen(port, () => {
     console.log(`Servidor Node.js rodando na porta ${port}`);
 });
+
