@@ -54,6 +54,10 @@
             background-color: #f8d7da !important;
             border-color: #f5c6cb !important;
         }
+        /* Destaque para campo de inserção manual */
+        .bg-warning-light {
+            background-color: #fff3cd !important;
+        }
     </style>
 </head>
 <body>
@@ -265,32 +269,33 @@
                             <input type="text" class="form-control" id="insumoName" required>
                         </div>
 
+                        <div class="mb-3">
+                            <label for="insumoUnidade" class="form-label">Unidade de Medida (Ex: g, ml, un)</label>
+                            <input type="text" class="form-control" id="insumoUnidade" required value="g" oninput="calculateCustoUnitario()">
+                            <small class="form-text text-muted">Use **g** ou **ml** para cálculo automático. Use **un** para custo manual.</small>
+                        </div>
+
                         <div class="row">
                             <div class="col-6 mb-3">
                                 <label for="insumoPrecoTotal" class="form-label">Preço Total da Compra (R$)</label>
-                                <input type="number" step="0.01" class="form-control" id="insumoPrecoTotal" oninput="calculateCustoUnitario()">
+                                <input type="number" step="0.01" class="form-control" id="insumoPrecoTotal" oninput="calculateCustoUnitario()" required>
                             </div>
                             <div class="col-6 mb-3">
                                 <label for="insumoQuantidadeKg" class="form-label">Quantidade Total (em Kg ou Litros)</label>
-                                <input type="number" step="0.001" class="form-control" id="insumoQuantidadeKg" oninput="calculateCustoUnitario()">
+                                <input type="number" step="0.001" class="form-control" id="insumoQuantidadeKg" oninput="calculateCustoUnitario()" required>
                                 <small class="form-text text-danger">Ex: Use **3.6** para 3kg e 600g.</small>
                             </div>
                         </div>
                         <div class="mb-3">
                             <label for="insumoCusto" class="form-label">Custo Unitário Calculado (R$/unidade)</label>
                             <input type="number" step="0.0001" class="form-control" id="insumoCusto" required readonly> 
-                            <small class="form-text text-muted">Preenchido automaticamente (R$/grama ou R$/ml).</small>
+                            <small class="form-text text-muted">Preenchido automaticamente (R$/grama ou R$/ml). Para "un" edite manualmente.</small>
                         </div>
                         
                         <div class="mb-3">
-                            <label for="insumoUnidade" class="form-label">Unidade de Medida (Ex: g, ml, un)</label>
-                            <input type="text" class="form-control" id="insumoUnidade" required value="g" oninput="calculateCustoUnitario()">
-                            <small class="form-text text-muted">A unidade definida aqui (g ou ml) será usada na Ficha Técnica.</small>
-                        </div>
-                        <div class="mb-3">
                             <label for="insumoEstoque" class="form-label">Estoque Atual</label>
                             <input type="number" step="0.01" class="form-control" id="insumoEstoque" required>
-                            <small class="form-text text-muted">Use a unidade definida acima (Ex: 5000 para 5kg de carne, ou 100 para 100 unidades).</small>
+                            <small class="form-text text-muted">Use a unidade definida acima (Ex: 5000 para 5kg, ou 100 para 100 unidades).</small>
                         </div>
                     </form>
                 </div>
@@ -604,17 +609,41 @@
             });
         }
 
-        // FUNÇÃO DE CÁLCULO CORRIGIDA: Converte Kg/Litros para Gramas/ML
+        // FUNÇÃO DE CÁLCULO CORRIGIDA: Trata Kg/Litros e Unidades (UN)
         function calculateCustoUnitario() {
             const precoTotal = parseFloat(insumoPrecoTotal.value);
             const quantidadeKg = parseFloat(insumoQuantidadeKg.value); // Valor inserido em Kg ou Litros
             const unidade = insumoUnidade.value.toLowerCase();
 
-            if (isNaN(precoTotal) || isNaN(quantidadeKg) || quantidadeKg <= 0) {
-                insumoCusto.value = '';
-                return;
+            // 1. Limpa o campo de custo unitário por padrão
+            insumoCusto.value = '';
+            
+            // 2. Controla a disponibilidade do campo Custo Unitário (R$/unidade)
+            // Se for 'un', permite edição manual. Senão, é calculado.
+            if (unidade === 'un') {
+                insumoCusto.removeAttribute('readonly');
+                insumoCusto.classList.add('bg-warning-light'); // Apenas para feedback visual
+                insumoCusto.placeholder = 'Insira o custo por UNIDADE (R$/un)';
+                
+                // Remove a obrigatoriedade dos campos de cálculo (Preço Total e Quantidade Kg/L)
+                insumoPrecoTotal.removeAttribute('required');
+                insumoQuantidadeKg.removeAttribute('required');
+                return; // Encerra, esperando que o usuário digite o valor no insumoCusto
+            } else {
+                insumoCusto.setAttribute('readonly', true);
+                insumoCusto.classList.remove('bg-warning-light');
+                insumoCusto.placeholder = '';
+                
+                // Restaura a obrigatoriedade dos campos de cálculo
+                insumoPrecoTotal.setAttribute('required', true);
+                insumoQuantidadeKg.setAttribute('required', true);
+
+                if (isNaN(precoTotal) || isNaN(quantidadeKg) || quantidadeKg <= 0) {
+                    return; // Se os dados de cálculo estão incompletos, não faz nada
+                }
             }
             
+            // 3. Executa o cálculo para 'g' e 'ml'
             if (unidade === 'g') {
                 // Cálculo para Gramas: (Preço Total) / (Kg * 1000)
                 const quantidadeGramas = quantidadeKg * 1000;
@@ -626,8 +655,10 @@
                 const custoPorMl = precoTotal / quantidadeMl;
                 insumoCusto.value = custoPorMl.toFixed(4);
             } else {
-                 // Para 'un' ou outras, o campo fica vazio para inserção manual do custo unitário
-                 insumoCusto.value = ''; 
+                 // Caso o usuário digite uma unidade não reconhecida ('g', 'ml', 'un')
+                 alert("Unidade de medida não reconhecida. Use 'g', 'ml' ou 'un'.");
+                 insumoUnidade.value = 'g'; // Volta para o padrão
+                 calculateCustoUnitario(); // Recalcula
             }
         }
         
@@ -640,9 +671,18 @@
             document.getElementById('insumoModalLabel').innerText = 'Adicionar Novo Insumo';
             document.getElementById('insumo-form').reset();
             document.getElementById('insumoId').value = ''; 
-            insumoPrecoTotal.value = '';
-            insumoQuantidadeKg.value = ''; 
-            insumoCusto.value = '';
+            
+            // Garante que o campo de custo esteja readonly por padrão, forçando o cálculo Kg/g
+            insumoUnidade.value = 'g';
+            insumoCusto.setAttribute('readonly', true);
+            insumoCusto.classList.remove('bg-warning-light');
+            insumoCusto.placeholder = '';
+            
+            // Garante que os campos de cálculo estejam visíveis e obrigatórios no modo padrão 'g'
+            insumoPrecoTotal.setAttribute('required', true);
+            insumoQuantidadeKg.setAttribute('required', true);
+
+            calculateCustoUnitario(); // Limpa inputs de cálculo e ajusta readonly
             insumoModal.show();
         }
 
@@ -655,12 +695,28 @@
             document.getElementById('insumoId').value = insumo.id;
             document.getElementById('insumoName').value = insumo.nome;
             
+            // Limpa os campos de cálculo (já que são para a compra, não para o insumo)
             insumoPrecoTotal.value = ''; 
             insumoQuantidadeKg.value = ''; 
             
             insumoCusto.value = insumo.custoUnitario;
             document.getElementById('insumoUnidade').value = insumo.unidade;
             document.getElementById('insumoEstoque').value = insumo.estoqueAtual;
+
+            // Define readonly / editável baseado na unidade carregada
+            if (insumo.unidade.toLowerCase() === 'un') {
+                 insumoCusto.removeAttribute('readonly');
+                 insumoCusto.classList.add('bg-warning-light');
+                 insumoCusto.placeholder = 'Insira o custo por UNIDADE (R$/un)';
+                 insumoPrecoTotal.removeAttribute('required');
+                 insumoQuantidadeKg.removeAttribute('required');
+            } else {
+                 insumoCusto.setAttribute('readonly', true);
+                 insumoCusto.classList.remove('bg-warning-light');
+                 insumoCusto.placeholder = '';
+                 insumoPrecoTotal.setAttribute('required', true);
+                 insumoQuantidadeKg.setAttribute('required', true);
+            }
 
             insumoModal.show();
         }
