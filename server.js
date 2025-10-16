@@ -81,6 +81,51 @@ app.post('/api/export', (req, res) => {
         return res.status(401).json({ success: false, message: 'Acesso não autorizado. Sessão inválida.' });
     }
 
+    // ROTA 5: OBTER LISTA DE INSUMOS (API)
+app.get('/api/insumos', (req, res) => {
+    const filePath = join(__dirname, 'insumos.json'); 
+
+    fs.readFile(filePath, 'utf8', (err, data) => {
+        if (err) {
+            console.error('Erro ao ler insumos.json:', err);
+            return res.status(500).json({ success: false, message: 'Erro interno ao carregar insumos.' });
+        }
+        
+        res.setHeader('Content-Type', 'application/json');
+        res.send(data);
+    });
+});
+
+
+// ROTA 6: EXPORTAÇÃO DE INSUMOS (PROTEGIDA POR SESSÃO)
+app.post('/api/insumos/export', (req, res) => {
+    // 1. Verifica a Sessão
+    const isAuthenticated = req.signedCookies.auth_session === 'loggedIn';
+
+    if (!isAuthenticated) {
+        return res.status(401).json({ success: false, message: 'Acesso não autorizado. Sessão inválida.' });
+    }
+
+    // 2. Continua com a lógica de salvar o arquivo
+    const insumosData = req.body;
+
+    if (!insumosData || !Array.isArray(insumosData)) {
+        return res.status(400).json({ success: false, message: 'Dados de insumos inválidos.' });
+    }
+
+    // Caminho para salvar insumos.json na raiz
+    const filePath = join(__dirname, 'insumos.json'); 
+
+    // 3. Salvando o arquivo
+    fs.writeFile(filePath, JSON.stringify(insumosData, null, 2), (err) => {
+        if (err) {
+            console.error('Erro ao salvar insumos.json:', err);
+            return res.status(500).json({ success: false, message: 'Erro interno ao salvar o arquivo.' });
+        }
+        res.json({ success: true, message: 'insumos.json atualizado no servidor!' });
+    });
+});
+
     // 2. Continua com a lógica de salvar o arquivo
     const menuData = req.body;
 
@@ -120,3 +165,4 @@ app.get('/', (req, res) => {
 app.listen(PORT, () => {
     console.log(`Server rodando na porta ${PORT}`);
 });
+
