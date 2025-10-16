@@ -1,36 +1,34 @@
 import express from 'express';
-// 1. IMPORTAÇÃO DO CLIENTE MONGODB
+// Importação dos módulos necessários do MongoDB
 import { MongoClient, ObjectId } from 'mongodb'; 
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
-// import fs from 'fs'; // <-- REMOVIDO: Não precisamos mais do sistema de arquivos
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
 
 // ==================================================================
-// CONFIGURAÇÃO INICIAL E ACESSO AO DIRETÓRIO
+// CONFIGURAÇÃO INICIAL
 // ==================================================================
 
 const app = express();
+// O Render define a porta através da variável de ambiente PORT
 const port = process.env.PORT || 3000;
 
-// Configuração para ES Modules para obter o __dirname (caminho absoluto)
+// Configuração para ES Modules para obter o __dirname
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 // Middlewares
 app.use(express.json());
 app.use(cookieParser());
+// Permite conexões de qualquer origem durante o desenvolvimento
 app.use(cors({ origin: '*', credentials: true })); 
-
-// Servir arquivos estáticos (HTML, JS, CSS do painel) - Assumindo que estão na raiz
-app.use(express.static(join(__dirname)));
 
 // ==================================================================
 // CONFIGURAÇÃO E CONEXÃO COM O MONGODB
 // ==================================================================
 
-// 2. USA A VARIÁVEL DE AMBIENTE MONGO_URL
+// Obtém a URL de conexão do MongoDB Atlas da variável de ambiente MONGO_URL
 const uri = process.env.MONGO_URL; 
 const client = new MongoClient(uri); 
 
@@ -42,14 +40,14 @@ const collections = {
     composicoes: 'composicoes'
 };
 
-let db; // Variável para a conexão ativa
+let db; // Variável para a conexão ativa com o banco de dados
 
 // Função para Iniciar o Servidor e Conectar ao DB
 async function run() {
     try {
         await client.connect();
         db = client.db(dbName);
-        console.log("🎉 Conectado com sucesso ao MongoDB Atlas!");
+        console.log("🎉 Conectado com sucesso ao MongoDB Atlas!"); // Log de sucesso
 
         // ------------------------------------------
         // INICIALIZAÇÃO DO SERVIDOR HTTP (APÓS CONEXÃO COM O BANCO)
@@ -60,6 +58,7 @@ async function run() {
 
     } catch (error) {
         console.error("❌ ERRO CRÍTICO ao conectar ao MongoDB ou iniciar o servidor:", error);
+        // Encerra o processo em caso de falha crítica na conexão
         process.exit(1); 
     }
 }
@@ -68,7 +67,7 @@ async function run() {
 run();
 
 // ==================================================================
-// ROTAS DE SEGURANÇA E AUTENTICAÇÃO (MANTIDAS)
+// ROTAS DE SEGURANÇA E AUTENTICAÇÃO
 // ==================================================================
 
 const SECRET_PASSWORD = process.env.ADMIN_PASS || '1234'; 
@@ -76,7 +75,13 @@ const SECRET_PASSWORD = process.env.ADMIN_PASS || '1234';
 app.post('/api/login', (req, res) => {
     const { user, pass } = req.body;
     if (user === 'admin' && pass === SECRET_PASSWORD) {
-        res.cookie('auth_session', 'true', { httpOnly: true, maxAge: 3600000 });
+        // Define o cookie de sessão seguro
+        res.cookie('auth_session', 'true', { 
+            httpOnly: true, 
+            maxAge: 3600000, // 1 hora
+            // Importante: Usar "secure" em produção (Render usa HTTPS)
+            secure: process.env.NODE_ENV === 'production' 
+        });
         return res.json({ success: true, message: 'Login realizado!' });
     }
     res.status(401).json({ success: false, message: 'Usuário ou senha inválidos.' });
@@ -96,58 +101,63 @@ function isAuthenticated(req, res, next) {
 }
 
 // ==================================================================
-// ROTAS DE LEITURA (GET) - LENDO DO MONGODB
+// ROTAS DE API (GET/POST) - PRIORIDADE MÁXIMA
+// Estas rotas devem vir antes de qualquer rota estática ou fallback (resolve Cannot GET)
 // ==================================================================
+
+// ROTA DE TESTE 
+app.get('/teste', (req, res) => {
+    res.send("O servidor está vivo e esta rota funciona!");
+});
+
+
+// ----------------------------------------------------
+// ROTAS DE LEITURA (GET) - LENDO DO MONGODB
+// ----------------------------------------------------
 
 app.get('/api/menu', async (req, res) => {
     try {
-        // Busca todos os documentos da coleção 'menuItems'
         const data = await db.collection(collections.menu).find({}).toArray();
         res.json(data);
     } catch (error) {
         console.error("Erro ao ler menu do DB:", error);
-        res.status(500).json([]);
+        res.status(500).json({ error: 'Falha ao buscar dados do cardápio.' });
     }
 });
 
 app.get('/api/insumos', async (req, res) => {
     try {
-        // Busca todos os documentos da coleção 'insumos'
         const data = await db.collection(collections.insumos).find({}).toArray();
         res.json(data);
     } catch (error) {
         console.error("Erro ao ler insumos do DB:", error);
-        res.status(500).json([]);
+        res.status(500).json({ error: 'Falha ao buscar dados de insumos.' });
     }
 });
 
 app.get('/api/composicoes', async (req, res) => {
     try {
-        // Busca todos os documentos da coleção 'composicoes'
         const data = await db.collection(collections.composicoes).find({}).toArray();
         res.json(data);
     } catch (error) {
         console.error("Erro ao ler composições do DB:", error);
-        res.status(500).json([]);
+        res.status(500).json({ error: 'Falha ao buscar dados de composições.' });
     }
 });
 
 
-// ==================================================================
+// ----------------------------------------------------
 // ROTAS DE ESCRITA (POST) - ESCREVENDO NO MONGODB
-// ==================================================================
+// ----------------------------------------------------
 
-// 1. Rota de Exportação do Menu (POST /api/export)
 app.post('/api/export', isAuthenticated, async (req, res) => {
     try {
-        const newMenuData = req.body; // Array de itens do menu
-
+        const newMenuData = req.body; 
         const collection = db.collection(collections.menu);
         
-        // 1. Deleta todo o conteúdo anterior (simulando a substituição do arquivo JSON)
+        // Substitui todos os documentos existentes no menu pela nova lista
         await collection.deleteMany({});
         
-        // 2. Insere os novos dados (se o array não estiver vazio)
         if (newMenuData.length > 0) {
              await collection.insertMany(newMenuData);
         }
@@ -159,11 +169,9 @@ app.post('/api/export', isAuthenticated, async (req, res) => {
     }
 });
 
-// 2. Rota de Exportação de Insumos (POST /api/insumos/export)
 app.post('/api/insumos/export', isAuthenticated, async (req, res) => {
     try {
         const newInsumosData = req.body;
-
         const collection = db.collection(collections.insumos);
         
         await collection.deleteMany({});
@@ -179,11 +187,9 @@ app.post('/api/insumos/export', isAuthenticated, async (req, res) => {
     }
 });
 
-// 3. Rota de Exportação de Composições (POST /api/composicoes/export)
 app.post('/api/composicoes/export', isAuthenticated, async (req, res) => {
     try {
         const newComposicoesData = req.body;
-
         const collection = db.collection(collections.composicoes);
         
         await collection.deleteMany({});
@@ -197,4 +203,19 @@ app.post('/api/composicoes/export', isAuthenticated, async (req, res) => {
         console.error("ERRO CRÍTICO (ESCRITA NO MONGODB) - composicoes:", error);
         res.status(500).json({ success: false, message: 'Erro de Servidor: Falha ao salvar no banco de dados.' });
     }
+});
+
+// ==================================================================
+// SERVIÇO DE ARQUIVOS ESTÁTICOS E ROTA DE FALLBACK
+// ==================================================================
+
+// Servir arquivos estáticos (HTML, JS, CSS do painel)
+// Isso deve vir após as rotas de API para evitar conflitos
+app.use(express.static(join(__dirname)));
+
+// ROTA FALLBACK (Catch-All):
+// Qualquer requisição que não foi tratada pelas rotas /api/* ou /teste
+// será redirecionada para o index.html (seu frontend principal).
+app.get('*', (req, res) => {
+    res.sendFile(join(__dirname, 'index.html'));
 });
