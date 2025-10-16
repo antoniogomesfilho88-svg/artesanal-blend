@@ -1,367 +1,4 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Painel de Gestão - Lanchonete</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
-    
-    <style>
-        /* Estilos básicos para o layout do Dashboard */
-        body {
-            display: flex;
-            min-height: 100vh;
-            background-color: #f8f9fa;
-        }
-        #sidebar {
-            width: 250px;
-            background-color: #343a40;
-            color: white;
-            padding: 15px;
-            flex-shrink: 0;
-        }
-        #content {
-            flex-grow: 1;
-            padding: 20px;
-        }
-        .nav-link.active {
-            background-color: #495057 !important;
-            border-radius: 5px;
-        }
-        /* Estilo para a tela de login (que sobrepõe tudo) */
-        #login-screen {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.8);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 1050;
-        }
-        .login-card {
-            width: 350px;
-            padding: 30px;
-            border-radius: 10px;
-            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
-            background: #fff;
-        }
-        /* Destaque para estoque baixo */
-        .table-danger-light {
-            background-color: #f8d7da !important;
-            border-color: #f5c6cb !important;
-        }
-    </style>
-</head>
-<body>
-
-    <div id="login-screen" style="display: none;">
-        <div class="login-card">
-            <h4 class="mb-4 text-center">Login do Painel</h4>
-            <div class="mb-3">
-                <label for="loginUser" class="form-label">Usuário</label>
-                <input type="text" class="form-control" id="loginUser" value="admin">
-            </div>
-            <div class="mb-3">
-                <label for="loginPass" class="form-label">Senha</label>
-                <input type="password" class="form-control" id="loginPass" value="12345">
-            </div>
-            <button class="btn btn-primary w-100" id="doLoginBtn">Entrar</button>
-            <p class="mt-3 text-center text-muted">Acesso restrito.</p>
-        </div>
-    </div>
-    
-    <div id="sidebar">
-        <h4 class="text-white mb-4">Gestão Lanchonete</h4>
-        <ul class="nav flex-column">
-            <li class="nav-item">
-                <a class="nav-link text-white active" href="#" onclick="showSection('products')">
-                    <i class="fas fa-burger"></i> Produtos (Cardápio)
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link text-white" href="#" onclick="showSection('insumos')">
-                    <i class="fas fa-leaf"></i> Insumos (Estoque)
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link text-white" href="#" onclick="showFinanceiroSection()">
-                    <i class="fas fa-dollar-sign"></i> Vendas e Financeiro
-                </a>
-            </li>
-        </ul>
-        
-        <div class="mt-5 pt-5 border-top border-secondary">
-            <p class="mb-1">Logado como: <strong id="currentUser">—</strong></p>
-            <button class="btn btn-sm btn-danger mt-2" id="logoutBtn" style="display: none;">Sair</button>
-        </div>
-    </div>
-
-    <div id="content">
-        <h2 id="main-title" class="mb-4">Gerenciamento de Produtos</h2>
-
-        <section id="products-section" class="content-section">
-            <div class="d-flex justify-content-between mb-3">
-                <button class="btn btn-success" onclick="openAddProductModal()">
-                    <i class="fas fa-plus"></i> Novo Produto
-                </button>
-                <button class="btn btn-warning" id="exportBtn">
-                    <i class="fas fa-upload"></i> Exportar Tudo (Produtos e Fichas)
-                </button>
-            </div>
-
-            <table class="table table-striped table-hover">
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Nome</th>
-                        <th>Preço Venda</th>
-                        <th>Custo Produção</th>
-                        <th>Ações</th>
-                    </tr>
-                </thead>
-                <tbody id="menu-tbody">
-                    <tr><td colspan="5" class="text-center text-muted">Carregando produtos...</td></tr>
-                </tbody>
-            </table>
-        </section>
-
-        <section id="insumos-section" class="content-section" style="display: none;">
-            <div class="d-flex justify-content-between mb-3">
-                <button class="btn btn-success" onclick="openAddInsumoModal()">
-                    <i class="fas fa-plus"></i> Novo Insumo
-                </button>
-                <button class="btn btn-primary" onclick="exportInsumos()">
-                    <i class="fas fa-cloud-upload-alt"></i> Exportar Insumos (Estoque)
-                </button>
-            </div>
-
-            <p class="alert alert-info">Linhas destacadas em vermelho indicam estoque baixo (abaixo de 500g/ml ou 5 un).</p>
-
-            <table class="table table-striped table-hover">
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Nome</th>
-                        <th>Custo Unitário</th>
-                        <th>Estoque Atual</th>
-                        <th>Ações</th>
-                    </tr>
-                </thead>
-                <tbody id="insumos-tbody">
-                    <tr><td colspan="5" class="text-center text-muted">Carregando insumos...</td></tr>
-                </tbody>
-            </table>
-        </section>
-
-        <section id="financeiro-section" class="content-section" style="display: none;">
-            
-            <h3 class="mb-4">Resumo Financeiro Médio (Baseado nas Fichas Técnicas)</h3>
-            <div class="row mb-5">
-                <div class="col-md-4">
-                    <div class="card text-white bg-dark mb-3">
-                        <div class="card-header">Total de Produtos Cadastrados</div>
-                        <div class="card-body">
-                            <h5 class="card-title display-4" id="totalProdutos">0</h5>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="card text-white bg-primary mb-3">
-                        <div class="card-header">Custo Médio por Produto</div>
-                        <div class="card-body">
-                            <h5 class="card-title display-4" id="resumoCusto">R$ 0.00</h5>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="card text-white bg-success mb-3">
-                        <div class="card-header">Lucro Bruto Médio por Produto</div>
-                        <div class="card-body">
-                            <h5 class="card-title display-4" id="resumoLucro">R$ 0.00</h5>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <h3 class="mb-4">Simulação de Vendas e Baixa de Estoque</h3>
-            <div class="card p-4">
-                <p class="alert alert-warning"><i class="fas fa-info-circle"></i> **Atenção:** Esta ação registra uma venda e **remove automaticamente** a quantidade de insumos do seu estoque.</p>
-                <div class="row g-3 align-items-end">
-                    <div class="col-md-6">
-                        <label for="vendaProdutoSelect" class="form-label">Produto Vendido</label>
-                        <select class="form-select" id="vendaProdutoSelect">
-                            <option value="">Carregando produtos...</option>
-                        </select>
-                    </div>
-                    <div class="col-md-3">
-                        <label for="vendaQuantidade" class="form-label">Quantidade</label>
-                        <input type="number" class="form-control" id="vendaQuantidade" value="1" min="1">
-                    </div>
-                    <div class="col-md-3">
-                        <button class="btn btn-success w-100" onclick="processSaleAndLowerStock()">
-                            <i class="fas fa-cash-register"></i> Registrar Venda
-                        </button>
-                    </div>
-                </div>
-            </div>
-            
-        </section>
-
-    </div> <div class="modal fade" id="productModal" tabindex="-1" aria-labelledby="productModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="productModalLabel">Adicionar/Editar Produto</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <form id="product-form">
-                        <input type="hidden" id="productId">
-                        <div class="mb-3">
-                            <label for="productName" class="form-label">Nome do Produto</label>
-                            <input type="text" class="form-control" id="productName" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="productPrice" class="form-label">Preço de Venda (R$)</label>
-                            <input type="number" step="0.01" class="form-control" id="productPrice" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="productCat" class="form-label">Categoria</label>
-                            <input type="text" class="form-control" id="productCat" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="productDesc" class="form-label">Descrição</label>
-                            <textarea class="form-control" id="productDesc"></textarea>
-                        </div>
-                        <div class="mb-3">
-                            <label for="productImgUrl" class="form-label">URL da Imagem</label>
-                            <input type="text" class="form-control" id="productImgUrl">
-                        </div>
-                    </form>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="button" class="btn btn-primary" id="saveProductBtn">Salvar Produto</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="modal fade" id="insumoModal" tabindex="-1" aria-labelledby="insumoModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="insumoModalLabel">Adicionar/Editar Insumo</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <form id="insumo-form">
-                        <input type="hidden" id="insumoId"> <div class="mb-3">
-                            <label for="insumoName" class="form-label">Nome do Insumo</label>
-                            <input type="text" class="form-control" id="insumoName" required>
-                        </div>
-
-                        <div class="row">
-                            <div class="col-6 mb-3">
-                                <label for="insumoPrecoTotal" class="form-label">Preço Total da Compra (R$)</label>
-                                <input type="number" step="0.01" class="form-control" id="insumoPrecoTotal" oninput="calculateCustoUnitario()">
-                            </div>
-                            <div class="col-6 mb-3">
-                                <label for="insumoQuantidadeKg" class="form-label">Quantidade Total (em Kg ou Litros)</label>
-                                <input type="number" step="0.001" class="form-control" id="insumoQuantidadeKg" oninput="calculateCustoUnitario()">
-                                <small class="form-text text-danger">Ex: Use **3.6** para 3kg e 600g.</small>
-                            </div>
-                        </div>
-                        <div class="mb-3">
-                            <label for="insumoCusto" class="form-label">Custo Unitário Calculado (R$/unidade)</label>
-                            <input type="number" step="0.0001" class="form-control" id="insumoCusto" required readonly> 
-                            <small class="form-text text-muted">Preenchido automaticamente (R$/grama ou R$/ml).</small>
-                        </div>
-                        
-                        <div class="mb-3">
-                            <label for="insumoUnidade" class="form-label">Unidade de Medida (Ex: g, ml, un)</label>
-                            <input type="text" class="form-control" id="insumoUnidade" required value="g" oninput="calculateCustoUnitario()">
-                            <small class="form-text text-muted">A unidade definida aqui (g ou ml) será usada na Ficha Técnica.</small>
-                        </div>
-                        <div class="mb-3">
-                            <label for="insumoEstoque" class="form-label">Estoque Atual</label>
-                            <input type="number" step="0.01" class="form-control" id="insumoEstoque" required>
-                            <small class="form-text text-muted">Use a unidade definida acima (Ex: 5000 para 5kg de carne, ou 100 para 100 unidades).</small>
-                        </div>
-                    </form>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="button" class="btn btn-primary" id="saveInsumoBtn">Salvar Insumo</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="modal fade" id="compositionModal" tabindex="-1" aria-labelledby="compositionModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="compositionModalLabel">Ficha Técnica: <span id="compositionProductName">Nome do Produto</span></h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <input type="hidden" id="currentProductId">
-
-                    <h6 class="mb-3">Adicionar Insumo à Ficha</h6>
-                    <div class="row g-3 mb-4">
-                        <div class="col-md-6">
-                            <select class="form-select" id="compInsumoSelect">
-                                <option value="">Selecione um Insumo...</option>
-                            </select>
-                        </div>
-                        <div class="col-md-3">
-                            <input type="number" step="0.01" class="form-control" id="compInsumoUso" placeholder="Quantidade de Uso">
-                        </div>
-                        <div class="col-md-3">
-                            <button class="btn btn-info w-100" onclick="addInsumoToComposition()">
-                                <i class="fas fa-plus"></i> Adicionar
-                            </button>
-                        </div>
-                        <div class="col-12">
-                            <small class="text-muted">A quantidade de uso deve ser na mesma unidade do insumo (g, ml, ou un).</small>
-                        </div>
-                    </div>
-
-                    <h6 class="mb-3">Insumos na Ficha Técnica:</h6>
-                    <table class="table table-bordered">
-                        <thead>
-                            <tr>
-                                <th>Insumo</th>
-                                <th>Unidade</th>
-                                <th>Custo Unitário (R$/unidade)</th>
-                                <th>Uso na Receita</th>
-                                <th>Custo Total (R$)</th>
-                                <th>Remover</th>
-                            </tr>
-                        </thead>
-                        <tbody id="composition-tbody">
-                            </tbody>
-                        <tfoot>
-                            <tr>
-                                <td colspan="4" class="text-end"><strong>Custo Total da Produção:</strong></td>
-                                <td colspan="2"><strong id="totalCostDisplay">R$ 0.00</strong></td>
-                            </tr>
-                        </tfoot>
-                    </table>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
     <script>
         // ==================================================================
@@ -399,7 +36,8 @@
 
         // ELEMENTOS DO MODAL DE INSUMO (PARA CÁLCULO)
         const insumoPrecoTotal = document.getElementById('insumoPrecoTotal');
-        const insumoQuantidadeKg = document.getElementById('insumoQuantidadeKg'); 
+        // ATUALIZADO: Usando o novo ID
+        const insumoQuantidadeGramaMl = document.getElementById('insumoQuantidadeGramaMl'); 
         const insumoCusto = document.getElementById('insumoCusto');
         const insumoUnidade = document.getElementById('insumoUnidade'); 
 
@@ -604,36 +242,34 @@
             });
         }
 
-        // FUNÇÃO DE CÁLCULO CORRIGIDA: Converte Kg/Litros para Gramas/ML
+        // NOVO CÁLCULO: Recebe Quantidade Total na mesma unidade de estoque (g/ml/un)
         function calculateCustoUnitario() {
             const precoTotal = parseFloat(insumoPrecoTotal.value);
-            const quantidadeKg = parseFloat(insumoQuantidadeKg.value); // Valor inserido em Kg ou Litros
+            // ATUALIZADO: Usando o novo ID
+            const quantidadeTotal = parseFloat(insumoQuantidadeGramaMl.value); 
             const unidade = insumoUnidade.value.toLowerCase();
 
-            if (isNaN(precoTotal) || isNaN(quantidadeKg) || quantidadeKg <= 0) {
+            if (isNaN(precoTotal) || isNaN(quantidadeTotal) || quantidadeTotal <= 0) {
                 insumoCusto.value = '';
                 return;
             }
             
-            if (unidade === 'g') {
-                // Cálculo para Gramas: (Preço Total) / (Kg * 1000)
-                const quantidadeGramas = quantidadeKg * 1000;
-                const custoPorGrama = precoTotal / quantidadeGramas;
-                insumoCusto.value = custoPorGrama.toFixed(4);
-            } else if (unidade === 'ml') {
-                // Cálculo para Mililitros: (Preço Total) / (Litros * 1000)
-                const quantidadeMl = quantidadeKg * 1000;
-                const custoPorMl = precoTotal / quantidadeMl;
-                insumoCusto.value = custoPorMl.toFixed(4);
+            // Só faz o cálculo automático se a unidade for g ou ml
+            if (unidade === 'g' || unidade === 'ml') {
+                // Cálculo direto: Preço / Quantidade (em Gramas ou ML)
+                const custoPorUnidade = precoTotal / quantidadeTotal;
+                
+                // Limita a 4 casas decimais para precisão
+                insumoCusto.value = custoPorUnidade.toFixed(4);
             } else {
-                 // Para 'un' ou outras, o campo fica vazio para inserção manual do custo unitário
+                 // Se for 'un' ou outra unidade, o usuário deve inserir o Custo Unitário manualmente, e o campo de cálculo é zerado.
                  insumoCusto.value = ''; 
             }
         }
         
-        // Adiciona a função de cálculo aos eventos de input
+        // Adiciona a função de cálculo ao 'oninput' dos campos de cálculo (NOVO ID)
         insumoPrecoTotal.oninput = calculateCustoUnitario;
-        insumoQuantidadeKg.oninput = calculateCustoUnitario; 
+        insumoQuantidadeGramaMl.oninput = calculateCustoUnitario; 
         insumoUnidade.oninput = calculateCustoUnitario;
         
         function openAddInsumoModal() {
@@ -641,7 +277,8 @@
             document.getElementById('insumo-form').reset();
             document.getElementById('insumoId').value = ''; 
             insumoPrecoTotal.value = '';
-            insumoQuantidadeKg.value = ''; 
+            // ATUALIZADO: Usando o novo ID
+            insumoQuantidadeGramaMl.value = ''; 
             insumoCusto.value = '';
             insumoModal.show();
         }
@@ -656,7 +293,8 @@
             document.getElementById('insumoName').value = insumo.nome;
             
             insumoPrecoTotal.value = ''; 
-            insumoQuantidadeKg.value = ''; 
+            // ATUALIZADO: Usando o novo ID
+            insumoQuantidadeGramaMl.value = ''; 
             
             insumoCusto.value = insumo.custoUnitario;
             document.getElementById('insumoUnidade').value = insumo.unidade;
@@ -674,7 +312,7 @@
             const estoqueAtual = parseFloat(document.getElementById('insumoEstoque').value);
             
             if (!nome || isNaN(custoUnitario) || isNaN(estoqueAtual) || custoUnitario <= 0) {
-                alert("Nome, Custo Unitário (deve ser maior que zero) e Estoque são obrigatórios.");
+                alert("Nome, Custo Unitário (deve ser maior que zero) e Estoque são obrigatórios. Use o cálculo de R$/Quantidade ou digite manualmente.");
                 return;
             }
 
@@ -958,7 +596,6 @@
         // ==================================================================
         
         async function loadCompositions() {
-            // Em uma aplicação real, aqui você faria um fetch para carregar o arquivo 'composicoes.json'
             composicoes = {}; 
         }
 
@@ -1102,6 +739,3 @@
         checkStatus();
 
     </script>
-
-</body>
-</html>
