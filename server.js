@@ -1,168 +1,148 @@
-import express from 'express';
-import { fileURLToPath } from 'url';
-import { dirname, join } from 'path';
-import fs from 'fs';
-import cookieParser from 'cookie-parser'; 
-import cors from 'cors';
+const app = express();
+const port = process.env.PORT || 3000;
 
-// Necessário para obter o __dirname em módulos ES
+// Configuração para ES Modules para obter o __dirname
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-const app = express();
-const PORT = process.env.PORT || 3000;
-
-// Configurações de Segurança
-const ADMIN_USER = 'admin'; // Seu usuário de login
-const ADMIN_PASS = '1234';  // Sua senha de login
-// Chave secreta para assinar o cookie de sessão. Configure no Render!
-const COOKIE_SECRET = process.env.COOKIE_SECRET || 'SUA_CHAVE_SECRETA_MUITO_LONGA_123456789'; 
-
 // Middlewares
-app.use(cors({ 
-    origin: '*', 
-    credentials: true 
-}));
-app.use(express.json({ limit: '5mb' }));
-app.use(cookieParser(COOKIE_SECRET)); 
+app.use(express.json());
+app.use(cookieParser());
+app.use(cors({ origin: '*', credentials: true })); // Ajuste a origem se necessário
 
-// CORREÇÃO: Serve arquivos estáticos (HTML, CSS, JS, Imagens) da raiz do projeto
-app.use(express.static(__dirname)); 
-
+// Servir arquivos estáticos (HTML, JS, CSS do painel)
+app.use(express.static(join(__dirname, 'public')));
 
 // ==================================================================
-// ROTAS DA API
+// SIMULAÇÃO DE BANCO DE DADOS (CARREGAMENTO DOS JSONs)
 // ==================================================================
 
-// ROTA 1: ROTA DE LOGIN
+// Função genérica para carregar JSON de forma segura
+function loadJSON(fileName) {
+    try {
+        const filePath = join(__dirname, fileName);
+        if (fs.existsSync(filePath)) {
+            const data = fs.readFileSync(filePath, 'utf8');
+            return JSON.parse(data);
+        }
+        return []; // Retorna array vazio se o arquivo não existir
+    } catch (error) {
+        console.error(`Erro ao carregar ${fileName}:`, error);
+        return [];
+    }
+}
+
+// ==================================================================
+// ROTAS DE SEGURANÇA (MANTIDAS SIMPLES)
+// ==================================================================
+
+const SECRET_PASSWORD = process.env.ADMIN_PASS || '1234'; // Use variável de ambiente!
+
 app.post('/api/login', (req, res) => {
     const { user, pass } = req.body;
-
-    if (user === ADMIN_USER && pass === ADMIN_PASS) {
-        // Gera um cookie de sessão assinado (seguro)
-        res.cookie('auth_session', 'loggedIn', { 
-            signed: true, 
-            httpOnly: true, 
-            maxAge: 1000 * 60 * 60 * 24 
-        });
-        return res.json({ success: true, message: 'Login efetuado.' });
-    } else {
-        return res.status(401).json({ success: false, message: 'Usuário ou senha inválidos.' });
+    if (user === 'admin' && pass === SECRET_PASSWORD) {
+        // Define um cookie de sessão simples (auth_session=true)
+        res.cookie('auth_session', 'true', { httpOnly: true, maxAge: 3600000 }); // 1 hora
+        return res.json({ success: true, message: 'Login realizado!' });
     }
+    res.status(401).json({ success: false, message: 'Usuário ou senha inválidos.' });
 });
 
-// ROTA 2: ROTA DE LOGOUT
 app.post('/api/logout', (req, res) => {
     res.clearCookie('auth_session');
-    return res.json({ success: true, message: 'Logout efetuado.' });
+    res.json({ success: true });
 });
 
-// ROTA 3: OBTER CARDÁPIO (NOVO: Para carregar os dados no dashboard e no cardápio principal)
+// Middleware de Autenticação para todas as rotas de edição
+function isAuthenticated(req, res, next) {
+    if (req.cookies.auth_session === 'true') {
+        return next();
+    }
+    // O status 401 é crucial para o Front-end saber que a sessão expirou
+    res.status(401).json({ success: false, message: 'Sessão expirada. Faça login novamente.' });
+}
+
+// ==================================================================
+// ROTAS DE LEITURA (GET)
+// ==================================================================
+
 app.get('/api/menu', (req, res) => {
-    const filePath = join(__dirname, 'menu.json'); 
-
-    fs.readFile(filePath, 'utf8', (err, data) => {
-        if (err) {
-            console.error('Erro ao ler menu.json:', err);
-            return res.status(500).json({ success: false, message: 'Erro interno ao carregar o cardápio.' });
-        }
-        
-        res.setHeader('Content-Type', 'application/json');
-        res.send(data);
-    });
+    const menu = loadJSON('menu.json');
+    res.json(menu);
 });
 
-// ROTA 4: EXPORTAÇÃO (PROTEGIDA POR COOKIE DE SESSÃO)
-app.post('/api/export', (req, res) => {
-    // 1. Verifica a Sessão
-    const isAuthenticated = req.signedCookies.auth_session === 'loggedIn';
-
-    if (!isAuthenticated) {
-        return res.status(401).json({ success: false, message: 'Acesso não autorizado. Sessão inválida.' });
-    }
-
-    // ROTA 5: OBTER LISTA DE INSUMOS (API)
 app.get('/api/insumos', (req, res) => {
-    const filePath = join(__dirname, 'insumos.json'); 
+    const insumos = loadJSON('insumos.json');
+    res.json(insumos);
+});
 
-    fs.readFile(filePath, 'utf8', (err, data) => {
-        if (err) {
-            console.error('Erro ao ler insumos.json:', err);
-            return res.status(500).json({ success: false, message: 'Erro interno ao carregar insumos.' });
-        }
-        
-        res.setHeader('Content-Type', 'application/json');
-        res.send(data);
-    });
+app.get('/api/composicoes', (req, res) => {
+    const composicoes = loadJSON('composicoes.json');
+    res.json(composicoes);
 });
 
 
-// ROTA 6: EXPORTAÇÃO DE INSUMOS (PROTEGIDA POR SESSÃO)
-app.post('/api/insumos/export', (req, res) => {
-    // 1. Verifica a Sessão
-    const isAuthenticated = req.signedCookies.auth_session === 'loggedIn';
+// ==================================================================
+// ROTAS DE ESCRITA (POST) - AQUI ESTÁ A CORREÇÃO PRINCIPAL ❗
+// ==================================================================
 
-    if (!isAuthenticated) {
-        return res.status(401).json({ success: false, message: 'Acesso não autorizado. Sessão inválida.' });
-    }
-
-    // 2. Continua com a lógica de salvar o arquivo
-    const insumosData = req.body;
-
-    if (!insumosData || !Array.isArray(insumosData)) {
-        return res.status(400).json({ success: false, message: 'Dados de insumos inválidos.' });
-    }
-
-    // Caminho para salvar insumos.json na raiz
-    const filePath = join(__dirname, 'insumos.json'); 
-
-    // 3. Salvando o arquivo
-    fs.writeFile(filePath, JSON.stringify(insumosData, null, 2), (err) => {
-        if (err) {
-            console.error('Erro ao salvar insumos.json:', err);
-            return res.status(500).json({ success: false, message: 'Erro interno ao salvar o arquivo.' });
-        }
-        res.json({ success: true, message: 'insumos.json atualizado no servidor!' });
-    });
-});
-
-    // 2. Continua com a lógica de salvar o arquivo
+// 1. Rota de Exportação do Menu (Chamada pela função 'exportMenuOnly' para salvamento instantâneo)
+app.post('/api/export', isAuthenticated, (req, res) => {
     const menuData = req.body;
+    const filePath = join(__dirname, 'menu.json');
 
-    if (!menuData || !Array.isArray(menuData)) {
-        return res.status(400).json({ success: false, message: 'Dados de menu inválidos.' });
+    try {
+        fs.writeFileSync(filePath, JSON.stringify(menuData, null, 2));
+        res.json({ success: true, message: 'Menu salvo com sucesso!' });
+    } catch (error) {
+        console.error("ERRO CRÍTICO (RENDER/PERMISSÃO) - menu.json:", error);
+        // Retorna um status 500 com a mensagem de erro para o Front-end
+        res.status(500).json({ 
+            success: false, 
+            message: `Erro de Servidor ao salvar menu. Verifique os logs do Render. Detalhe: ${error.code}` 
+        });
     }
+});
 
-    // Caminho para salvar menu.json na raiz
-    const filePath = join(__dirname, 'menu.json'); 
+// 2. Rota de Exportação de Insumos
+app.post('/api/insumos/export', isAuthenticated, (req, res) => {
+    const insumosData = req.body;
+    const filePath = join(__dirname, 'insumos.json');
 
-    // 3. Salvando o arquivo
-    fs.writeFile(filePath, JSON.stringify(menuData, null, 2), (err) => {
-        if (err) {
-            console.error('Erro ao salvar menu.json:', err);
-            return res.status(500).json({ success: false, message: 'Erro interno ao salvar o arquivo.' });
-        }
-        res.json({ success: true, message: 'menu.json atualizado no servidor!' });
-    });
+    try {
+        fs.writeFileSync(filePath, JSON.stringify(insumosData, null, 2));
+        res.json({ success: true, message: 'Insumos salvos com sucesso!' });
+    } catch (error) {
+        console.error("ERRO CRÍTICO (RENDER/PERMISSÃO) - insumos.json:", error);
+        res.status(500).json({ 
+            success: false, 
+            message: `Erro de Servidor ao salvar insumos. Detalhe: ${error.code}` 
+        });
+    }
+});
+
+// 3. Rota de Exportação de Composições (Fichas Técnicas)
+app.post('/api/composicoes/export', isAuthenticated, (req, res) => {
+    const composicoesData = req.body;
+    const filePath = join(__dirname, 'composicoes.json');
+
+    try {
+        fs.writeFileSync(filePath, JSON.stringify(composicoesData, null, 2));
+        res.json({ success: true, message: 'Composições salvas com sucesso!' });
+    } catch (error) {
+        console.error("ERRO CRÍTICO (RENDER/PERMISSÃO) - composicoes.json:", error);
+        res.status(500).json({ 
+            success: false, 
+            message: `Erro de Servidor ao salvar composições. Detalhe: ${error.code}` 
+        });
+    }
 });
 
 
 // ==================================================================
-// ROTAS DE SERVIÇO DE ARQUIVOS HTML (CORRIGIDO PARA RAIZ)
+// INICIALIZAÇÃO DO SERVIDOR
 // ==================================================================
 
-// Serve o dashboard.html (Ex: acessando /dashboard.html)
-app.get('/dashboard.html', (req, res) => {
-    res.sendFile(join(__dirname, 'dashboard.html'));
+app.listen(port, () => {
+    console.log(`Servidor rodando na porta ${port}`);
 });
-
-// Serve o index.html (Ex: acessando a URL principal /)
-app.get('/', (req, res) => {
-    res.sendFile(join(__dirname, 'index.html'));
-});
-
-
-app.listen(PORT, () => {
-    console.log(`Server rodando na porta ${PORT}`);
-});
-
