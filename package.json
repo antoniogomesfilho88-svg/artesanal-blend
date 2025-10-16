@@ -1,16 +1,18 @@
 {
-  "name": "artesanal-blend",
+  "name": "artesanal-blend-server",
   "version": "1.0.0",
+  "description": "Servidor Node.js para o dashboard e cardápio Artesanal Blend.",
+  "main": "server.js",
   "type": "module",
-  "description": "Sistema completo Artesanal Blend - Cardápio Online + Dashboard + Servidor Node.js",
-  "main": "servidor.js",
   "scripts": {
-    "start": "node servidor.js"
+    "start": "node server.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
     "express": "^4.18.2",
+    "cookie-parser": "^1.4.6",
     "cors": "^2.8.5",
-    "cookie-parser": "^1.4.6"
-  }
-}
-
+    
+    
+    "path": "0.12.7",
+    "fs": "0.0.1-security"
