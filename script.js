@@ -1,223 +1,312 @@
-// ===============================
-// ARTESANAL BLEND - SCRIPT COMPLETO
-// ===============================
+// ==============================
+//  Artesanal Blend - Cardápio Online ATUALIZADO
+// ==============================
 
-let carrinho = [];
-let taxaEntrega = 0;
+let menuData = [];
+let cart = [];
 
-// ===============================
-// Carregar o Cardápio do Servidor
-// ===============================
+// ========== Carregar o cardápio ==========
 async function carregarMenu() {
   try {
-    const response = await fetch("/api/menu");
-    if (!response.ok) throw new Error("Erro ao carregar cardápio.");
-    const data = await response.json();
+    console.log("🔄 Carregando cardápio...");
+    const resp = await fetch("/api/menu");
+    
+    if (!resp.ok) {
+      throw new Error(`Erro HTTP: ${resp.status}`);
+    }
+    
+    menuData = await resp.json();
+    console.log("✅ Cardápio carregado:", menuData);
+    renderMenu(menuData);
+  } catch (err) {
+    console.error("❌ Erro ao carregar cardápio:", err);
+    document.querySelector("main").innerHTML = `
+      <div style="text-align: center; padding: 40px; color: #fff;">
+        <h3>⚠️ Erro ao carregar cardápio</h3>
+        <p>Tente recarregar a página</p>
+        <button onclick="carregarMenu()" style="padding: 10px 20px; background: #f56f76; color: white; border: none; border-radius: 5px; cursor: pointer;">
+          🔄 Tentar Novamente
+        </button>
+      </div>
+    `;
+  }
+}
 
-    const categorias = ["Hambúrgueres", "Combos", "Acompanhamentos", "Adicionais", "Bebidas"];
-    categorias.forEach(cat => {
-      const container = document.getElementById(`cat-${cat}`);
-      if (container) container.innerHTML = "";
-    });
+// ========== Renderizar o cardápio ==========
+function renderMenu(menu) {
+  console.log("🎨 Renderizando cardápio...");
+  
+  // Limpar containers por categoria
+  const categorias = ['Hambúrgueres', 'Combos', 'Acompanhamentos', 'Adicionais', 'Bebidas'];
+  categorias.forEach(cat => {
+    const container = document.getElementById(`cat-${cat}`);
+    if (container) {
+      container.innerHTML = '';
+    }
+  });
 
-    data.forEach(item => {
-      const container = document.getElementById(`cat-${item.cat}`);
-      if (!container) return;
+  // Agrupar por categoria
+  const menuPorCategoria = {};
+  categorias.forEach(cat => {
+    menuPorCategoria[cat] = menu.filter(item => item.cat === cat);
+  });
 
+  // Renderizar cada categoria
+  categorias.forEach(categoria => {
+    const container = document.getElementById(`cat-${categoria}`);
+    if (!container) return;
+
+    const itens = menuPorCategoria[categoria];
+    
+    if (itens.length === 0) {
+      container.innerHTML = `
+        <div style="text-align: center; padding: 20px; color: #ccc; grid-column: 1 / -1;">
+          Nenhum produto em ${categoria}
+        </div>
+      `;
+      return;
+    }
+
+    itens.forEach(item => {
       const card = document.createElement("div");
       card.classList.add("menu-item");
+      
+      // Usar imagem padrão se não tiver URL
+      const imagemUrl = item.imgUrl && item.imgUrl.trim() !== '' 
+        ? item.imgUrl 
+        : 'https://i.imgur.com/6Hb2K3o.jpg'; // Imagem padrão
+      
       card.innerHTML = `
-        <img src="${item.imgUrl}" alt="${item.name}">
-        <h3>${item.name}</h3>
-        <p>${item.desc}</p>
-        <div class="price-line">
-          <span class="price">R$ ${item.price.toFixed(2)}</span>
-          <button class="add-btn" onclick="addToCart(${item.id})">+</button>
+        <img src="${imagemUrl}" alt="${item.name}" onerror="this.src='https://i.imgur.com/6Hb2K3o.jpg'">
+        <div class="item-info">
+          <h4>${item.name}</h4>
+          <p>${item.desc || 'Delicioso produto artesanal'}</p>
+          <div class="item-footer">
+            <span class="price">R$ ${item.price.toFixed(2)}</span>
+            <button class="add-btn" onclick="addToCart(${item.id})">+</button>
+          </div>
         </div>
       `;
       container.appendChild(card);
     });
-
-  } catch (error) {
-    console.error("❌ Erro ao carregar cardápio:", error);
-    alert("⚠️ Não foi possível carregar o cardápio. Tente novamente.");
-  }
+  });
 }
 
-// ===============================
-// Funções do Carrinho
-// ===============================
-function addToCart(id) {
-  fetch("/api/menu")
-    .then(res => res.json())
-    .then(menu => {
-      const produto = menu.find(p => p.id === id);
-      if (!produto) return alert("Produto não encontrado!");
+// ========== Carrinho ==========
+let carrinho = JSON.parse(localStorage.getItem('carrinho')) || [];
 
-      const existente = carrinho.find(p => p.id === id);
-      if (existente) {
-        existente.qtd += 1;
-      } else {
-        carrinho.push({ ...produto, qtd: 1 });
-      }
-      renderCarrinho();
-    })
-    .catch(err => console.error("Erro ao adicionar produto:", err));
+function addToCart(id) {
+  const item = menuData.find(p => p.id === id);
+  if (!item) {
+    console.error("Item não encontrado:", id);
+    return;
+  }
+  
+  const existing = carrinho.find(c => c.id === id);
+  if (existing) {
+    existing.qtd++;
+  } else {
+    carrinho.push({ ...item, qtd: 1 });
+  }
+  
+  localStorage.setItem('carrinho', JSON.stringify(carrinho));
+  updateCart();
+  showCart();
 }
 
 function removeFromCart(id) {
-  const index = carrinho.findIndex(p => p.id === id);
-  if (index !== -1) {
-    carrinho[index].qtd -= 1;
-    if (carrinho[index].qtd <= 0) carrinho.splice(index, 1);
-  }
-  renderCarrinho();
+  carrinho = carrinho.filter(item => item.id !== id);
+  localStorage.setItem('carrinho', JSON.stringify(carrinho));
+  updateCart();
 }
 
-function calcularSubtotal() {
-  return carrinho.reduce((acc, item) => acc + item.price * item.qtd, 0);
-}
-
-function renderCarrinho() {
+function updateCart() {
   const container = document.getElementById("cart-items");
-  const totalElem = document.getElementById("cart-total");
   const checkoutBtn = document.getElementById("checkoutBtn");
-  const cartCount = document.getElementById("cartCount");
+  const subtotalElem = document.getElementById("subtotal");
+  const totalElem = document.getElementById("total");
+  const feeElem = document.getElementById("fee");
 
   if (!container) return;
 
   container.innerHTML = "";
-  let subtotal = calcularSubtotal();
+  let subtotal = 0;
 
   carrinho.forEach(item => {
+    subtotal += item.qtd * item.price;
     const div = document.createElement("div");
-    div.classList.add("cart-item");
+    div.className = "cart-line";
     div.innerHTML = `
-      <span>${item.name}</span>
       <div>
-        <button onclick="removeFromCart(${item.id})">-</button>
-        <span>${item.qtd}</span>
-        <button onclick="addToCart(${item.id})">+</button>
+        <strong>${item.qtd}x ${item.name}</strong>
+        <br>
+        <span>R$ ${(item.qtd * item.price).toFixed(2)}</span>
       </div>
-      <span>R$ ${(item.price * item.qtd).toFixed(2)}</span>
+      <button class="remove-btn" onclick="removeFromCart(${item.id})">❌</button>
     `;
     container.appendChild(div);
   });
 
-  const totalFinal = subtotal + taxaEntrega;
-  totalElem.textContent = `Total: R$ ${totalFinal.toFixed(2)}`;
+  // Calcular taxa e total
+  const regionSelect = document.getElementById("region");
+  const taxa = regionSelect ? parseFloat(regionSelect.selectedOptions[0].dataset.fee) || 0 : 0;
+  const total = subtotal + taxa;
 
-  checkoutBtn.disabled = carrinho.length === 0;
-  cartCount.textContent = carrinho.reduce((acc, p) => acc + p.qtd, 0);
-}
-
-// ===============================
-// Região e Taxa de Entrega
-// ===============================
-function atualizarTaxa() {
-  const regiao = document.getElementById("clienteRegiao").value;
-
-  switch (regiao) {
-    case "Jardim Canadá":
-      taxaEntrega = 6.00;
-      break;
-    case "Retiro das Pedras":
-      taxaEntrega = 10.00;
-      break;
-    case "Serra do Manacás":
-      taxaEntrega = 10.00;
-      break;
-    case "Vale do Sol":
-      taxaEntrega = 12.00;
-      break;
-    case "Alphaville":
-      taxaEntrega = 15.00;
-      break;
-    default:
-      taxaEntrega = 0;
+  if (subtotalElem) subtotalElem.textContent = `R$ ${subtotal.toFixed(2)}`;
+  if (feeElem) feeElem.textContent = `R$ ${taxa.toFixed(2)}`;
+  if (totalElem) totalElem.textContent = `R$ ${total.toFixed(2)}`;
+  
+  if (checkoutBtn) {
+    checkoutBtn.disabled = carrinho.length === 0;
+    checkoutBtn.style.display = carrinho.length > 0 ? 'block' : 'none';
   }
 
-  renderCarrinho();
+  // Atualizar contador
+  const cartCount = document.getElementById("cartCount");
+  if (cartCount) {
+    cartCount.textContent = carrinho.reduce((acc, item) => acc + item.qtd, 0);
+  }
 }
 
-// ===============================
-// Mostrar campo de troco
-// ===============================
-function mostrarTroco() {
-  const pagamento = document.getElementById("pagamento").value;
-  const campoTroco = document.getElementById("campoTroco");
-  campoTroco.style.display = pagamento === "Dinheiro" ? "block" : "none";
+// ========== Controle do Carrinho ==========
+function showCart() {
+  const cart = document.getElementById("cart");
+  if (cart) {
+    cart.style.display = 'block';
+    updateCart();
+  }
 }
 
-// ===============================
-// Enviar Pedido pelo WhatsApp
-// ===============================
-function enviarPedido() {
-  if (carrinho.length === 0) return alert("Adicione itens ao carrinho antes de enviar!");
+function hideCart() {
+  const cart = document.getElementById("cart");
+  if (cart) {
+    cart.style.display = 'none';
+  }
+}
 
-  const nome = document.getElementById("clienteNome").value || "Cliente não informado";
-  const telefone = document.getElementById("clienteTelefone").value || "Telefone não informado";
-  const endereco = document.getElementById("clienteEndereco").value || "Endereço não informado";
-  const regiao = document.getElementById("clienteRegiao").value || "Região não informada";
-  const pagamento = document.getElementById("pagamento").value || "Não informado";
-  const troco = document.getElementById("troco").value || "-";
-  const obs = document.getElementById("obsCliente").value || "Nenhuma observação.";
+// ========== Enviar Pedido ==========
+async function enviarPedidoServidor(pedido) {
+  try {
+    const response = await fetch("/api/order", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(pedido),
+    });
+    
+    if (response.ok) {
+      console.log("✅ Pedido enviado ao servidor!");
+      return true;
+    } else {
+      console.error("❌ Erro ao enviar pedido:", await response.text());
+      return false;
+    }
+  } catch (err) {
+    console.error("❌ Erro de rede ao enviar pedido:", err);
+    return false;
+  }
+}
 
-  let mensagem = `🍔 *Pedido - Artesanal Blend*%0A%0A`;
+function enviarPedidoWhatsApp() {
+  if (carrinho.length === 0) return;
 
-  carrinho.forEach(item => {
-    mensagem += `• ${item.name} (x${item.qtd}) - R$ ${(item.price * item.qtd).toFixed(2)}%0A`;
+  const regionSelect = document.getElementById("region");
+  const region = regionSelect ? regionSelect.value : "Retirada";
+  const taxa = regionSelect ? parseFloat(regionSelect.selectedOptions[0].dataset.fee) || 0 : 0;
+  
+  const total = carrinho.reduce((sum, item) => sum + item.qtd * item.price, 0) + taxa;
+
+  const pedido = {
+    itens: carrinho.map(item => ({
+      nome: item.name,
+      quantidade: item.qtd,
+      preco: item.price,
+      subtotal: item.qtd * item.price
+    })),
+    total: total,
+    cliente: region,
+    taxa: taxa,
+    data: new Date().toISOString()
+  };
+
+  // Enviar para servidor
+  enviarPedidoServidor(pedido);
+
+  // Montar mensagem WhatsApp
+  let msg = `*ARTESANAL BLEND - NOVO PEDIDO*%0A%0A`;
+  
+  pedido.itens.forEach(item => {
+    msg += `▪️ ${item.quantidade}x ${item.nome} - R$ ${item.subtotal.toFixed(2)}%0A`;
   });
+  
+  msg += `%0A*Taxa de entrega:* R$ ${taxa.toFixed(2)}%0A`;
+  msg += `*Total:* R$ ${total.toFixed(2)}%0A%0A`;
+  msg += `*Região:* ${region}%0A`;
+  
+  // Informações do cliente
+  const nome = document.getElementById("clienteNome")?.value || "Não informado";
+  const telefone = document.getElementById("clienteTelefone")?.value || "Não informado";
+  const endereco = document.getElementById("clienteEndereco")?.value || "Não informado";
+  const pagamento = document.getElementById("pagamento")?.value || "Não informado";
+  const observacoes = document.getElementById("obsCliente")?.value || "Nenhuma";
+  
+  msg += `*Nome:* ${nome}%0A`;
+  msg += `*Telefone:* ${telefone}%0A`;
+  msg += `*Endereço:* ${endereco}%0A`;
+  msg += `*Pagamento:* ${pagamento}%0A`;
+  msg += `*Observações:* ${observacoes}%0A%0A`;
+  msg += `_Pedido gerado automaticamente via site_`;
 
-  const subtotal = calcularSubtotal();
-  const totalFinal = subtotal + taxaEntrega;
+  // Abrir WhatsApp
+  window.open(`https://wa.me/5531992128891?text=${msg}`, "_blank");
 
-  mensagem += `%0A💰 *Subtotal:* R$ ${subtotal.toFixed(2)}`;
-  mensagem += `%0A🚚 *Entrega (${regiao}):* R$ ${taxaEntrega.toFixed(2)}`;
-  mensagem += `%0A💵 *Total:* R$ ${totalFinal.toFixed(2)}`;
-  mensagem += `%0A%0A🏠 *Endereço:* ${endereco}`;
-  mensagem += `%0A👤 *Nome:* ${nome}`;
-  mensagem += `%0A📞 *Telefone:* ${telefone}`;
-  mensagem += `%0A🏙️ *Região:* ${regiao}`;
-  mensagem += `%0A💳 *Pagamento:* ${pagamento}`;
-  if (pagamento === "Dinheiro") {
-    mensagem += `%0A💵 *Troco para:* R$ ${troco}`;
-  }
-  mensagem += `%0A📝 *Obs:* ${obs}`;
-  mensagem += `%0A%0A✅ *Agradecemos seu pedido!*`;
-
-  const numero = "5531992128891";
-  const url = `https://wa.me/${numero}?text=${mensagem}`;
-  window.open(url, "_blank");
+  // Limpar carrinho
+  carrinho = [];
+  localStorage.setItem('carrinho', JSON.stringify(carrinho));
+  updateCart();
+  hideCart();
+  
+  alert("Pedido enviado para o WhatsApp! 🎉");
 }
 
-// ===============================
-// Inicialização
-// ===============================
+// ========== Event Listeners ==========
 document.addEventListener("DOMContentLoaded", () => {
+  console.log("🚀 Iniciando cardápio...");
   carregarMenu();
-  renderCarrinho();
+  updateCart();
 
+  // Carrinho
+  const openCartBtn = document.getElementById("openCartBtn");
+  const closeCartBtn = document.getElementById("closeCartBtn");
   const checkoutBtn = document.getElementById("checkoutBtn");
-  const regiaoSelect = document.getElementById("clienteRegiao");
 
-  if (checkoutBtn) checkoutBtn.addEventListener("click", enviarPedido);
-  if (regiaoSelect) regiaoSelect.addEventListener("change", atualizarTaxa);
+  if (openCartBtn) {
+    openCartBtn.addEventListener("click", showCart);
+  }
+
+  if (closeCartBtn) {
+    closeCartBtn.addEventListener("click", hideCart);
+  }
+
+  if (checkoutBtn) {
+    checkoutBtn.addEventListener("click", enviarPedidoWhatsApp);
+  }
+
+  // Taxa de entrega
+  const regionSelect = document.getElementById("region");
+  if (regionSelect) {
+    regionSelect.addEventListener("change", updateCart);
+  }
 });
 
-// Controle de abrir e fechar o carrinho com animação
-const openCartBtn = document.getElementById("openCartBtn");
-const closeCartBtn = document.getElementById("closeCartBtn");
-const cart = document.getElementById("cart");
-
-if (openCartBtn && cart) {
-  openCartBtn.addEventListener("click", () => {
-    cart.classList.add("show");
-  });
+// ========== Funções auxiliares ==========
+function mostrarTroco() {
+  const pagamento = document.getElementById("pagamento");
+  const campoTroco = document.getElementById("campoTroco");
+  if (pagamento && campoTroco) {
+    campoTroco.style.display = pagamento.value === "Dinheiro" ? "block" : "none";
+  }
 }
 
-if (closeCartBtn && cart) {
-  closeCartBtn.addEventListener("click", () => {
-    cart.classList.remove("show");
-  });
+function atualizarTaxa() {
+  updateCart();
 }
