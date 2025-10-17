@@ -578,7 +578,7 @@ tr:hover {
           <button class="btn btn-warning" onclick="sincronizarCardapio()">
             🔄 Sincronizar
           </button>
-          <button class="btn btn-ghost" onclick="carregarEstatisticas()">
+          <button class="btn btn-ghost" onclick="carregarDados()">
             📊 Atualizar Dados
           </button>
         </div>
@@ -635,7 +635,7 @@ tr:hover {
         <button class="btn btn-warning" onclick="sincronizarCardapio()">
           🔄 Sincronizar Cardápio
         </button>
-        <button class="btn btn-ghost" onclick="localStorage.setItem('menu_backup', JSON.stringify(produtos)); showNotification('Backup local salvo!')">
+        <button class="btn btn-ghost" onclick="fazerBackupLocal()">
           💾 Backup Local
         </button>
         <button class="btn btn-ghost" onclick="restaurarBackupLocal()">
@@ -646,7 +646,7 @@ tr:hover {
 
     <div class="panel">
       <h2 id="formTitle">➕ Adicionar Novo Produto</h2>
-      <form id="prodForm" onsubmit="salvarProduto(event)">
+      <form id="prodForm">
         <input type="hidden" id="prodId">
         
         <div class="form-grid">
@@ -762,7 +762,7 @@ tr:hover {
 
 <script>
 // ==============================
-// DASHBOARD COMPLETO - Artesanal Blend
+// DASHBOARD COMPLETO E FUNCIONAL
 // ==============================
 
 const CREDENTIALS = { user: "admin", pass: "1234" };
@@ -773,28 +773,29 @@ let usuarioLogado = false;
 // ========== FUNÇÕES PRINCIPAIS ==========
 
 // Carregar dados iniciais
-async function carregarDadosIniciais() {
+async function carregarDados() {
   await carregarProdutos();
   await carregarPedidos();
   await carregarEstatisticas();
-  
-  // Verificar login
-  if (!usuarioLogado) {
-    document.getElementById('loginModal').style.display = 'flex';
-  }
 }
 
 // Carregar produtos do servidor
 async function carregarProdutos() {
   try {
+    showLoading(true);
     const response = await fetch('/api/menu');
     if (response.ok) {
       produtos = await response.json();
       renderizarProdutos();
+      showNotification('Produtos carregados com sucesso!');
+    } else {
+      throw new Error('Erro ao carregar produtos');
     }
   } catch (error) {
     console.error('Erro ao carregar produtos:', error);
     showNotification('Erro ao carregar produtos', 'error');
+  } finally {
+    showLoading(false);
   }
 }
 
@@ -842,19 +843,24 @@ function renderizarProdutos(lista = produtos) {
   const tbody = document.getElementById('produtosTableBody');
   tbody.innerHTML = '';
 
+  if (lista.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 40px;">Nenhum produto cadastrado</td></tr>';
+    return;
+  }
+
   lista.forEach(produto => {
     const tr = document.createElement('tr');
     tr.innerHTML = `
-      <td>${produto.id}</td>
+      <td>${produto.id || produto._id}</td>
       <td><strong>${produto.name}</strong></td>
       <td>${produto.cat}</td>
       <td>R$ ${produto.price.toFixed(2)}</td>
       <td>${produto.imgUrl ? '✅' : '❌'}</td>
       <td class="action-buttons">
-        <button class="btn btn-ghost btn-sm" onclick="editarProduto(${produto.id})" title="Editar">
+        <button class="btn btn-ghost btn-sm" onclick="editarProduto('${produto.id || produto._id}')" title="Editar">
           ✏️
         </button>
-        <button class="btn btn-ghost btn-sm" onclick="excluirProduto(${produto.id})" title="Excluir">
+        <button class="btn btn-ghost btn-sm" onclick="excluirProduto('${produto.id || produto._id}')" title="Excluir">
           🗑️
         </button>
       </td>
@@ -868,14 +874,15 @@ function novoProduto() {
   document.getElementById('prodForm').reset();
   document.getElementById('prodId').value = '';
   document.getElementById('imgPreview').innerHTML = '<div class="placeholder">Imagem será exibida aqui</div>';
+  showTab('produtos');
 }
 
 function editarProduto(id) {
-  const produto = produtos.find(p => p.id === id);
+  const produto = produtos.find(p => (p.id === id) || (p._id === id));
   if (!produto) return;
 
   document.getElementById('formTitle').textContent = '✏️ Editar Produto';
-  document.getElementById('prodId').value = produto.id;
+  document.getElementById('prodId').value = produto.id || produto._id;
   document.getElementById('prodName').value = produto.name;
   document.getElementById('prodPrice').value = produto.price;
   document.getElementById('prodCat').value = produto.cat;
@@ -887,4 +894,260 @@ function editarProduto(id) {
     document.getElementById('imgPreview').innerHTML = `<img src="${produto.imgUrl}" alt="${produto.name}">`;
   }
   
-  // Rol
+  showTab('produtos');
+}
+
+async function excluirProduto(id) {
+  if (!confirm('Tem certeza que deseja excluir este produto?')) return;
+
+  try {
+    const response = await fetch(`/api/menu/item/${id}`, {
+      method: 'DELETE'
+    });
+
+    if (response.ok) {
+      showNotification('Produto excluído com sucesso!');
+      await carregarProdutos();
+    } else {
+      throw new Error('Erro ao excluir produto');
+    }
+  } catch (error) {
+    console.error('Erro ao excluir produto:', error);
+    showNotification('Erro ao excluir produto', 'error');
+  }
+}
+
+// Form submit handler
+document.getElementById('prodForm').addEventListener('submit', async function(e) {
+  e.preventDefault();
+  await salvarProduto();
+});
+
+async function salvarProduto() {
+  const id = document.getElementById('prodId').value;
+  const produto = {
+    name: document.getElementById('prodName').value,
+    price: parseFloat(document.getElementById('prodPrice').value),
+    cat: document.getElementById('prodCat').value,
+    imgUrl: document.getElementById('prodImg').value,
+    desc: document.getElementById('prodDesc').value
+  };
+
+  try {
+    let response;
+    if (id) {
+      // Editar produto existente
+      response = await fetch(`/api/menu/item/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(produto)
+      });
+    } else {
+      // Adicionar novo produto
+      produto.id = Date.now(); // ID temporário
+      response = await fetch('/api/menu/item', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(produto)
+      });
+    }
+
+    if (response.ok) {
+      showNotification(id ? 'Produto atualizado com sucesso!' : 'Produto adicionado com sucesso!');
+      await carregarProdutos();
+      limparForm();
+    } else {
+      throw new Error('Erro ao salvar produto');
+    }
+  } catch (error) {
+    console.error('Erro ao salvar produto:', error);
+    showNotification('Erro ao salvar produto', 'error');
+  }
+}
+
+function limparForm() {
+  document.getElementById('prodForm').reset();
+  document.getElementById('prodId').value = '';
+  document.getElementById('imgPreview').innerHTML = '<div class="placeholder">Imagem será exibida aqui</div>';
+  document.getElementById('formTitle').textContent = '➕ Adicionar Novo Produto';
+}
+
+// ========== PEDIDOS ==========
+
+function renderizarPedidos() {
+  const container = document.getElementById('ordersList');
+  container.innerHTML = '';
+
+  if (pedidos.length === 0) {
+    container.innerHTML = '<div style="text-align: center; padding: 40px; color: var(--muted)">Nenhum pedido recebido</div>';
+    return;
+  }
+
+  pedidos.forEach(pedido => {
+    const div = document.createElement('div');
+    div.className = 'order-item';
+    div.innerHTML = `
+      <div class="order-header">
+        <div class="order-id">Pedido #${pedido.id || pedido._id}</div>
+        <div class="order-date">${new Date(pedido.data).toLocaleString()}</div>
+      </div>
+      <div class="order-total">Total: R$ ${pedido.total.toFixed(2)}</div>
+      <div style="margin-top: 8px; font-size: 14px;">
+        <strong>Itens:</strong> ${pedido.itens.map(item => `${item.quantidade}x ${item.nome}`).join(', ')}
+      </div>
+      <div style="margin-top: 4px; font-size: 12px; color: var(--muted)">
+        Cliente: ${pedido.cliente || 'Não informado'}
+      </div>
+    `;
+    container.appendChild(div);
+  });
+}
+
+function renderizarPedidosRecentes() {
+  const container = document.getElementById('recentOrders');
+  const recentes = pedidos.slice(0, 5); // Últimos 5 pedidos
+  
+  container.innerHTML = '';
+
+  if (recentes.length === 0) {
+    container.innerHTML = '<div style="text-align: center; padding: 20px; color: var(--muted)">Nenhum pedido recente</div>';
+    return;
+  }
+
+  recentes.forEach(pedido => {
+    const div = document.createElement('div');
+    div.className = 'order-item';
+    div.innerHTML = `
+      <div class="order-header">
+        <div class="order-id">Pedido #${pedido.id || pedido._id}</div>
+        <div class="order-total">R$ ${pedido.total.toFixed(2)}</div>
+      </div>
+      <div style="font-size: 14px;">
+        ${pedido.itens.length} itens • ${new Date(pedido.data).toLocaleTimeString()}
+      </div>
+    `;
+    container.appendChild(div);
+  });
+}
+
+// ========== SINCRONIZAÇÃO ==========
+
+async function sincronizarCardapio() {
+  try {
+    showLoading(true);
+    const response = await fetch('/api/menu', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(produtos)
+    });
+
+    if (response.ok) {
+      showNotification('Cardápio sincronizado com sucesso!');
+      await carregarProdutos();
+    } else {
+      throw new Error('Erro ao sincronizar');
+    }
+  } catch (error) {
+    console.error('Erro ao sincronizar:', error);
+    showNotification('Erro ao sincronizar cardápio', 'error');
+  } finally {
+    showLoading(false);
+  }
+}
+
+// ========== EXPORT/IMPORT ==========
+
+function exportarMenuJSON() {
+  const dataStr = JSON.stringify(produtos, null, 2);
+  const dataBlob = new Blob([dataStr], { type: 'application/json' });
+  
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(dataBlob);
+  link.download = 'menu-artesanal-blend.json';
+  link.click();
+  
+  showNotification('Cardápio exportado com sucesso!');
+}
+
+// Import via file input
+document.getElementById('importFile').addEventListener('change', function(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const importedData = JSON.parse(e.target.result);
+      produtos = importedData;
+      renderizarProdutos();
+      showNotification('Dados importados com sucesso!');
+    } catch (error) {
+      showNotification('Erro ao importar arquivo', 'error');
+    }
+  };
+  reader.readAsText(file);
+});
+
+// ========== BACKUP LOCAL ==========
+
+function fazerBackupLocal() {
+  localStorage.setItem('artesanal_blend_backup', JSON.stringify(produtos));
+  showNotification('Backup local salvo com sucesso!');
+}
+
+function restaurarBackupLocal() {
+  const backup = localStorage.getItem('artesanal_blend_backup');
+  if (backup) {
+    produtos = JSON.parse(backup);
+    renderizarProdutos();
+    showNotification('Backup restaurado com sucesso!');
+  } else {
+    showNotification('Nenhum backup encontrado', 'error');
+  }
+}
+
+// ========== INTERFACE ==========
+
+function showTab(tabName) {
+  // Esconder todas as tabs
+  document.querySelectorAll('.tab-content').forEach(tab => {
+    tab.classList.remove('active');
+  });
+  
+  // Mostrar tab selecionada
+  document.getElementById(tabName).classList.add('active');
+  
+  // Atualizar botões
+  document.querySelectorAll('.tab').forEach(btn => {
+    btn.classList.remove('active');
+  });
+  event.target.classList.add('active');
+}
+
+function showNotification(message, type = 'success') {
+  const notification = document.getElementById('notification');
+  notification.textContent = message;
+  notification.className = `notification ${type === 'error' ? 'error' : ''} show`;
+  
+  setTimeout(() => {
+    notification.classList.remove('show');
+  }, 3000);
+}
+
+function showLoading(show) {
+  if (show) {
+    document.body.classList.add('loading');
+  } else {
+    document.body.classList.remove('loading');
+  }
+}
+
+// ========== LOGIN ==========
+
+function fazerLogin() {
+  const user = document.getElementById('loginUser').value;
+  const pass = document.getElementById('loginPass').value;
+
+  if (user === CREDENTIALS.user && pass === CREDENTIALS.pass) {
+    usuarioLogado = true;
+    document.getElementById('
