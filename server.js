@@ -1,5 +1,5 @@
 // =========================================================
-//  Artesanal Blend - Backend COMPLETO com Rotas de Gerenciamento
+//  Artesanal Blend - Backend FINAL com Tratamento de Erro de API
 // =========================================================
 
 import express from 'express';
@@ -83,14 +83,11 @@ app.get('/api/menu', async (req, res) => {
   }
 });
 
-
 // Rota 3: Criar/Salvar um novo Produto (POST)
-// ESSA ROTA CORRIGE O ERRO DE SALVAR PRODUTO
 app.post('/api/menu/item', async (req, res) => {
     try {
         const novoProduto = new Produto(req.body);
         
-        // Garante que o ID seja sequencial para novos itens
         const ultimoProduto = await Produto.findOne().sort({ id: -1 });
         novoProduto.id = (ultimoProduto ? ultimoProduto.id : 0) + 1;
 
@@ -116,7 +113,7 @@ app.post('/api/menu/item', async (req, res) => {
 app.put('/api/menu/item/:id', async (req, res) => {
     try {
         const produtoAtualizado = await Produto.findOneAndUpdate(
-            { id: req.params.id }, // Busca pelo ID Sequencial
+            { id: req.params.id }, 
             req.body,             
             { new: true }         
         );
@@ -142,7 +139,6 @@ app.put('/api/menu/item/:id', async (req, res) => {
 });
 
 // Rota 5: Deletar um Produto (DELETE)
-// ESSA ROTA CORRIGE O ERRO DE EXCLUIR PRODUTO
 app.delete('/api/menu/item/:id', async (req, res) => {
     try {
         const produtoDeletado = await Produto.findOneAndDelete({ id: req.params.id });
@@ -167,19 +163,6 @@ app.delete('/api/menu/item/:id', async (req, res) => {
 });
 
 
-/ --- Rotas Genéricas Adicionais para o Dashboard ---
-
-// Rota para Pedidos (Resolve o erro da linha 812)
-app.get('/api/pedidos', (req, res) => {
-    // Retorna JSON vazio para não quebrar o frontend
-    res.json({ success: true, pedidos: [], message: 'Rota de pedidos ativa.' });
-});
-
-// Rota para Estatísticas (Resolve o erro da linha 836)
-app.get('/api/estatisticas', (req, res) => {
-    // Retorna JSON vazio para não quebrar o frontend
-    res.json({ success: true, estatisticas: {}, message: 'Rota de estatísticas ativa.' });
-});
 // Rota 6: Status do sistema (health check)
 app.get('/health', (req, res) => {
   res.json({
@@ -188,25 +171,37 @@ app.get('/health', (req, res) => {
   });
 });
 
-// Rota 7: Rota vazia para Pedidos (Evita o erro 'Unexpected token <' do Dashboard)
+// Rota 7: Rota vazia para Pedidos (Resolve o erro 'Unexpected token <' para pedidos)
 app.get('/api/pedidos', (req, res) => {
-    res.json({ success: true, pedidos: [], message: 'Rota de pedidos não implementada, mas ativa.' });
+    res.json({ success: true, pedidos: [], message: 'Rota de pedidos ativa.' });
 });
 
-// Rota 8: Rota vazia para Estatísticas (Evita o erro 'Unexpected token <' do Dashboard)
+// Rota 8: Rota vazia para Estatísticas (Resolve o erro 'Unexpected token <' para estatísticas)
 app.get('/api/estatisticas', (req, res) => {
-    res.json({ success: true, estatisticas: {}, message: 'Rota de estatísticas não implementada, mas ativa.' });
+    res.json({ success: true, estatisticas: {}, message: 'Rota de estatísticas ativa.' });
 });
 
 
-// Rota 9: Rota curinga para rotas não reconhecidas (para o Dashboard)
-app.get('*', (req, res) => {
-  // Se a rota for o dashboard.html e não for uma rota da API, carrega o arquivo.
-  if (req.url.includes('dashboard')) {
-      return res.sendFile(path.join(__dirname, 'dashboard.html'));
-  }
-  // Para qualquer outra rota desconhecida, volta ao index.
-  res.sendFile(path.join(__dirname, 'index.html'));
+// =======================================================
+// --- TRATAMENTO FINAL DE ROTAS (404) ---
+// ESSA PARTE GARANTE QUE NÃO VOLTE HTML EM CHAMADAS DE API
+// =======================================================
+app.use((req, res) => {
+    // 1. Se o caminho começar com /api/, retorna um erro 404 em JSON.
+    if (req.path.startsWith('/api/')) {
+        return res.status(404).json({ 
+            success: false, 
+            message: `Endpoint de API '${req.path}' não encontrado. Verifique a URL.` 
+        });
+    }
+    
+    // 2. Se for uma requisição para a página do dashboard, carrega o dashboard.html.
+    if (req.path.includes('dashboard')) {
+        return res.sendFile(path.join(__dirname, 'dashboard.html'));
+    }
+    
+    // 3. Para qualquer outra coisa que não foi encontrada, retorna o index.html.
+    res.status(404).sendFile(path.join(__dirname, 'index.html'));
 });
 
 
@@ -215,4 +210,3 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`🚀 Servidor rodando na porta ${PORT}`);
 });
-
