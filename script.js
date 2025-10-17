@@ -1,5 +1,5 @@
 // ==============================
-//  Artesanal Blend - Cardápio Online ATUALIZADO
+//  Artesanal Blend - Cardápio Online
 // ==============================
 
 let menuData = [];
@@ -10,20 +10,7 @@ async function carregarMenu() {
   try {
     console.log("🔄 Carregando cardápio...");
     
-    // URL DA SUA API NO RENDER
-    const resp = await fetch("https://artesanal-blend.onrender.com/api/menu");
-    
-    if (!resp.ok) {
-      throw new Error(`Erro HTTP: ${resp.status}`);
-    }
-    
-    menuData = await resp.json();
-    console.log("✅ Cardápio carregado:", menuData);
-    renderMenu(menuData);
-  } catch (err) {
-    console.error("❌ Erro ao carregar cardápio:", err);
-    
-    // Dados de emergência se a API falhar
+    // DADOS LOCAIS - funciona sem API
     menuData = [
       {
         "id": 1,
@@ -31,7 +18,7 @@ async function carregarMenu() {
         "desc": "Pão brioche, blend 180g, queijo, alface, tomate",
         "price": 28.90,
         "cat": "Hambúrgueres",
-        "imgUrl": ""
+        "imgUrl": "baconblend.jpg"
       },
       {
         "id": 2,
@@ -39,7 +26,7 @@ async function carregarMenu() {
         "desc": "Blend 180g, queijo cheddar, bacon crocante",
         "price": 32.90,
         "cat": "Hambúrgueres",
-        "imgUrl": ""
+        "imgUrl": "baconblend.jpg"
       },
       {
         "id": 3,
@@ -51,32 +38,67 @@ async function carregarMenu() {
       },
       {
         "id": 4,
-        "name": "Batata Frita",
-        "desc": "Porção 200g",
-        "price": 15.90,
-        "cat": "Acompanhamentos",
+        "name": "Combo Família",
+        "desc": "2 Hambúrgueres + 2 Batatas + 2 Refris",
+        "price": 79.90,
+        "cat": "Combos",
         "imgUrl": ""
       },
       {
         "id": 5,
+        "name": "Batata Frita",
+        "desc": "Porção 200g",
+        "price": 15.90,
+        "cat": "Acompanhamentos",
+        "imgUrl": "batata.jpg"
+      },
+      {
+        "id": 6,
+        "name": "Onion Rings",
+        "desc": "Porção 150g",
+        "price": 18.90,
+        "cat": "Acompanhamentos",
+        "imgUrl": ""
+      },
+      {
+        "id": 7,
+        "name": "Queijo Extra",
+        "desc": "Fatia adicional",
+        "price": 4.90,
+        "cat": "Adicionais",
+        "imgUrl": ""
+      },
+      {
+        "id": 8,
+        "name": "Bacon Extra",
+        "desc": "Porção 50g",
+        "price": 6.90,
+        "cat": "Adicionais",
+        "imgUrl": ""
+      },
+      {
+        "id": 9,
         "name": "Refrigerante",
         "desc": "Lata 350ml",
         "price": 8.90,
         "cat": "Bebidas",
         "imgUrl": ""
+      },
+      {
+        "id": 10,
+        "name": "Suco Natural",
+        "desc": "Copo 500ml",
+        "price": 12.90,
+        "cat": "Bebidas",
+        "imgUrl": ""
       }
     ];
     
+    console.log("✅ Cardápio carregado localmente");
     renderMenu(menuData);
     
-    document.querySelector("main").innerHTML += `
-      <div style="text-align: center; padding: 20px; color: #ff6b6b; background: #fff3f3; margin: 20px; border-radius: 10px;">
-        <p>⚠️ Modo offline - Conectando à API...</p>
-        <button onclick="carregarMenu()" style="padding: 10px 20px; background: #ff6b6b; color: white; border: none; border-radius: 5px; cursor: pointer;">
-          🔄 Tentar Novamente
-        </button>
-      </div>
-    `;
+  } catch (err) {
+    console.error("❌ Erro ao carregar cardápio:", err);
   }
 }
 
@@ -119,7 +141,7 @@ function renderMenu(menu) {
       const card = document.createElement("div");
       card.classList.add("menu-item");
       
-      // Placeholder para imagens
+      // Usar imagem local se disponível
       const imagemUrl = item.imgUrl && item.imgUrl.trim() !== '' 
         ? item.imgUrl 
         : 'https://placehold.co/300x200/FF6B6B/FFFFFF?text=Artesanal+Blend';
