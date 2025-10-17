@@ -1,115 +1,142 @@
-const express = require('express');
-const fs = require('fs');
-const path = require('path');
-const bodyParser = require('body-parser');
+import express from 'express';
+import cors from 'cors';
+import mongoose from 'mongoose';
+import fs from 'fs';
+import path from 'path';
+
 const app = express();
 const PORT = process.env.PORT || 10000;
 
-// Middlewares
-app.use(bodyParser.json());
-app.use(express.static(path.join(__dirname))); // Serve todos os arquivos da raiz
-app.use(express.urlencoded({ extended: true }));
+// ==================== CONFIGURAÇÃO ====================
+app.use(cors());
+app.use(express.json());
+app.use(express.static('.')); // Serve arquivos estáticos (HTML, CSS, imagens)
 
-// Caminhos dos arquivos JSON
-const menuFile = path.join(__dirname, 'menu.json');
-const insumosFile = path.join(__dirname, 'insumos.json');
-const ordersFile = path.join(__dirname, 'orders.json');
+// ==================== MONGODB ====================
+const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/artesanal_blend';
 
-// Funções auxiliares
-function readJSON(filePath) {
-  if (!fs.existsSync(filePath)) fs.writeFileSync(filePath, JSON.stringify([]));
-  return JSON.parse(fs.readFileSync(filePath));
-}
+mongoose.connect(MONGO_URI)
+  .then(() => console.log('✅ MongoDB conectado'))
+  .catch(err => console.error('❌ MongoDB offline:', err.message));
 
-function writeJSON(filePath, data) {
-  fs.writeFileSync(filePath, JSON.stringify(data, null, 2));
-}
+// ==================== SCHEMAS ====================
+const produtoSchema = new mongoose.Schema({
+  nome: String,
+  preco: Number,
+  imagem: String
+});
+const insumoSchema = new mongoose.Schema({
+  nome: String,
+  quantidade: Number
+});
+const pedidoSchema = new mongoose.Schema({
+  clienteNome: String,
+  clienteTelefone: String,
+  clienteEndereco: String,
+  clienteRegiao: String,
+  pagamento: String,
+  troco: Number,
+  obsCliente: String,
+  itens: Array,
+  total: Number,
+  status: { type: String, default: 'Pendente' },
+  criadoEm: { type: Date, default: Date.now }
+});
 
-// -------------------- ROTAS -------------------- //
+const Produto = mongoose.model('Produto', produtoSchema);
+const Insumo = mongoose.model('Insumo', insumoSchema);
+const Pedido = mongoose.model('Pedido', pedidoSchema);
 
-// Produtos
-app.get('/api/produtos', (req, res) => {
-  const produtos = readJSON(menuFile);
+// ==================== ROTAS ====================
+
+// --- Produtos ---
+app.get('/api/produtos', async (req, res) => {
+  const produtos = await Produto.find().sort({nome:1});
   res.json(produtos);
 });
 
-app.post('/api/produtos', (req, res) => {
-  const produtos = readJSON(menuFile);
-  const newProduto = { id: Date.now(), ...req.body };
-  produtos.push(newProduto);
-  writeJSON(menuFile, produtos);
-  res.json(newProduto);
+app.post('/api/produtos', async (req, res) => {
+  const novo = new Produto(req.body);
+  await novo.save();
+  await atualizarMenuJSON();
+  res.json(novo);
 });
 
-app.put('/api/produtos/:id', (req, res) => {
-  const produtos = readJSON(menuFile);
-  const idx = produtos.findIndex(p => p.id == req.params.id);
-  if (idx === -1) return res.status(404).send('Produto não encontrado');
-  produtos[idx] = { ...produtos[idx], ...req.body };
-  writeJSON(menuFile, produtos);
-  res.json(produtos[idx]);
+app.put('/api/produtos/:id', async (req, res) => {
+  const produto = await Produto.findByIdAndUpdate(req.params.id, req.body, { new: true });
+  await atualizarMenuJSON();
+  res.json(produto);
 });
 
-app.delete('/api/produtos/:id', (req, res) => {
-  let produtos = readJSON(menuFile);
-  produtos = produtos.filter(p => p.id != req.params.id);
-  writeJSON(menuFile, produtos);
-  res.json({ success: true });
+app.delete('/api/produtos/:id', async (req, res) => {
+  await Produto.findByIdAndDelete(req.params.id);
+  await atualizarMenuJSON();
+  res.json({ ok: true });
 });
 
-// Insumos
-app.get('/api/insumos', (req, res) => {
-  const insumos = readJSON(insumosFile);
+// --- Insumos ---
+app.get('/api/insumos', async (req, res) => {
+  const insumos = await Insumo.find().sort({nome:1});
   res.json(insumos);
 });
 
-app.post('/api/insumos', (req, res) => {
-  const insumos = readJSON(insumosFile);
-  const newInsumo = { id: Date.now(), ...req.body };
-  insumos.push(newInsumo);
-  writeJSON(insumosFile, insumos);
-  res.json(newInsumo);
+app.post('/api/insumos', async (req, res) => {
+  const novo = new Insumo(req.body);
+  await novo.save();
+  res.json(novo);
 });
 
-app.put('/api/insumos/:id', (req, res) => {
-  const insumos = readJSON(insumosFile);
-  const idx = insumos.findIndex(i => i.id == req.params.id);
-  if (idx === -1) return res.status(404).send('Insumo não encontrado');
-  insumos[idx] = { ...insumos[idx], ...req.body };
-  writeJSON(insumosFile, insumos);
-  res.json(insumos[idx]);
+app.put('/api/insumos/:id', async (req, res) => {
+  const insumo = await Insumo.findByIdAndUpdate(req.params.id, req.body, { new: true });
+  res.json(insumo);
 });
 
-app.delete('/api/insumos/:id', (req, res) => {
-  let insumos = readJSON(insumosFile);
-  insumos = insumos.filter(i => i.id != req.params.id);
-  writeJSON(insumosFile, insumos);
-  res.json({ success: true });
+app.delete('/api/insumos/:id', async (req, res) => {
+  await Insumo.findByIdAndDelete(req.params.id);
+  res.json({ ok: true });
 });
 
-// Pedidos
-app.get('/api/pedidos', (req, res) => {
-  const pedidos = readJSON(ordersFile);
+// --- Pedidos ---
+app.get('/api/pedidos', async (req, res) => {
+  const pedidos = await Pedido.find().sort({ criadoEm: -1 });
   res.json(pedidos);
 });
 
-app.post('/api/pedidos', (req, res) => {
-  const pedidos = readJSON(ordersFile);
-  const newPedido = { id: Date.now(), ...req.body, data: new Date() };
-  pedidos.push(newPedido);
-  writeJSON(ordersFile, pedidos);
-  res.json(newPedido);
+app.post('/api/pedidos', async (req, res) => {
+  const novo = new Pedido(req.body);
+  await novo.save();
+  res.json(novo);
 });
 
-// Financeiro (resumo)
-app.get('/api/financeiro', (req, res) => {
-  const pedidos = readJSON(ordersFile);
-  const totalPedidos = pedidos.length;
-  const totalVendas = pedidos.reduce((acc, p) => acc + (p.total || 0), 0);
-  res.json({ totalPedidos, totalVendas });
+// --- Financeiro ---
+app.get('/api/financeiro', async (req, res) => {
+  const pedidos = await Pedido.find();
+  const total = pedidos.reduce((acc, p) => acc + (p.total || 0), 0);
+  res.json(total);
 });
 
-// Iniciar servidor
+// ==================== FUNÇÃO DE SINCRONIZAÇÃO DO CARDÁPIO ====================
+async function atualizarMenuJSON() {
+  const produtos = await Produto.find();
+  const menuJSON = {};
+
+  produtos.forEach(prod => {
+    let categoria = "Outros";
+    if (prod.nome.toLowerCase().includes('hamburguer')) categoria = 'Hambúrgueres';
+    else if (prod.nome.toLowerCase().includes('combo')) categoria = 'Combos';
+    else if (prod.nome.toLowerCase().includes('bebida')) categoria = 'Bebidas';
+    else if (prod.nome.toLowerCase().includes('acompanhamento')) categoria = 'Acompanhamentos';
+    else if (prod.nome.toLowerCase().includes('adicional')) categoria = 'Adicionais';
+
+    if (!menuJSON[categoria]) menuJSON[categoria] = [];
+    menuJSON[categoria].push(prod);
+  });
+
+  fs.writeFileSync(path.join('.', 'menu.json'), JSON.stringify(menuJSON, null, 2));
+  console.log('✅ menu.json atualizado');
+}
+
+// ==================== INICIALIZAÇÃO ====================
 app.listen(PORT, () => {
   console.log(`🚀 Servidor rodando na porta ${PORT}`);
 });
