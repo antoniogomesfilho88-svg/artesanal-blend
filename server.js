@@ -1,6 +1,6 @@
-// ==============================
-//  Artesanal Blend - Backend + Frontend Estático
-// ==============================
+// =========================================================
+//  Artesanal Blend - Backend COMPLETO com Rotas de Gerenciamento
+// =========================================================
 
 import express from 'express';
 import mongoose from 'mongoose';
@@ -14,12 +14,10 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // --- Middlewares ---
-// O CORS é configurado para aceitar requisições de qualquer lugar (necessário para o Dashboard/Cardápio)
 app.use(cors());
-app.use(express.json());
+app.use(express.json()); // Necessário para ler o corpo (body) de requisições POST/PUT
 
-// --- Servir arquivos estáticos (HTML, CSS, JS, imagens) ---
-// Isso permite que o Render encontre e sirva seus arquivos frontend (index.html, script.js, dashboard.html, etc.)
+// --- Servir arquivos estáticos (Frontend) ---
 app.use(express.static(path.join(__dirname)));
 
 // --- Conexão MongoDB Atlas ---
@@ -42,7 +40,7 @@ const produtoSchema = new mongoose.Schema({
 
 const Produto = mongoose.model('Produto', produtoSchema);
 
-// --- Dados locais de fallback (caso o banco caia) ---
+// --- Dados locais de fallback ---
 const menuLocal = [
   {
     id: 1,
@@ -63,45 +61,41 @@ const menuLocal = [
 ];
 
 // =======================================================
-// --- ROTAS DA API ---
+// --- ROTAS DO CARDÁPIO E GERENCIAMENTO (CRUD) ---
 // =======================================================
 
-// Rota 1: Página inicial (Cardápio)
+// Rota 1: Página inicial (Abre o Cardápio HTML)
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));
 });
 
-// Rota 2: Listar Cardápio (usada pelo Cardápio público)
+// Rota 2: Listar Cardápio (GET)
 app.get('/api/menu', async (req, res) => {
   try {
     if (mongoose.connection.readyState === 1) {
       const produtos = await Produto.find();
       res.json(produtos);
     } else {
-      res.json(menuLocal); // Retorna fallback se o MongoDB estiver fora
+      res.json(menuLocal);
     }
   } catch (err) {
     res.json(menuLocal);
   }
 });
 
-// -------------------------------------------------------------------
-// ROTAS DE GERENCIAMENTO (PARA O DASHBOARD)
-// CORREÇÃO: Adicionando POST, PUT e DELETE que estavam faltando.
-// -------------------------------------------------------------------
 
 // Rota 3: Criar/Salvar um novo Produto (POST)
-// ESSA ROTA RESOLVE O ERRO AO SALVAR PRODUTO NO DASHBOARD
-app.post('/api/menu/item', async (req, res) => { 
+// ESSA ROTA CORRIGE O ERRO DE SALVAR PRODUTO
+app.post('/api/menu/item', async (req, res) => {
     try {
         const novoProduto = new Produto(req.body);
-
-        // Lógica para ID
+        
+        // Garante que o ID seja sequencial para novos itens
         const ultimoProduto = await Produto.findOne().sort({ id: -1 });
         novoProduto.id = (ultimoProduto ? ultimoProduto.id : 0) + 1;
 
         const produtoSalvo = await novoProduto.save();
-
+        
         res.status(201).json({ 
             success: true,
             message: 'Produto salvo com sucesso!', 
@@ -118,11 +112,11 @@ app.post('/api/menu/item', async (req, res) => {
     }
 });
 
-// Rota 4: Atualizar um Produto existente (PUT/PATCH)
-app.put('/api/produtos/:id', async (req, res) => {
+// Rota 4: Atualizar um Produto existente (PUT)
+app.put('/api/menu/item/:id', async (req, res) => {
     try {
         const produtoAtualizado = await Produto.findOneAndUpdate(
-            { id: req.params.id }, 
+            { id: req.params.id }, // Busca pelo ID Sequencial
             req.body,             
             { new: true }         
         );
@@ -148,7 +142,8 @@ app.put('/api/produtos/:id', async (req, res) => {
 });
 
 // Rota 5: Deletar um Produto (DELETE)
-app.delete('/api/produtos/:id', async (req, res) => {
+// ESSA ROTA CORRIGE O ERRO DE EXCLUIR PRODUTO
+app.delete('/api/menu/item/:id', async (req, res) => {
     try {
         const produtoDeletado = await Produto.findOneAndDelete({ id: req.params.id });
 
@@ -173,8 +168,7 @@ app.delete('/api/produtos/:id', async (req, res) => {
 
 
 // -------------------------------------------------------------------
-// ROTAS GENÉRICAS / HEALTH CHECK
-// CORREÇÃO: Adicionando rotas vazias para evitar o erro 'Unexpected token <'
+// ROTAS GENÉRICAS (Para Saúde do Sistema e Evitar Erros no Dashboard)
 // -------------------------------------------------------------------
 
 // Rota 6: Status do sistema (health check)
@@ -185,17 +179,24 @@ app.get('/health', (req, res) => {
   });
 });
 
-// Rota 7: Rota vazia para evitar erro de pedidos/estatísticas no Dashboard
-// Evita o erro 'Unexpected token <' ao carregar o dashboard.
+// Rota 7: Rota vazia para Pedidos (Evita o erro 'Unexpected token <' do Dashboard)
 app.get('/api/pedidos', (req, res) => {
     res.json({ success: true, pedidos: [], message: 'Rota de pedidos não implementada, mas ativa.' });
 });
 
-// Rota 8: Rota curinga para garantir que outras URLs abram o Dashboard (ou index)
-// É importante que essa rota venha por último!
+// Rota 8: Rota vazia para Estatísticas (Evita o erro 'Unexpected token <' do Dashboard)
+app.get('/api/estatisticas', (req, res) => {
+    res.json({ success: true, estatisticas: {}, message: 'Rota de estatísticas não implementada, mas ativa.' });
+});
+
+
+// Rota 9: Rota curinga para rotas não reconhecidas (para o Dashboard)
 app.get('*', (req, res) => {
-  // Assume que qualquer outra rota desconhecida deve levar ao Cardápio ou Dashboard
-  // Dependendo de qual arquivo você quer ser o padrão para rotas desconhecidas.
+  // Se a rota for o dashboard.html e não for uma rota da API, carrega o arquivo.
+  if (req.url.includes('dashboard')) {
+      return res.sendFile(path.join(__dirname, 'dashboard.html'));
+  }
+  // Para qualquer outra rota desconhecida, volta ao index.
   res.sendFile(path.join(__dirname, 'index.html'));
 });
 
@@ -205,4 +206,3 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`🚀 Servidor rodando na porta ${PORT}`);
 });
-
