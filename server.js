@@ -167,10 +167,19 @@ app.delete('/api/menu/item/:id', async (req, res) => {
 });
 
 
-// -------------------------------------------------------------------
-// ROTAS GENÉRICAS (Para Saúde do Sistema e Evitar Erros no Dashboard)
-// -------------------------------------------------------------------
+/ --- Rotas Genéricas Adicionais para o Dashboard ---
 
+// Rota para Pedidos (Resolve o erro da linha 812)
+app.get('/api/pedidos', (req, res) => {
+    // Retorna JSON vazio para não quebrar o frontend
+    res.json({ success: true, pedidos: [], message: 'Rota de pedidos ativa.' });
+});
+
+// Rota para Estatísticas (Resolve o erro da linha 836)
+app.get('/api/estatisticas', (req, res) => {
+    // Retorna JSON vazio para não quebrar o frontend
+    res.json({ success: true, estatisticas: {}, message: 'Rota de estatísticas ativa.' });
+});
 // Rota 6: Status do sistema (health check)
 app.get('/health', (req, res) => {
   res.json({
@@ -206,3 +215,4 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`🚀 Servidor rodando na porta ${PORT}`);
 });
+
