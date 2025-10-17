@@ -49,9 +49,38 @@ function carregarListaInsumos() {
   const div = document.getElementById('lista-insumos-produto');
   div.innerHTML='';
   insumos.forEach(i=>{
-    div.innerHTML+=`<label>${i.nome}: <input type="number" min="0" value="0" data-id="${i._id}"></label><br>`;
+    const input = document.createElement('input');
+    input.type='number';
+    input.min='0';
+    input.value=0;
+    input.dataset.id=i._id;
+    input.addEventListener('input', atualizarCustoProduto);
+
+    const label = document.createElement('label');
+    label.textContent = `${i.nome} (${i.unidade}, R$ ${i.precoUnitario.toFixed(2)}): `;
+    label.appendChild(input);
+    div.appendChild(label);
+    div.appendChild(document.createElement('br'));
   });
+  atualizarCustoProduto();
 }
+
+function atualizarCustoProduto() {
+  const inputs = document.querySelectorAll('#lista-insumos-produto input');
+  let custoTotal = 0;
+  inputs.forEach(inp=>{
+    const insumo = insumos.find(i=>i._id===inp.dataset.id);
+    const qtd = parseFloat(inp.value) || 0;
+    custoTotal += qtd * insumo.precoUnitario;
+  });
+  document.getElementById('custo-total-produto').textContent = custoTotal.toFixed(2);
+
+  const precoVenda = parseFloat(document.getElementById('produto-preco').value) || 0;
+  const lucro = precoVenda - custoTotal;
+  document.getElementById('lucro-produto').textContent = lucro.toFixed(2);
+}
+
+document.getElementById('produto-preco').addEventListener('input', atualizarCustoProduto);
 
 function editarProduto(id) {
   const p = produtos.find(x=>x._id===id);
@@ -178,3 +207,4 @@ async function carregarFinanceiro() {
 // Carregar produtos e insumos ao abrir dashboard
 mostrarSecao('produtos');
 fetch('/api/insumos').then(res=>res.json()).then(data=>insumos=data);
+
