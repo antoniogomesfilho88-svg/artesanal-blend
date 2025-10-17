@@ -9,15 +9,97 @@ let cart = [];
 async function carregarMenu() {
   try {
     console.log("🔄 Carregando cardápio...");
-    const resp = await fetch("/api/menu");
     
-    if (!resp.ok) {
-      throw new Error(`Erro HTTP: ${resp.status}`);
-    }
+    // Dados locais em vez de API
+    const menuLocal = {
+      "menu": [
+        {
+          "id": 1,
+          "name": "Hambúrguer Artesanal",
+          "desc": "Pão brioche, blend 180g, queijo, alface, tomate",
+          "price": 28.90,
+          "cat": "Hambúrgueres",
+          "imgUrl": ""
+        },
+        {
+          "id": 2,
+          "name": "Cheese Bacon",
+          "desc": "Blend 180g, queijo cheddar, bacon crocante",
+          "price": 32.90,
+          "cat": "Hambúrgueres",
+          "imgUrl": ""
+        },
+        {
+          "id": 3,
+          "name": "Combo Classic",
+          "desc": "Hambúrguer + Batata + Refri 350ml",
+          "price": 45.90,
+          "cat": "Combos",
+          "imgUrl": ""
+        },
+        {
+          "id": 4,
+          "name": "Combo Família",
+          "desc": "2 Hambúrgueres + 2 Batatas + 2 Refris",
+          "price": 79.90,
+          "cat": "Combos",
+          "imgUrl": ""
+        },
+        {
+          "id": 5,
+          "name": "Batata Frita",
+          "desc": "Porção 200g",
+          "price": 15.90,
+          "cat": "Acompanhamentos",
+          "imgUrl": ""
+        },
+        {
+          "id": 6,
+          "name": "Onion Rings",
+          "desc": "Porção 150g",
+          "price": 18.90,
+          "cat": "Acompanhamentos",
+          "imgUrl": ""
+        },
+        {
+          "id": 7,
+          "name": "Queijo Extra",
+          "desc": "Fatia adicional",
+          "price": 4.90,
+          "cat": "Adicionais",
+          "imgUrl": ""
+        },
+        {
+          "id": 8,
+          "name": "Bacon Extra",
+          "desc": "Porção 50g",
+          "price": 6.90,
+          "cat": "Adicionais",
+          "imgUrl": ""
+        },
+        {
+          "id": 9,
+          "name": "Refrigerante",
+          "desc": "Lata 350ml",
+          "price": 8.90,
+          "cat": "Bebidas",
+          "imgUrl": ""
+        },
+        {
+          "id": 10,
+          "name": "Suco Natural",
+          "desc": "Copo 500ml",
+          "price": 12.90,
+          "cat": "Bebidas",
+          "imgUrl": ""
+        }
+      ]
+    };
     
-    menuData = await resp.json();
-    console.log("✅ Cardápio carregado:", menuData);
+    menuData = menuLocal.menu;
+    console.log("✅ Cardápio carregado localmente:", menuData);
     renderMenu(menuData);
+    
   } catch (err) {
     console.error("❌ Erro ao carregar cardápio:", err);
     document.querySelector("main").innerHTML = `
@@ -310,4 +392,5 @@ function mostrarTroco() {
 function atualizarTaxa() {
   updateCart();
 }
+
 
