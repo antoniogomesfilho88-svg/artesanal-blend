@@ -26,9 +26,10 @@ async function carregarCardapio() {
                     // CORREÇÃO 3: Trata produto.imagem se for null
                     const precoFormatado = (produto.preco || 0).toFixed(2);
                     const imagemUrl = produto.imagem || '';
+                    const nomeEscapado = escaparStringHTML(produto.nome); // <--- NOVO
 
                     return `
-                        <div class="menu-item" onclick="adicionarAoCarrinho('${categoria}', '${produto.nome}', ${produto.preco || 0})">
+                        <div class="menu-item" onclick="adicionarAoCarrinho('${categoria}', '${nomeEscapado}', ${produto.preco || 0})">
                             ${imagemUrl ? `<img src="${imagemUrl}" alt="${produto.nome}" />` : ''}
                             <h3>${produto.nome}</h3>
                             <p>${produto.descricao || ''}</p>
@@ -296,3 +297,4 @@ window.alterarQuantidade = alterarQuantidade;
 window.atualizarTaxa = atualizarTaxa;
 window.mostrarTroco = mostrarTroco;
 window.finalizarPedido = finalizarPedido;
+
