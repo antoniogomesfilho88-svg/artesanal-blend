@@ -1,119 +1,170 @@
-// Controle de abas
-document.querySelectorAll(".tab-button").forEach(btn => {
-  btn.addEventListener("click", () => {
-    document.querySelectorAll(".tab-button").forEach(b => b.classList.remove("active"));
-    document.querySelectorAll(".tab-content").forEach(tab => tab.classList.remove("active"));
-    btn.classList.add("active");
-    document.getElementById(btn.dataset.tab).classList.add("active");
-  });
-});
+// ===== Dashboard.js =====
 
-// Funções para produtos
-const produtoForm = document.getElementById("produtoForm");
-produtoForm.addEventListener("submit", async (e) => {
-  e.preventDefault();
-  const produto = {
-    nome: document.getElementById("nomeProduto").value,
-    preco: parseFloat(document.getElementById("precoProduto").value),
-    descricao: document.getElementById("descricaoProduto").value,
-    imagem: document.getElementById("imagemProduto").value
-  };
-  await fetch("/api/produtos", {
-    method: "POST",
-    headers: {"Content-Type": "application/json"},
-    body: JSON.stringify(produto)
-  });
-  produtoForm.reset();
-  carregarProdutos();
-});
+// Inicializações
+let produtos = [];
+let insumos = [];
+let pedidos = [];
+let financeiro = { vendas: 0, gastos: 0, lucro: 0 };
 
-async function carregarProdutos() {
-  const res = await fetch("/api/produtos");
-  const produtos = await res.json();
-  const lista = document.getElementById("listaProdutos");
-  lista.innerHTML = produtos.map(p => `
-    <div class="produto-card">
-      <img src="${p.imagem}" alt="${p.nome}">
-      <h3>${p.nome}</h3>
-      <p>${p.descricao}</p>
-      <p>R$ ${p.preco.toFixed(2)}</p>
-    </div>
-  `).join("");
-}
-
-// Funções para insumos
-const insumoForm = document.getElementById("insumoForm");
-insumoForm.addEventListener("submit", async (e) => {
-  e.preventDefault();
-  const insumo = {
-    nome: document.getElementById("nomeInsumo").value,
-    quantidade: parseFloat(document.getElementById("quantidadeInsumo").value),
-    unidade: document.getElementById("unidadeInsumo").value,
-    preco: parseFloat(document.getElementById("precoInsumo").value)
-  };
-  await fetch("/api/insumos", {
-    method: "POST",
-    headers: {"Content-Type": "application/json"},
-    body: JSON.stringify(insumo)
-  });
-  insumoForm.reset();
-  carregarInsumos();
-});
-
-async function carregarInsumos() {
-  const res = await fetch("/api/insumos");
-  const insumos = await res.json();
-  const lista = document.getElementById("listaInsumos");
-  lista.innerHTML = insumos.map(i => `
-    <div class="insumo-card">
-      <h3>${i.nome}</h3>
-      <p>Quantidade: ${i.quantidade} ${i.unidade}</p>
-      <p>Preço: R$ ${i.preco.toFixed(2)}</p>
-    </div>
-  `).join("");
-}
-
-// Funções para pedidos
-async function carregarPedidos() {
-  const res = await fetch("/api/pedidos");
-  const pedidos = await res.json();
-  const lista = document.getElementById("listaPedidos");
-  lista.innerHTML = pedidos.map(p => `
-    <div class="pedido-card">
-      <p><strong>Cliente:</strong> ${p.cliente}</p>
-      <p><strong>Total:</strong> R$ ${p.total.toFixed(2)}</p>
-      <p><strong>Itens:</strong> ${p.itens.map(i => i.nome).join(", ")}</p>
-      <button onclick="imprimirPedido('${p._id}')">Imprimir</button>
-    </div>
-  `).join("");
-}
-
-// Imprimir pedido
-function imprimirPedido(id) {
-  fetch(`/api/pedidos/${id}`)
+// ===== Funções de Produtos =====
+function carregarProdutos() {
+  fetch('/api/produtos')
     .then(res => res.json())
-    .then(p => {
-      const printWindow = window.open("", "PRINT", "height=600,width=400");
-      printWindow.document.write(`<h1>Cupom Não Fiscal</h1>`);
-      printWindow.document.write(`<p>Cliente: ${p.cliente}</p>`);
-      printWindow.document.write(`<p>Total: R$ ${p.total.toFixed(2)}</p>`);
-      printWindow.document.write(`<p>Itens: ${p.itens.map(i => i.nome).join(", ")}</p>`);
-      printWindow.document.close();
-      printWindow.print();
+    .then(data => {
+      produtos = data;
+      renderProdutos();
     });
 }
 
-// Financeiro
-async function carregarFinanceiro() {
-  const res = await fetch("/api/financeiro");
-  const data = await res.json();
-  document.getElementById("totalVendas").textContent = data.vendas.toFixed(2);
-  document.getElementById("totalCustos").textContent = data.custos.toFixed(2);
-  document.getElementById("lucro").textContent = data.lucro.toFixed(2);
+function renderProdutos() {
+  const container = document.getElementById('produtos-container');
+  container.innerHTML = '';
+  produtos.forEach(prod => {
+    const card = document.createElement('div');
+    card.className = 'product-card';
+    card.innerHTML = `
+      <img src="${prod.imagem}" alt="${prod.nome}">
+      <h3>${prod.nome}</h3>
+      <p>${prod.descricao}</p>
+      <p class="price">R$ ${prod.preco.toFixed(2)}</p>
+      <button class="btn btn-secondary" onclick="editarProduto('${prod.id}')">Editar</button>
+      <button class="btn btn-primary" onclick="removerProduto('${prod.id}')">Remover</button>
+    `;
+    container.appendChild(card);
+  });
 }
 
-// Inicializar
-carregarProdutos();
-carregarInsumos();
-carregarPedidos();
-carregarFinanceiro();
+function adicionarProduto(produto) {
+  fetch('/api/produtos', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(produto)
+  }).then(() => carregarProdutos());
+}
+
+function editarProduto(id) {
+  const produto = produtos.find(p => p.id === id);
+  const novoNome = prompt('Nome:', produto.nome);
+  const novoPreco = parseFloat(prompt('Preço:', produto.preco));
+  const novaDescricao = prompt('Descrição:', produto.descricao);
+  if (novoNome && !isNaN(novoPreco) && novaDescricao) {
+    fetch(`/api/produtos/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ nome: novoNome, preco: novoPreco, descricao: novaDescricao })
+    }).then(() => carregarProdutos());
+  }
+}
+
+function removerProduto(id) {
+  if (confirm('Deseja realmente remover o produto?')) {
+    fetch(`/api/produtos/${id}`, { method: 'DELETE' }).then(() => carregarProdutos());
+  }
+}
+
+// ===== Funções de Insumos =====
+function carregarInsumos() {
+  fetch('/api/insumos')
+    .then(res => res.json())
+    .then(data => {
+      insumos = data;
+      renderInsumos();
+    });
+}
+
+function renderInsumos() {
+  const container = document.getElementById('insumos-container');
+  container.innerHTML = '';
+  insumos.forEach(insumo => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${insumo.nome}</td>
+      <td>${insumo.quantidade}</td>
+      <td>${insumo.unidade}</td>
+      <td><input type="number" value="${insumo.uso}" onchange="atualizarCusto('${insumo.id}', this.value)"></td>
+      <td>R$ ${(insumo.preco * insumo.uso).toFixed(2)}</td>
+    `;
+    container.appendChild(tr);
+  });
+}
+
+function atualizarCusto(id, valor) {
+  const insumo = insumos.find(i => i.id === id);
+  insumo.uso = parseFloat(valor);
+  renderInsumos();
+}
+
+// ===== Funções de Pedidos =====
+function carregarPedidos() {
+  fetch('/api/pedidos')
+    .then(res => res.json())
+    .then(data => {
+      pedidos = data;
+      renderPedidos();
+    });
+}
+
+function renderPedidos() {
+  const container = document.getElementById('pedidos-container');
+  container.innerHTML = '';
+  pedidos.forEach(p => {
+    const card = document.createElement('div');
+    card.className = 'order-card';
+    card.innerHTML = `
+      <h4>Pedido #${p.id}</h4>
+      <p>Cliente: ${p.cliente}</p>
+      <p>Total: R$ ${p.total.toFixed(2)}</p>
+      <p>Status: <span class="status ${p.status}">${p.status}</span></p>
+      <button class="btn btn-primary" onclick="imprimirPedido('${p.id}')">Imprimir Cupom</button>
+      <button class="btn btn-secondary" onclick="atualizarStatus('${p.id}')">Atualizar Status</button>
+    `;
+    container.appendChild(card);
+  });
+}
+
+function atualizarStatus(id) {
+  const status = prompt('Novo status (pending/completed/cancelled):');
+  if (status) {
+    fetch(`/api/pedidos/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status })
+    }).then(() => carregarPedidos());
+  }
+}
+
+function imprimirPedido(id) {
+  const pedido = pedidos.find(p => p.id === id);
+  let printContent = `Pedido #${pedido.id}\nCliente: ${pedido.cliente}\nTotal: R$ ${pedido.total.toFixed(2)}\nItens:\n`;
+  pedido.itens.forEach(i => {
+    printContent += `- ${i.nome} x${i.qtd} = R$ ${(i.preco * i.qtd).toFixed(2)}\n`;
+  });
+  const win = window.open('', '', 'width=400,height=600');
+  win.document.write('<pre>' + printContent + '</pre>');
+  win.print();
+  win.close();
+}
+
+// ===== Funções Financeiro =====
+function carregarFinanceiro() {
+  fetch('/api/financeiro')
+    .then(res => res.json())
+    .then(data => {
+      financeiro = data;
+      renderFinanceiro();
+    });
+}
+
+function renderFinanceiro() {
+  document.getElementById('vendas').textContent = `R$ ${financeiro.vendas.toFixed(2)}`;
+  document.getElementById('gastos').textContent = `R$ ${financeiro.gastos.toFixed(2)}`;
+  document.getElementById('lucro').textContent = `R$ ${financeiro.lucro.toFixed(2)}`;
+}
+
+// ===== Inicialização =====
+document.addEventListener('DOMContentLoaded', () => {
+  carregarProdutos();
+  carregarInsumos();
+  carregarPedidos();
+  carregarFinanceiro();
+});
