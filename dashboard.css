@@ -114,7 +114,7 @@ body {
 /* Section Header */
 .section-header {
   display: flex;
-  justify-content: between;
+  justify-content: space-between;
   align-items: center;
   margin-bottom: 2rem;
 }
@@ -180,6 +180,10 @@ body {
   background: #f8f9fa;
 }
 
+.produto-card.estoque-baixo {
+  border-left-color: var(--danger) !important;
+}
+
 .produto-card h3 {
   color: var(--primary);
   margin-bottom: 0.5rem;
@@ -227,6 +231,12 @@ body {
   color: white;
 }
 
+.status-pendente { background: #fff3cd; color: #856404; }
+.status-preparando { background: #d1edff; color: #004085; }
+.status-pronto { background: #d1f7d1; color: #155724; }
+.status-entregue { background: #d4edda; color: #155724; }
+.status-cancelado { background: #f8d7da; color: #721c24; }
+
 .card-actions {
   display: flex;
   gap: 0.5rem;
@@ -240,6 +250,7 @@ body {
   border-radius: var(--radius);
   cursor: pointer;
   font-size: 0.8rem;
+  transition: opacity 0.3s ease;
 }
 
 .btn-editar {
@@ -257,11 +268,37 @@ body {
   color: white;
 }
 
+.btn-editar:hover, .btn-excluir:hover, .btn-toggle:hover {
+  opacity: 0.8;
+}
+
+/* Insumos */
+.insumo-info {
+  margin: 0.5rem 0;
+}
+
+.insumo-info .quantidade {
+  font-size: 1.1rem;
+  font-weight: bold;
+  color: var(--success);
+}
+
+.insumo-info .quantidade.alerta {
+  color: var(--danger);
+}
+
+.insumo-info .quantidade small {
+  font-size: 0.8rem;
+  color: var(--text-light);
+  margin-left: 0.5rem;
+}
+
 /* Filters */
 .filters {
   display: flex;
   gap: 1rem;
   margin-bottom: 2rem;
+  flex-wrap: wrap;
 }
 
 .filters select {
@@ -269,10 +306,11 @@ body {
   border: 1px solid var(--border);
   border-radius: var(--radius);
   font-size: 1rem;
+  min-width: 200px;
 }
 
 /* Modal */
-.modal {
+.modal-overlay {
   position: fixed;
   top: 0;
   left: 0;
@@ -283,16 +321,17 @@ body {
   align-items: center;
   justify-content: center;
   z-index: 1000;
+  padding: 1rem;
 }
 
-.modal-content {
+.modal {
   background: white;
   padding: 2rem;
   border-radius: var(--radius);
   box-shadow: var(--shadow);
   max-width: 500px;
-  width: 90%;
-  max-height: 80vh;
+  width: 100%;
+  max-height: 90vh;
   overflow-y: auto;
 }
 
@@ -319,6 +358,15 @@ body {
   border: 1px solid var(--border);
   border-radius: var(--radius);
   font-size: 1rem;
+  transition: border-color 0.3s ease;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 2px rgba(139, 69, 19, 0.1);
 }
 
 .form-group textarea {
@@ -326,16 +374,37 @@ body {
   min-height: 80px;
 }
 
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.form-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 1rem 0;
+}
+
+.form-checkbox label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  margin-bottom: 0;
+}
+
 .modal-actions {
   display: flex;
   gap: 1rem;
-  margin-top: 1rem;
+  margin-top: 1.5rem;
 }
 
 /* Financeiro */
 .financeiro-cards {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
   gap: 1.5rem;
   margin-top: 2rem;
 }
@@ -346,11 +415,13 @@ body {
   border-radius: var(--radius);
   box-shadow: var(--shadow);
   text-align: center;
+  border-top: 4px solid var(--primary);
 }
 
 .finance-card h3 {
   color: var(--text-light);
   margin-bottom: 1rem;
+  font-size: 1rem;
 }
 
 .finance-card p {
@@ -364,6 +435,9 @@ body {
   text-align: center;
   padding: 3rem;
   color: var(--text-light);
+  background: white;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
 }
 
 .empty-state::before {
@@ -382,6 +456,7 @@ body {
   .header-content {
     flex-direction: column;
     text-align: center;
+    gap: 0.5rem;
   }
   
   .tabs {
@@ -392,6 +467,7 @@ body {
   .tab-button {
     padding: 1rem;
     white-space: nowrap;
+    font-size: 0.9rem;
   }
   
   .dashboard-content {
@@ -408,8 +484,43 @@ body {
     grid-template-columns: 1fr;
   }
   
-  .modal-content {
+  .modal {
     width: 95%;
     padding: 1.5rem;
+  }
+  
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+  
+  .filters {
+    flex-direction: column;
+  }
+  
+  .filters select {
+    min-width: auto;
+  }
+  
+  .card-actions {
+    flex-direction: column;
+  }
+  
+  .financeiro-cards {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .header-content h1 {
+    font-size: 1.25rem;
+  }
+  
+  .tab-button {
+    padding: 0.75rem;
+    font-size: 0.8rem;
+  }
+  
+  .modal-actions {
+    flex-direction: column;
   }
 }
