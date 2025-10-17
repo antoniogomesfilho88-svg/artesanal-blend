@@ -1,9 +1,9 @@
 // ==============================
-//  Artesanal Blend - Cardápio Online ATUALIZADO
+//  Artesanal Blend - Cardápio Online
 // ==============================
 
 let menuData = [];
-let cart = [];
+let carrinho = JSON.parse(localStorage.getItem('carrinho')) || [];
 
 // ========== Carregar o cardápio ==========
 async function carregarMenu() {
@@ -11,92 +11,90 @@ async function carregarMenu() {
     console.log("🔄 Carregando cardápio...");
     
     // Dados locais em vez de API
-    const menuLocal = {
-      "menu": [
-        {
-          "id": 1,
-          "name": "Hambúrguer Artesanal",
-          "desc": "Pão brioche, blend 180g, queijo, alface, tomate",
-          "price": 28.90,
-          "cat": "Hambúrgueres",
-          "imgUrl": ""
-        },
-        {
-          "id": 2,
-          "name": "Cheese Bacon",
-          "desc": "Blend 180g, queijo cheddar, bacon crocante",
-          "price": 32.90,
-          "cat": "Hambúrgueres",
-          "imgUrl": ""
-        },
-        {
-          "id": 3,
-          "name": "Combo Classic",
-          "desc": "Hambúrguer + Batata + Refri 350ml",
-          "price": 45.90,
-          "cat": "Combos",
-          "imgUrl": ""
-        },
-        {
-          "id": 4,
-          "name": "Combo Família",
-          "desc": "2 Hambúrgueres + 2 Batatas + 2 Refris",
-          "price": 79.90,
-          "cat": "Combos",
-          "imgUrl": ""
-        },
-        {
-          "id": 5,
-          "name": "Batata Frita",
-          "desc": "Porção 200g",
-          "price": 15.90,
-          "cat": "Acompanhamentos",
-          "imgUrl": ""
-        },
-        {
-          "id": 6,
-          "name": "Onion Rings",
-          "desc": "Porção 150g",
-          "price": 18.90,
-          "cat": "Acompanhamentos",
-          "imgUrl": ""
-        },
-        {
-          "id": 7,
-          "name": "Queijo Extra",
-          "desc": "Fatia adicional",
-          "price": 4.90,
-          "cat": "Adicionais",
-          "imgUrl": ""
-        },
-        {
-          "id": 8,
-          "name": "Bacon Extra",
-          "desc": "Porção 50g",
-          "price": 6.90,
-          "cat": "Adicionais",
-          "imgUrl": ""
-        },
-        {
-          "id": 9,
-          "name": "Refrigerante",
-          "desc": "Lata 350ml",
-          "price": 8.90,
-          "cat": "Bebidas",
-          "imgUrl": ""
-        },
-        {
-          "id": 10,
-          "name": "Suco Natural",
-          "desc": "Copo 500ml",
-          "price": 12.90,
-          "cat": "Bebidas",
-          "imgUrl": ""
-        }
-      ]
-    };
+    const menuLocal = [
+      {
+        "id": 1,
+        "name": "Hambúrguer Artesanal",
+        "desc": "Pão brioche, blend 180g, queijo, alface, tomate",
+        "price": 28.90,
+        "cat": "Hambúrgueres",
+        "imgUrl": ""
+      },
+      {
+        "id": 2,
+        "name": "Cheese Bacon",
+        "desc": "Blend 180g, queijo cheddar, bacon crocante",
+        "price": 32.90,
+        "cat": "Hambúrgueres",
+        "imgUrl": ""
+      },
+      {
+        "id": 3,
+        "name": "Combo Classic",
+        "desc": "Hambúrguer + Batata + Refri 350ml",
+        "price": 45.90,
+        "cat": "Combos",
+        "imgUrl": ""
+      },
+      {
+        "id": 4,
+        "name": "Combo Família",
+        "desc": "2 Hambúrgueres + 2 Batatas + 2 Refris",
+        "price": 79.90,
+        "cat": "Combos",
+        "imgUrl": ""
+      },
+      {
+        "id": 5,
+        "name": "Batata Frita",
+        "desc": "Porção 200g",
+        "price": 15.90,
+        "cat": "Acompanhamentos",
+        "imgUrl": ""
+      },
+      {
+        "id": 6,
+        "name": "Onion Rings",
+        "desc": "Porção 150g",
+        "price": 18.90,
+        "cat": "Acompanhamentos",
+        "imgUrl": ""
+      },
+      {
+        "id": 7,
+        "name": "Queijo Extra",
+        "desc": "Fatia adicional",
+        "price": 4.90,
+        "cat": "Adicionais",
+        "imgUrl": ""
+      },
+      {
+        "id": 8,
+        "name": "Bacon Extra",
+        "desc": "Porção 50g",
+        "price": 6.90,
+        "cat": "Adicionais",
+        "imgUrl": ""
+      },
+      {
+        "id": 9,
+        "name": "Refrigerante",
+        "desc": "Lata 350ml",
+        "price": 8.90,
+        "cat": "Bebidas",
+        "imgUrl": ""
+      },
+      {
+        "id": 10,
+        "name": "Suco Natural",
+        "desc": "Copo 500ml",
+        "price": 12.90,
+        "cat": "Bebidas",
+        "imgUrl": ""
+      }
+    ];
     
-    menuData = menuLocal.menu;
+    menuData = menuLocal;
     console.log("✅ Cardápio carregado localmente:", menuData);
     renderMenu(menuData);
     
@@ -153,30 +151,28 @@ function renderMenu(menu) {
       const card = document.createElement("div");
       card.classList.add("menu-item");
       
-      // Usar imagem padrão se não tiver URL
+      // CORREÇÃO AQUI: Link correto do placeholder
       const imagemUrl = item.imgUrl && item.imgUrl.trim() !== '' 
         ? item.imgUrl 
         : 'https://via.placeholder.com/300x200/FF6B6B/ffffff?text=Artesanal+Blend';
       
       card.innerHTML = `
         <img src="${imagemUrl}" alt="${item.name}" onerror="this.src='https://via.placeholder.com/300x200/FF6B6B/ffffff?text=Artesanal+Blend'">
-  <div class="item-info">
-    <h4>${item.name}</h4>
-    <p>${item.desc || 'Delicioso produto artesanal'}</p>
-    <div class="item-footer">
-      <span class="price">R$ ${item.price.toFixed(2)}</span>
-      <button class="add-btn" onclick="addToCart(${item.id})">+</button>
-    </div>
-  </div>
-`;
+        <div class="item-info">
+          <h4>${item.name}</h4>
+          <p>${item.desc || 'Delicioso produto artesanal'}</p>
+          <div class="item-footer">
+            <span class="price">R$ ${item.price.toFixed(2)}</span>
+            <button class="add-btn" onclick="addToCart(${item.id})">+</button>
+          </div>
+        </div>
+      `;
       container.appendChild(card);
     });
   });
 }
 
 // ========== Carrinho ==========
-let carrinho = JSON.parse(localStorage.getItem('carrinho')) || [];
-
 function addToCart(id) {
   const item = menuData.find(p => p.id === id);
   if (!item) {
@@ -205,9 +201,7 @@ function removeFromCart(id) {
 function updateCart() {
   const container = document.getElementById("cart-items");
   const checkoutBtn = document.getElementById("checkoutBtn");
-  const subtotalElem = document.getElementById("subtotal");
-  const totalElem = document.getElementById("total");
-  const feeElem = document.getElementById("fee");
+  const totalElem = document.getElementById("cart-total");
 
   if (!container) return;
 
@@ -229,18 +223,12 @@ function updateCart() {
     container.appendChild(div);
   });
 
-  // Calcular taxa e total
-  const regionSelect = document.getElementById("region");
-  const taxa = regionSelect ? parseFloat(regionSelect.selectedOptions[0].dataset.fee) || 0 : 0;
-  const total = subtotal + taxa;
+  const total = subtotal;
 
-  if (subtotalElem) subtotalElem.textContent = `R$ ${subtotal.toFixed(2)}`;
-  if (feeElem) feeElem.textContent = `R$ ${taxa.toFixed(2)}`;
-  if (totalElem) totalElem.textContent = `R$ ${total.toFixed(2)}`;
+  if (totalElem) totalElem.textContent = `Total: R$ ${total.toFixed(2)}`;
   
   if (checkoutBtn) {
     checkoutBtn.disabled = carrinho.length === 0;
-    checkoutBtn.style.display = carrinho.length > 0 ? 'block' : 'none';
   }
 
   // Atualizar contador
@@ -254,7 +242,7 @@ function updateCart() {
 function showCart() {
   const cart = document.getElementById("cart");
   if (cart) {
-    cart.style.display = 'block';
+    cart.classList.add("show");
     updateCart();
   }
 }
@@ -262,65 +250,31 @@ function showCart() {
 function hideCart() {
   const cart = document.getElementById("cart");
   if (cart) {
-    cart.style.display = 'none';
+    cart.classList.remove("show");
   }
 }
 
 // ========== Enviar Pedido ==========
-async function enviarPedidoServidor(pedido) {
-  try {
-    const response = await fetch("/api/order", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(pedido),
-    });
-    
-    if (response.ok) {
-      console.log("✅ Pedido enviado ao servidor!");
-      return true;
-    } else {
-      console.error("❌ Erro ao enviar pedido:", await response.text());
-      return false;
-    }
-  } catch (err) {
-    console.error("❌ Erro de rede ao enviar pedido:", err);
-    return false;
-  }
-}
-
 function enviarPedidoWhatsApp() {
   if (carrinho.length === 0) return;
 
-  const regionSelect = document.getElementById("region");
+  const regionSelect = document.getElementById("clienteRegiao");
   const region = regionSelect ? regionSelect.value : "Retirada";
-  const taxa = regionSelect ? parseFloat(regionSelect.selectedOptions[0].dataset.fee) || 0 : 0;
+  const taxa = regionSelect ? parseFloat(regionSelect.selectedOptions[0].textContent.match(/R\$\s*([0-9,]+)/)?.[1].replace(',', '.')) || 0 : 0;
   
   const total = carrinho.reduce((sum, item) => sum + item.qtd * item.price, 0) + taxa;
-
-  const pedido = {
-    itens: carrinho.map(item => ({
-      nome: item.name,
-      quantidade: item.qtd,
-      preco: item.price,
-      subtotal: item.qtd * item.price
-    })),
-    total: total,
-    cliente: region,
-    taxa: taxa,
-    data: new Date().toISOString()
-  };
-
-  // Enviar para servidor
-  enviarPedidoServidor(pedido);
 
   // Montar mensagem WhatsApp
   let msg = `*ARTESANAL BLEND - NOVO PEDIDO*%0A%0A`;
   
-  pedido.itens.forEach(item => {
-    msg += `▪️ ${item.quantidade}x ${item.nome} - R$ ${item.subtotal.toFixed(2)}%0A`;
+  carrinho.forEach(item => {
+    msg += `▪️ ${item.qtd}x ${item.name} - R$ ${(item.qtd * item.price).toFixed(2)}%0A`;
   });
   
-  msg += `%0A*Taxa de entrega:* R$ ${taxa.toFixed(2)}%0A`;
+  if (taxa > 0) {
+    msg += `%0A*Taxa de entrega:* R$ ${taxa.toFixed(2)}%0A`;
+  }
+  
   msg += `*Total:* R$ ${total.toFixed(2)}%0A%0A`;
   msg += `*Região:* ${region}%0A`;
   
@@ -335,6 +289,12 @@ function enviarPedidoWhatsApp() {
   msg += `*Telefone:* ${telefone}%0A`;
   msg += `*Endereço:* ${endereco}%0A`;
   msg += `*Pagamento:* ${pagamento}%0A`;
+  
+  if (pagamento === "Dinheiro") {
+    const troco = document.getElementById("troco")?.value || "Não informado";
+    msg += `*Troco para:* R$ ${troco}%0A`;
+  }
+  
   msg += `*Observações:* ${observacoes}%0A%0A`;
   msg += `_Pedido gerado automaticamente via site_`;
 
@@ -374,7 +334,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // Taxa de entrega
-  const regionSelect = document.getElementById("region");
+  const regionSelect = document.getElementById("clienteRegiao");
   if (regionSelect) {
     regionSelect.addEventListener("change", updateCart);
   }
@@ -392,5 +352,3 @@ function mostrarTroco() {
 function atualizarTaxa() {
   updateCart();
 }
-
-
