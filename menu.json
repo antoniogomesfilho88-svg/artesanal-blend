@@ -1,38 +1,16 @@
-[
-  {
-    "_id": "68f1ae6ef5af2fe4ffb9013e",
-    "name": "bacon blend ",
-    "price": 23,
-    "cat": "Hambúrgueres",
-    "imgUrl": "",
-    "desc": "ddddddddfff",
-    "id": 1760669295905
-  },
-  {
-    "_id": "68f1af02f5af2fe4ffb9013f",
-    "name": "classico blend ",
-    "price": 50,
-    "cat": "Combos",
-    "imgUrl": "",
-    "desc": "dfffff",
-    "id": 1760669443794
-  },
-  {
-    "_id": "68f1b013f5af2fe4ffb90140",
-    "name": "ererrtre",
-    "price": 23,
-    "cat": "Hambúrgueres",
-    "imgUrl": "https://imgur.com/a/VpG7wjG",
-    "desc": "",
-    "id": 1760669716657
-  },
-  {
-    "_id": "68f1b2eb510b3fbeaa549d99",
-    "name": "gfghdhd",
-    "price": 65,
-    "cat": "Hambúrgueres",
-    "imgUrl": "https://imgur.com/a/VpG7wjG",
-    "desc": "fdhhdfd",
-    "id": 1760670444339
-  }
-]
+{
+  "Hambúrgueres": [
+    {
+      "nome": "Blend Clássico",
+      "preco": 25.90,
+      "descricao": "Hambúrguer 180g, queijo, alface, tomate e molho especial",
+      "imagem": "hamburguer-classico.jpg",
+      "categoria": "Hambúrgueres",
+      "disponivel": true
+    }
+  ],
+  "Combos": [],
+  "Acompanhamentos": [],
+  "Adicionais": [],
+  "Bebidas": []
+}
