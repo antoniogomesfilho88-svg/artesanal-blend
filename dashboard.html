@@ -1150,4 +1150,77 @@ function fazerLogin() {
 
   if (user === CREDENTIALS.user && pass === CREDENTIALS.pass) {
     usuarioLogado = true;
-    document.getElementById('
+    document.getElementById('currentUser').textContent = user;
+    document.getElementById('logoutBtn').style.display = 'inline-block';
+    document.getElementById('loginModal').style.display = 'none';
+    showNotification('Login realizado com sucesso!');
+    carregarDados();
+  } else {
+    showNotification('Usuário ou senha incorretos', 'error');
+  }
+}
+
+function fecharLogin() {
+  document.getElementById('loginModal').style.display = 'none';
+}
+
+document.getElementById('logoutBtn').addEventListener('click', function() {
+  usuarioLogado = false;
+  document.getElementById('currentUser').textContent = '—';
+  this.style.display = 'none';
+  document.getElementById('loginModal').style.display = 'flex';
+  showNotification('Logout realizado');
+});
+
+// ========== EVENT LISTENERS ==========
+
+// Image preview
+document.getElementById('prodImg').addEventListener('input', function() {
+  const preview = document.getElementById('imgPreview');
+  if (this.value) {
+    preview.innerHTML = `<img src="${this.value}" alt="Preview">`;
+  } else {
+    preview.innerHTML = '<div class="placeholder">Imagem será exibida aqui</div>';
+  }
+});
+
+// File input for images
+document.getElementById('prodImgFile').addEventListener('change', function(e) {
+  const file = e.target.files[0];
+  if (file) {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      document.getElementById('imgPreview').innerHTML = `<img src="${e.target.result}" alt="Preview">`;
+      // Aqui você pode fazer upload da imagem para um servidor
+    };
+    reader.readAsDataURL(file);
+  }
+});
+
+// Search and filter
+document.getElementById('searchInput').addEventListener('input', function() {
+  const searchTerm = this.value.toLowerCase();
+  const filtered = produtos.filter(p => 
+    p.name.toLowerCase().includes(searchTerm)
+  );
+  renderizarProdutos(filtered);
+});
+
+document.getElementById('filterCat').addEventListener('change', function() {
+  const category = this.value;
+  const filtered = category ? produtos.filter(p => p.cat === category) : produtos;
+  renderizarProdutos(filtered);
+});
+
+// ========== INICIALIZAÇÃO ==========
+
+// Mostrar login modal ao carregar
+document.addEventListener('DOMContentLoaded', function() {
+  document.getElementById('loginModal').style.display = 'flex';
+});
+
+// Se já estiver logado (para desenvolvimento)
+// carregarDados();
+</script>
+</body>
+</html>
