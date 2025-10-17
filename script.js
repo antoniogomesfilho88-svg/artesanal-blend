@@ -68,12 +68,13 @@ function carregarCardapioLocal() {
                         const imagemUrl = produto.imagem || '';
 
                         return `
-                            <div class="menu-item" onclick="adicionarAoCarrinho('${categoria}', '${produto.nome}', ${produto.preco || 0})">
-                                ${imagemUrl ? `<img src="${imagemUrl}" alt="${produto.nome}" />` : ''}
-                                <h3>${produto.nome}</h3>
-                                <p>${produto.descricao || ''}</p>
-                                <span class="price">R$ ${precoFormatado}</span>
-                            </div>
+                        <div class="menu-item" onclick="adicionarAoCarrinho('${categoria}', '${produto.nome}', ${produto.preco || 0})">
+                            ${imagemUrl ? `<img src="${imagemUrl}" alt="${produto.nome}" />` : ''}
+                            <h3>${produto.nome}</h3>
+                            <p>${produto.descricao || ''}</p>
+                            <span class="price">R$ ${precoFormatado}</span>
+                        </div>
+                    `;
                         `;
                     }).join('');
                 }
@@ -297,4 +298,5 @@ window.alterarQuantidade = alterarQuantidade;
 window.atualizarTaxa = atualizarTaxa;
 window.mostrarTroco = mostrarTroco;
 window.finalizarPedido = finalizarPedido;
+
 
