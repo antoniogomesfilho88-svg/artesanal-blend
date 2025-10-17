@@ -1,128 +1,115 @@
-// server.js
-import express from 'express';
-import mongoose from 'mongoose';
-import cors from 'cors';
-import dotenv from 'dotenv';
-import path from 'path';
-
-dotenv.config();
-
+const express = require('express');
+const fs = require('fs');
+const path = require('path');
+const bodyParser = require('body-parser');
 const app = express();
 const PORT = process.env.PORT || 10000;
 
-app.use(cors());
-app.use(express.json());
-app.use(express.static(path.join('.', '/')));
+// Middlewares
+app.use(bodyParser.json());
+app.use(express.static(path.join(__dirname))); // Serve todos os arquivos da raiz
+app.use(express.urlencoded({ extended: true }));
 
-// MongoDB connection
-const mongoURI = process.env.MONGO_URI;
+// Caminhos dos arquivos JSON
+const menuFile = path.join(__dirname, 'menu.json');
+const insumosFile = path.join(__dirname, 'insumos.json');
+const ordersFile = path.join(__dirname, 'orders.json');
 
-mongoose.connect(mongoURI)
-  .then(() => console.log("✅ MongoDB conectado"))
-  .catch(err => {
-    console.error("⚠️ MongoDB offline:", err.message);
-    process.exit(1);
-  });
+// Funções auxiliares
+function readJSON(filePath) {
+  if (!fs.existsSync(filePath)) fs.writeFileSync(filePath, JSON.stringify([]));
+  return JSON.parse(fs.readFileSync(filePath));
+}
 
-// Schemas
-const produtoSchema = new mongoose.Schema({
-  nome: String,
-  preco: Number,
-  categoria: String,
-  estoque: Number,
+function writeJSON(filePath, data) {
+  fs.writeFileSync(filePath, JSON.stringify(data, null, 2));
+}
+
+// -------------------- ROTAS -------------------- //
+
+// Produtos
+app.get('/api/produtos', (req, res) => {
+  const produtos = readJSON(menuFile);
+  res.json(produtos);
 });
 
-const insumoSchema = new mongoose.Schema({
-  nome: String,
-  quantidade: Number,
-  unidade: String
+app.post('/api/produtos', (req, res) => {
+  const produtos = readJSON(menuFile);
+  const newProduto = { id: Date.now(), ...req.body };
+  produtos.push(newProduto);
+  writeJSON(menuFile, produtos);
+  res.json(newProduto);
 });
 
-const pedidoSchema = new mongoose.Schema({
-  itens: [{
-    produto: String,
-    quantidade: Number,
-    preco: Number
-  }],
-  total: Number,
-  data: { type: Date, default: Date.now }
+app.put('/api/produtos/:id', (req, res) => {
+  const produtos = readJSON(menuFile);
+  const idx = produtos.findIndex(p => p.id == req.params.id);
+  if (idx === -1) return res.status(404).send('Produto não encontrado');
+  produtos[idx] = { ...produtos[idx], ...req.body };
+  writeJSON(menuFile, produtos);
+  res.json(produtos[idx]);
 });
 
-const Produto = mongoose.model('Produto', produtoSchema);
-const Insumo = mongoose.model('Insumo', insumoSchema);
-const Pedido = mongoose.model('Pedido', pedidoSchema);
-
-// Rotas Produtos
-app.get('/produtos', async (req, res) => {
-  try {
-    const produtos = await Produto.find();
-    res.json(produtos);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
+app.delete('/api/produtos/:id', (req, res) => {
+  let produtos = readJSON(menuFile);
+  produtos = produtos.filter(p => p.id != req.params.id);
+  writeJSON(menuFile, produtos);
+  res.json({ success: true });
 });
 
-app.post('/produtos', async (req, res) => {
-  try {
-    const novoProduto = new Produto(req.body);
-    await novoProduto.save();
-    res.status(201).json(novoProduto);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
+// Insumos
+app.get('/api/insumos', (req, res) => {
+  const insumos = readJSON(insumosFile);
+  res.json(insumos);
 });
 
-// Rotas Insumos
-app.get('/insumos', async (req, res) => {
-  try {
-    const insumos = await Insumo.find();
-    res.json(insumos);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
+app.post('/api/insumos', (req, res) => {
+  const insumos = readJSON(insumosFile);
+  const newInsumo = { id: Date.now(), ...req.body };
+  insumos.push(newInsumo);
+  writeJSON(insumosFile, insumos);
+  res.json(newInsumo);
 });
 
-app.post('/insumos', async (req, res) => {
-  try {
-    const novoInsumo = new Insumo(req.body);
-    await novoInsumo.save();
-    res.status(201).json(novoInsumo);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
+app.put('/api/insumos/:id', (req, res) => {
+  const insumos = readJSON(insumosFile);
+  const idx = insumos.findIndex(i => i.id == req.params.id);
+  if (idx === -1) return res.status(404).send('Insumo não encontrado');
+  insumos[idx] = { ...insumos[idx], ...req.body };
+  writeJSON(insumosFile, insumos);
+  res.json(insumos[idx]);
 });
 
-// Rotas Pedidos (PDV)
-app.get('/pedidos', async (req, res) => {
-  try {
-    const pedidos = await Pedido.find();
-    res.json(pedidos);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
+app.delete('/api/insumos/:id', (req, res) => {
+  let insumos = readJSON(insumosFile);
+  insumos = insumos.filter(i => i.id != req.params.id);
+  writeJSON(insumosFile, insumos);
+  res.json({ success: true });
 });
 
-app.post('/pedidos', async (req, res) => {
-  try {
-    const novoPedido = new Pedido(req.body);
-    await novoPedido.save();
-    res.status(201).json(novoPedido);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
+// Pedidos
+app.get('/api/pedidos', (req, res) => {
+  const pedidos = readJSON(ordersFile);
+  res.json(pedidos);
 });
 
-// Dashboard / Frontend
-app.get('/', (req, res) => {
-  res.sendFile(path.join('.', 'index.html'));
+app.post('/api/pedidos', (req, res) => {
+  const pedidos = readJSON(ordersFile);
+  const newPedido = { id: Date.now(), ...req.body, data: new Date() };
+  pedidos.push(newPedido);
+  writeJSON(ordersFile, pedidos);
+  res.json(newPedido);
 });
 
-app.get('/dashboard', (req, res) => {
-  res.sendFile(path.join('.', 'dashboard.html'));
+// Financeiro (resumo)
+app.get('/api/financeiro', (req, res) => {
+  const pedidos = readJSON(ordersFile);
+  const totalPedidos = pedidos.length;
+  const totalVendas = pedidos.reduce((acc, p) => acc + (p.total || 0), 0);
+  res.json({ totalPedidos, totalVendas });
 });
 
-// Start server
+// Iniciar servidor
 app.listen(PORT, () => {
   console.log(`🚀 Servidor rodando na porta ${PORT}`);
-  console.log("==> Your service is live 🎉");
 });
