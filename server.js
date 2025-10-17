@@ -92,16 +92,16 @@ app.get('/api/menu', async (req, res) => {
 
 // Rota 3: Criar/Salvar um novo Produto (POST)
 // ESSA ROTA RESOLVE O ERRO AO SALVAR PRODUTO NO DASHBOARD
-app.post('/api/produtos', async (req, res) => {
+app.post('/api/menu/item', async (req, res) => { 
     try {
         const novoProduto = new Produto(req.body);
-        
-        // Lógica para garantir que o 'id' seja sequencial e único
+
+        // Lógica para ID
         const ultimoProduto = await Produto.findOne().sort({ id: -1 });
         novoProduto.id = (ultimoProduto ? ultimoProduto.id : 0) + 1;
 
         const produtoSalvo = await novoProduto.save();
-        
+
         res.status(201).json({ 
             success: true,
             message: 'Produto salvo com sucesso!', 
@@ -205,3 +205,4 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`🚀 Servidor rodando na porta ${PORT}`);
 });
+
