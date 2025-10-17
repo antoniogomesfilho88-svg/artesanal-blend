@@ -5,22 +5,39 @@
 let menuData = [];
 let carrinho = JSON.parse(localStorage.getItem('carrinho')) || [];
 
+// A URL BASE DO SEU SERVIDOR NO RENDER
+const API_BASE_URL = "https://artesanal-blend.onrender.com";
+
 // ========== Carregar o cardápio ==========
 async function carregarMenu() {
   try {
     console.log("🔄 Carregando cardápio...");
     
-    // Tenta carregar da API, se não consegue usa dados locais
-    const resp = await fetch("/api/menu");
+    // CORREÇÃO CRÍTICA: Usando a URL ABSOLUTA do Render + a rota correta para produtos
+    // Assumimos que a rota correta é /api/cardapio (ou /api/produtos)
+    const resp = await fetch(API_BASE_URL + "/api/cardapio"); 
     
     if (resp.ok) {
-      menuData = await resp.json();
+      const data = await resp.json();
+      
+      // Ajuste para o formato da resposta do seu backend.
+      // Se a API retornar { success: true, data: [...] }
+      if (data && Array.isArray(data.data)) {
+        menuData = data.data; 
+      // Se a API retornar o array diretamente [...]
+      } else if (Array.isArray(data)) {
+        menuData = data;
+      } else {
+        throw new Error('Formato de dados da API inválido.');
+      }
+
       console.log("✅ Cardápio carregado da API");
     } else {
-      throw new Error('API offline');
+      // Se a resposta não for OK (ex: 404 Not Found), usa o fallback.
+      throw new Error('API offline ou rota inválida.');
     }
   } catch (err) {
-    console.log("⚠️ Usando dados locais");
+    console.error("⚠️ Falha ao carregar API. Usando dados locais:", err);
     // Dados locais de fallback
     menuData = [
       {
@@ -197,8 +214,8 @@ function updateCart() {
   if (totalElem) {
     if (taxa > 0) {
       totalElem.innerHTML = `Subtotal: R$ ${subtotal.toFixed(2)}<br>
-                            Taxa de entrega: R$ ${taxa.toFixed(2)}<br>
-                            <strong>Total: R$ ${total.toFixed(2)}</strong>`;
+                              Taxa de entrega: R$ ${taxa.toFixed(2)}<br>
+                              <strong>Total: R$ ${total.toFixed(2)}</strong>`;
     } else {
       totalElem.innerHTML = `<strong>Total: R$ ${total.toFixed(2)}</strong>`;
     }
