@@ -1,1019 +1,890 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Painel Administrativo - Gestão de Cardápio e Custos</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <style>
-        /* Estilos básicos de layout */
-        body {
-            display: flex;
-            min-height: 100vh;
-            background-color: #f8f9fa;
-        }
-        #sidebar {
-            width: 250px;
-            background-color: #343a40;
-            color: white;
-            padding: 20px;
-            flex-shrink: 0;
-        }
-        #content {
-            flex-grow: 1;
-            padding: 20px;
-        }
-        .content-section {
-            display: none;
-        }
-        .header-bar {
-            background-color: white;
-            border-bottom: 1px solid #dee2e6;
-            padding: 10px 20px;
-            margin-bottom: 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        /* Estilo para a tela de login */
-        #login-screen {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.8);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 1060;
-            display: none; /* Inicia oculto, visível apenas se não estiver logado */
-        }
-        #login-screen .card {
-            width: 350px;
-            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
-        }
-    </style>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Dashboard - Artesanal Blend</title>
+<style>
+:root {
+  --bg: #f9f9f9;
+  --panel: #ffffff;
+  --accent: #3b82f6;
+  --accent-hover: #2563eb;
+  --muted: #666;
+  --text: #222;
+  --border: #ddd;
+  --success: #22c55e;
+  --danger: #ef4444;
+  --warning: #f59e0b;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.6;
+}
+
+.wrap {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+/* Header */
+header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #fff;
+  border-radius: 12px;
+  padding: 16px 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  border: 1px solid var(--border);
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+header img {
+  width: 60px;
+  height: 60px;
+  border-radius: 10px;
+  object-fit: cover;
+}
+
+header h1 {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.user-info {
+  font-size: 14px;
+  color: var(--muted);
+}
+
+/* Main Grid */
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 400px;
+  gap: 24px;
+}
+
+@media (max-width: 1200px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Panels */
+.panel {
+  background: var(--panel);
+  padding: 24px;
+  border-radius: 12px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+  border: 1px solid var(--border);
+  margin-bottom: 20px;
+}
+
+.panel h2 {
+  margin: 0 0 20px 0;
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Stats Grid */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.stat-card {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 20px;
+  border-radius: 10px;
+  text-align: center;
+}
+
+.stat-card .num {
+  font-size: 32px;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.stat-card .label {
+  font-size: 14px;
+  opacity: 0.9;
+}
+
+/* Tables */
+.table-container {
+  overflow-x: auto;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--panel);
+}
+
+th, td {
+  padding: 12px 16px;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+  font-size: 14px;
+}
+
+th {
+  background: #f8fafc;
+  font-weight: 600;
+  color: var(--text);
+}
+
+tr:hover {
+  background: #f8fafc;
+}
+
+/* Forms */
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+@media (max-width: 768px) {
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.form-group {
+  margin-bottom: 16px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 6px;
+  font-weight: 500;
+  color: var(--text);
+  font-size: 14px;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 14px;
+  transition: border-color 0.2s;
+  background: var(--panel);
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* Image Preview */
+.img-preview {
+  width: 100%;
+  height: 200px;
+  background: #f8fafc;
+  border: 2px dashed var(--border);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  margin-bottom: 16px;
+}
+
+.img-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.img-preview .placeholder {
+  color: var(--muted);
+  text-align: center;
+  padding: 20px;
+}
+
+/* Buttons */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 12px 20px;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-decoration: none;
+}
+
+.btn-primary {
+  background: var(--accent);
+  color: white;
+}
+
+.btn-primary:hover {
+  background: var(--accent-hover);
+  transform: translateY(-1px);
+}
+
+.btn-success {
+  background: var(--success);
+  color: white;
+}
+
+.btn-danger {
+  background: var(--danger);
+  color: white;
+}
+
+.btn-warning {
+  background: var(--warning);
+  color: white;
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--text);
+  border: 1px solid var(--border);
+}
+
+.btn-ghost:hover {
+  background: #f8fafc;
+}
+
+.btn-sm {
+  padding: 8px 12px;
+  font-size: 12px;
+}
+
+/* Form Actions */
+.form-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border);
+}
+
+/* Tools */
+.tools {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border);
+}
+
+/* Orders List */
+.orders-list {
+  max-height: 500px;
+  overflow-y: auto;
+}
+
+.order-item {
+  background: #f8fafc;
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 12px;
+  border-left: 4px solid var(--accent);
+}
+
+.order-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.order-id {
+  font-weight: 600;
+  color: var(--text);
+}
+
+.order-date {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.order-total {
+  font-weight: 600;
+  color: var(--success);
+}
+
+/* Login Modal */
+.login-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.login-box {
+  background: white;
+  padding: 32px;
+  border-radius: 12px;
+  width: 400px;
+  max-width: 90vw;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+}
+
+.login-box h3 {
+  margin-bottom: 24px;
+  text-align: center;
+  color: var(--text);
+}
+
+/* Tabs */
+.tabs {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 24px;
+  background: #f8fafc;
+  padding: 4px;
+  border-radius: 8px;
+}
+
+.tab {
+  flex: 1;
+  padding: 12px 16px;
+  text-align: center;
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.tab.active {
+  background: white;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.tab-content {
+  display: none;
+}
+
+.tab-content.active {
+  display: block;
+}
+
+/* Status badges */
+.status-badge {
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.status-pending {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.status-completed {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.status-cancelled {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+/* Action buttons in tables */
+.action-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .wrap {
+    padding: 12px;
+  }
+  
+  header {
+    flex-direction: column;
+    gap: 12px;
+    text-align: center;
+  }
+  
+  .header-left, .header-right {
+    justify-content: center;
+  }
+  
+  .panel {
+    padding: 16px;
+  }
+  
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Loading states */
+.loading {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+/* Notifications */
+.notification {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  padding: 16px 20px;
+  border-radius: 8px;
+  background: white;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  border-left: 4px solid var(--success);
+  z-index: 1001;
+  transform: translateX(400px);
+  transition: transform 0.3s;
+}
+
+.notification.show {
+  transform: translateX(0);
+}
+
+.notification.error {
+  border-left-color: var(--danger);
+}
+
+/* Chart container */
+.chart-container {
+  background: white;
+  padding: 16px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  margin-top: 16px;
+}
+</style>
 </head>
 <body>
+<div class="wrap">
+  <header>
+    <div class="header-left">
+      <img src="logo.jpg" alt="Artesanal Blend">
+      <h1>Dashboard Artesanal Blend</h1>
+    </div>
+    <div class="header-right">
+      <div class="user-info">
+        Usuário: <strong id="currentUser">—</strong>
+      </div>
+      <button id="logoutBtn" class="btn btn-ghost" style="display:none">Sair</button>
+    </div>
+  </header>
 
-    <div id="login-screen">
-        <div class="card">
-            <div class="card-header bg-primary text-white text-center">
-                <h4>Acesso Restrito</h4>
-            </div>
-            <div class="card-body">
-                <div class="mb-3">
-                    <label for="loginUser" class="form-label">Usuário</label>
-                    <input type="text" class="form-control" id="loginUser" value="admin">
-                </div>
-                <div class="mb-3">
-                    <label for="loginPass" class="form-label">Senha</label>
-                    <input type="password" class="form-control" id="loginPass" value="admin123">
-                </div>
-                <button id="doLoginBtn" class="btn btn-success w-100">Entrar</button>
-            </div>
-        </div>
+  <div class="tabs">
+    <button class="tab active" onclick="showTab('dashboard')">📊 Dashboard</button>
+    <button class="tab" onclick="showTab('produtos')">🍔 Produtos</button>
+    <button class="tab" onclick="showTab('pedidos')">📦 Pedidos</button>
+    <button class="tab" onclick="showTab('vendas')">💰 Vendas</button>
+  </div>
+
+  <!-- Dashboard Tab -->
+  <div id="dashboard" class="tab-content active">
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="num" id="statTotalProdutos">0</div>
+        <div class="label">Total de Produtos</div>
+      </div>
+      <div class="stat-card">
+        <div class="num" id="statPedidosHoje">0</div>
+        <div class="label">Pedidos Hoje</div>
+      </div>
+      <div class="stat-card">
+        <div class="num" id="statVendasHoje">R$ 0</div>
+        <div class="label">Vendas Hoje</div>
+      </div>
+      <div class="stat-card">
+        <div class="num" id="statTotalPedidos">0</div>
+        <div class="label">Total de Pedidos</div>
+      </div>
     </div>
 
-    <div id="sidebar">
-        <h3 class="text-white mb-4">Admin Panel</h3>
-        <ul class="nav nav-pills flex-column mb-auto">
-            <li class="nav-item">
-                <a href="#" class="nav-link text-white active" onclick="showSection('products')">
-                    <i class="fas fa-burger me-2"></i>
-                    Produtos (Cardápio)
-                </a>
-            </li>
-            <li>
-                <a href="#" class="nav-link text-white" onclick="showSection('insumos')">
-                    <i class="fas fa-boxes me-2"></i>
-                    Insumos (Estoque)
-                </a>
-            </li>
-            <li>
-                <a href="#" class="nav-link text-white" onclick="showSection('financeiro')">
-                    <i class="fas fa-chart-line me-2"></i>
-                    Visão Financeira
-                </a>
-            </li>
-        </ul>
-        <hr>
-        <div class="d-grid gap-2">
-            <button class="btn btn-warning" id="exportBtn" title="Salvar Produtos e Fichas Técnicas no servidor">
-                <i class="fas fa-upload me-1"></i> Exportar TUDO
-            </button>
-            <button class="btn btn-info" onclick="exportInsumos()" title="Salvar Insumos no servidor (insumos.json)">
-                <i class="fas fa-upload me-1"></i> Exportar Insumos
-            </button>
-        </div>
+    <div class="panel">
+      <h2>📈 Vendas por Categoria</h2>
+      <div class="chart-container">
+        <canvas id="categoryChart" width="400" height="200"></canvas>
+      </div>
     </div>
 
-    <div id="content">
-        <div class="header-bar">
-            <h1 id="main-title">Painel de Gerenciamento</h1>
-            <div>
-                <span class="me-3">Logado como: <strong id="currentUser">—</strong></span>
-                <button class="btn btn-danger" id="logoutBtn" style="display: none;"><i class="fas fa-sign-out-alt"></i> Sair</button>
-            </div>
+    <div class="grid">
+      <div class="panel">
+        <h2>🚨 Pedidos Recentes</h2>
+        <div id="recentOrders" class="orders-list">
+          <!-- Pedidos serão carregados aqui -->
         </div>
+      </div>
 
-        <div id="products-section" class="content-section">
-            <div class="card shadow-sm">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h5>Lista de Produtos</h5>
-                    <button class="btn btn-success" onclick="openAddProductModal()">
-                        <i class="fas fa-plus me-1"></i> Adicionar Produto
-                    </button>
-                </div>
-                <div class="card-body">
-                    <table class="table table-striped table-hover">
-                        <thead>
-                            <tr>
-                                <th>ID</th>
-                                <th>Nome</th>
-                                <th>Preço Venda</th>
-                                <th>Custo Produção</th>
-                                <th>Ações</th>
-                            </tr>
-                        </thead>
-                        <tbody id="menu-tbody">
-                            </tbody>
-                    </table>
-                </div>
-            </div>
+      <div class="panel">
+        <h2>⚡ Ações Rápidas</h2>
+        <div style="display: flex; flex-direction: column; gap: 12px;">
+          <button class="btn btn-primary" onclick="showTab('produtos')">
+            ➕ Adicionar Produto
+          </button>
+          <button class="btn btn-success" onclick="exportarMenuJSON()">
+            📤 Exportar Cardápio
+          </button>
+          <button class="btn btn-warning" onclick="sincronizarCardapio()">
+            🔄 Sincronizar
+          </button>
+          <button class="btn btn-ghost" onclick="carregarEstatisticas()">
+            📊 Atualizar Dados
+          </button>
         </div>
+      </div>
+    </div>
+  </div>
 
-        <div id="insumos-section" class="content-section">
-            <div class="card shadow-sm">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h5>Gestão de Insumos</h5>
-                    <button class="btn btn-success" onclick="openAddInsumoModal()">
-                        <i class="fas fa-plus me-1"></i> Adicionar Insumo
-                    </button>
-                </div>
-                <div class="card-body">
-                    <table class="table table-striped table-hover">
-                        <thead>
-                            <tr>
-                                <th>ID</th>
-                                <th>Nome</th>
-                                <th>Custo Unitário</th>
-                                <th>Estoque Atual</th>
-                                <th>Ações</th>
-                            </tr>
-                        </thead>
-                        <tbody id="insumos-tbody">
-                            </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
+  <!-- Produtos Tab -->
+  <div id="produtos" class="tab-content">
+    <div class="panel">
+      <h2>🍔 Gerenciar Produtos</h2>
+      
+      <div style="display: flex; gap: 12px; margin-bottom: 20px;">
+        <input type="text" id="searchInput" placeholder="Buscar produtos..." style="flex: 1;">
+        <select id="filterCat">
+          <option value="">Todas as categorias</option>
+          <option value="Hambúrgueres">Hambúrgueres</option>
+          <option value="Combos">Combos</option>
+          <option value="Acompanhamentos">Acompanhamentos</option>
+          <option value="Adicionais">Adicionais</option>
+          <option value="Bebidas">Bebidas</option>
+        </select>
+        <button class="btn btn-primary" onclick="novoProduto()">
+          ➕ Novo Produto
+        </button>
+      </div>
 
-        <div id="financeiro-section" class="content-section">
-            <div class="card shadow-sm">
-                <div class="card-header">
-                    <h5>Visão Financeira (Simulação)</h5>
-                </div>
-                <div class="card-body">
-                    <p>Esta seção simularia relatórios de vendas, lucros, margem de contribuição e giro de estoque com base nos dados de custo e preço de venda.</p>
-                    <div class="alert alert-info">
-                        <strong>Margem de Lucro Bruta Média do Cardápio:</strong> (Preço Venda - Custo) / Preço Venda * 100%.
-                    </div>
-                </div>
-            </div>
-        </div>
+      <div class="table-container">
+        <table id="produtosTable">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Nome</th>
+              <th>Categoria</th>
+              <th>Preço</th>
+              <th>Imagem</th>
+              <th>Ações</th>
+            </tr>
+          </thead>
+          <tbody id="produtosTableBody">
+            <!-- Produtos serão carregados aqui -->
+          </tbody>
+        </table>
+      </div>
 
+      <div class="tools">
+        <input type="file" id="importFile" accept=".json" style="display: none;">
+        <button class="btn btn-ghost" onclick="document.getElementById('importFile').click()">
+          📥 Importar JSON
+        </button>
+        <button class="btn btn-success" onclick="exportarMenuJSON()">
+          📤 Exportar JSON
+        </button>
+        <button class="btn btn-warning" onclick="sincronizarCardapio()">
+          🔄 Sincronizar Cardápio
+        </button>
+        <button class="btn btn-ghost" onclick="localStorage.setItem('menu_backup', JSON.stringify(produtos)); showNotification('Backup local salvo!')">
+          💾 Backup Local
+        </button>
+        <button class="btn btn-ghost" onclick="restaurarBackupLocal()">
+          🔄 Restaurar Backup
+        </button>
+      </div>
     </div>
 
-    <div class="modal fade" id="productModal" tabindex="-1" aria-labelledby="productModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="productModalLabel">Adicionar/Editar Produto</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <form id="product-form">
-                        <input type="hidden" id="productId">
-                        <div class="mb-3">
-                            <label for="productName" class="form-label">Nome do Produto</label>
-                            <input type="text" class="form-control" id="productName" required>
-                        </div>
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label for="productPrice" class="form-label">Preço de Venda (R$)</label>
-                                <input type="number" step="0.01" class="form-control" id="productPrice" required>
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label for="productCat" class="form-label">Categoria</label>
-                                <select class="form-select" id="productCat" required>
-                                    <option value="lanche">Lanche</option>
-                                    <option value="bebida">Bebida</option>
-                                    <option value="sobremesa">Sobremesa</option>
-                                    <option value="acompanhamento">Acompanhamento</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="mb-3">
-                            <label for="productDesc" class="form-label">Descrição</label>
-                            <textarea class="form-control" id="productDesc"></textarea>
-                        </div>
-                        <div class="mb-3">
-                            <label for="productImgUrl" class="form-label">URL da Imagem</label>
-                            <input type="url" class="form-control" id="productImgUrl">
-                        </div>
-                    </form>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="button" class="btn btn-primary" id="saveProductBtn">Salvar Produto</button>
-                </div>
-            </div>
+    <div class="panel">
+      <h2 id="formTitle">➕ Adicionar Novo Produto</h2>
+      <form id="prodForm" onsubmit="salvarProduto(event)">
+        <input type="hidden" id="prodId">
+        
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="prodName">Nome do Produto *</label>
+            <input type="text" id="prodName" required>
+          </div>
+          
+          <div class="form-group">
+            <label for="prodPrice">Preço (R$) *</label>
+            <input type="number" id="prodPrice" step="0.01" min="0" required>
+          </div>
+          
+          <div class="form-group">
+            <label for="prodCat">Categoria *</label>
+            <select id="prodCat" required>
+              <option value="">Selecione...</option>
+              <option value="Hambúrgueres">🍔 Hambúrgueres</option>
+              <option value="Combos">🥡 Combos</option>
+              <option value="Acompanhamentos">🍟 Acompanhamentos</option>
+              <option value="Adicionais">➕ Adicionais</option>
+              <option value="Bebidas">🥤 Bebidas</option>
+            </select>
+          </div>
+          
+          <div class="form-group">
+            <label for="prodImg">URL da Imagem</label>
+            <input type="text" id="prodImg" placeholder="ex: images/hamburguer.jpg">
+          </div>
         </div>
-    </div>
-
-    <div class="modal fade" id="insumoModal" tabindex="-1" aria-labelledby="insumoModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="insumoModalLabel">Adicionar/Editar Insumo</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <form id="insumo-form">
-                        <input type="hidden" id="insumoId">
-                        
-                        <div class="row">
-                            <div class="col-md-8 mb-3">
-                                <label for="insumoName" class="form-label">Nome do Insumo</label>
-                                <input type="text" class="form-control" id="insumoName" required>
-                            </div>
-                            <div class="col-md-4 mb-3">
-                                <label for="insumoUnidade" class="form-label">Unidade Padrão</label>
-                                <select class="form-select" id="insumoUnidade" required>
-                                    <option value="g">g (Gramas)</option>
-                                    <option value="ml">ml (Mililitros)</option>
-                                    <option value="un">un (Unidade)</option>
-                                    <option value="pct">pct (Pacote)</option>
-                                    <option value="lt">lt (Litros)</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        <hr>
-                        
-                        <h6 class="mb-3">Definição do Custo Unitário (R$/unidade)</h6>
-                        
-                        <div class="row" id="calculoKgGroup">
-                            <div class="col-md-6 mb-3">
-                                <label for="insumoPrecoTotal" class="form-label">Preço Total do Pacote (R$)</label>
-                                <input type="number" step="0.01" class="form-control" id="insumoPrecoTotal" placeholder="Ex: 15.00">
-                                <small class="form-text text-muted">Preço pago pelo pacote/volume total.</small>
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label for="insumoQuantidadeKg" class="form-label">Quantidade do Pacote (Kg)</label>
-                                <input type="number" step="0.001" class="form-control" id="insumoQuantidadeKg" placeholder="Ex: 1.000 (1 Kg)">
-                                <small class="form-text text-muted">Peso total do pacote (em Kg).</small>
-                            </div>
-                        </div>
-                        
-                        <div class="row">
-                            <div class="col-md-4 mb-3" id="custoUnitarioGroup">
-                                <label for="insumoCusto" class="form-label">Custo Unitário (R$/Unidade Padrão)</label>
-                                <input type="number" step="0.0001" class="form-control" id="insumoCusto" required placeholder="Preenchido Automaticamente ou Manual">
-                                <small class="form-text text-danger">Necessário preencher manualmente para unidades como 'un', 'ml', 'pct'.</small>
-                            </div>
-                            <div class="col-md-8 mb-3">
-                                <label for="insumoEstoque" class="form-label">Estoque Atual (Unidade Padrão)</label>
-                                <input type="number" step="0.01" class="form-control" id="insumoEstoque" required>
-                                <small class="form-text text-muted">Quantidade atual em estoque (Ex: 500g, 10 un).</small>
-                            </div>
-                        </div>
-                    </form>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="button" class="btn btn-primary" id="saveInsumoBtn">Salvar Insumo</button>
-                </div>
-            </div>
+        
+        <div class="form-group">
+          <label for="prodDesc">Descrição</label>
+          <textarea id="prodDesc" rows="3" placeholder="Descrição do produto..."></textarea>
         </div>
-    </div>
-
-
-    <div class="modal fade" id="compositionModal" tabindex="-1" aria-labelledby="compositionModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-xl">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="compositionModalLabel">Ficha Técnica: <span id="compositionProductName"></span></h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <input type="hidden" id="currentProductId">
-
-                    <div class="row mb-4 p-3 bg-light border rounded">
-                        <div class="col-md-6 mb-3">
-                            <label for="compInsumoSelect" class="form-label">Adicionar Insumo</label>
-                            <select class="form-select" id="compInsumoSelect"></select>
-                        </div>
-                        <div class="col-md-4 mb-3">
-                            <label for="compInsumoUso" class="form-label">Uso por Produto (Unidade Padrão)</label>
-                            <input type="number" step="0.01" class="form-control" id="compInsumoUso" placeholder="Ex: 50 (para 50g ou 50un)">
-                        </div>
-                        <div class="col-md-2 d-flex align-items-end">
-                            <button class="btn btn-success w-100" onclick="addInsumoToComposition()">
-                                <i class="fas fa-plus"></i> Add
-                            </button>
-                        </div>
-                    </div>
-
-                    <h6 class="mt-4">Insumos na Ficha Técnica</h6>
-                    <table class="table table-bordered table-sm">
-                        <thead>
-                            <tr class="table-primary">
-                                <th>Insumo</th>
-                                <th>Un. Padrão</th>
-                                <th>Custo Unit. (R$/Un.)</th>
-                                <th>Uso por Prod.</th>
-                                <th>Custo Total no Prod.</th>
-                                <th>Ação</th>
-                            </tr>
-                        </thead>
-                        <tbody id="composition-tbody">
-                            </tbody>
-                        <tfoot>
-                            <tr>
-                                <th colspan="4" class="text-end">Custo Total do Produto:</th>
-                                <th id="totalCostDisplay">R$ 0.00</th>
-                                <th></th>
-                            </tr>
-                        </tfoot>
-                    </table>
-
-                    <div class="alert alert-warning mt-3">
-                        Lembre-se de clicar em **"Exportar TUDO"** no painel lateral para salvar esta Ficha Técnica no servidor.
-                    </div>
-
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
-                </div>
-            </div>
+        
+        <div class="form-group">
+          <label>Preview da Imagem</label>
+          <div class="img-preview" id="imgPreview">
+            <div class="placeholder">Imagem será exibida aqui</div>
+          </div>
+          <input type="file" id="prodImgFile" accept="image/*" style="display: none;">
+          <button type="button" class="btn btn-ghost btn-sm" onclick="document.getElementById('prodImgFile').click()">
+            📁 Escolher Arquivo
+          </button>
         </div>
+        
+        <div class="form-actions">
+          <button type="submit" class="btn btn-primary">
+            💾 Salvar Produto
+          </button>
+          <button type="button" class="btn btn-ghost" onclick="limparForm()">
+            ❌ Cancelar
+          </button>
+        </div>
+      </form>
     </div>
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-
-    <script>
-        // ==================================================================
-        // VARIÁVEIS GLOBAIS E ELEMENTOS DOM 
-        // ==================================================================
-        let produtos = []; 
-        let insumos = []; 
-        let logged = false;
-        // Variável que armazena a composição de TODOS os produtos (estrutura: { produtoId: [{insumoId, uso}] })
-        let composicoes = {}; 
-        let currentProductComposition = []; 
-        let currentProductId = null; 
-
-        // Elementos de Segurança
-        const loginModal = document.getElementById('login-screen');
-        const loginUser = document.getElementById('loginUser');
-        const loginPass = document.getElementById('loginPass');
-        const doLoginBtn = document.getElementById('doLoginBtn');
-        const logoutBtn = document.getElementById('logoutBtn');
-        const currentUser = document.getElementById('currentUser');
-        
-        // Tabelas
-        const menuTbody = document.getElementById('menu-tbody');
-        const insumosTbody = document.getElementById('insumos-tbody'); 
-
-        // Modais e Formulários (Inicialização dos objetos Bootstrap - ESSENCIAL!)
-        const productModal = new bootstrap.Modal(document.getElementById('productModal'));
-        const insumoModal = new bootstrap.Modal(document.getElementById('insumoModal'));
-        const compositionModal = new bootstrap.Modal(document.getElementById('compositionModal')); // NOVO MODAL
-        
-        const saveProductBtn = document.getElementById('saveProductBtn');
-        const saveInsumoBtn = document.getElementById('saveInsumoBtn');
-
-        // ELEMENTOS DO MODAL DE INSUMO (PARA CÁLCULO)
-        const insumoPrecoTotal = document.getElementById('insumoPrecoTotal');
-        const insumoQuantidadeKg = document.getElementById('insumoQuantidadeKg');
-        const insumoCusto = document.getElementById('insumoCusto');
-        const insumoUnidade = document.getElementById('insumoUnidade'); 
-
-        // ELEMENTOS DO MODAL DE COMPOSIÇÃO (FICHA TÉCNICA)
-        const compInsumoSelect = document.getElementById('compInsumoSelect');
-        const compInsumoUso = document.getElementById('compInsumoUso');
-        const compositionTbody = document.getElementById('composition-tbody');
-        const compositionProductName = document.getElementById('compositionProductName');
-        const totalCostDisplay = document.getElementById('totalCostDisplay');
-        
-        // ==================================================================
-        // FUNÇÕES DE SEGURANÇA E AUTENTICAÇÃO (CORRIGIDAS)
-        // ==================================================================
-
-        async function checkAuth() {
-            try {
-                // Tenta carregar dados; se falhar (401), a sessão expirou
-                const response = await fetch('/api/menu'); 
-                logged = response.ok;
-            } catch (e) {
-                logged = false;
-            }
-
-            if (logged) {
-                loginModal.style.display = 'none';
-                logoutBtn.style.display = 'inline-block';
-                currentUser.innerText = 'admin';
-                await initialLoad();
-            } else {
-                loginModal.style.display = 'flex';
-                logoutBtn.style.display = 'none';
-                currentUser.innerText = '—';
-                // Garante que o usuário não pode interagir com o conteúdo principal
-                document.getElementById('content').style.pointerEvents = 'none';
-            }
-        }
-
-        doLoginBtn.onclick = async () => {
-            const user = loginUser.value;
-            const pass = loginPass.value;
-
-            try {
-                const response = await fetch('/api/login', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    // CORREÇÃO CRÍTICA: Essencial para receber o cookie de autenticação
-                    credentials: 'include', 
-                    body: JSON.stringify({ user, pass })
-                });
-
-                const data = await response.json();
-
-                if (response.ok && data.success) {
-                    alert('Login realizado com sucesso!');
-                    // Após o login, a função checkAuth() deve ser chamada para recarregar tudo
-                    checkAuth(); 
-                    document.getElementById('content').style.pointerEvents = 'auto'; // Reabilita a interação
-                } else {
-                    alert(data.message || 'Erro ao fazer login.');
-                }
-            } catch (e) {
-                console.error("Erro na requisição de login:", e);
-                alert('Erro de rede ou servidor ao tentar logar.');
-            }
-        };
-
-        logoutBtn.onclick = async () => {
-            try {
-                await fetch('/api/logout', { method: 'POST', credentials: 'include' });
-            } catch (e) {
-                console.warn("Erro ao fazer logout, mas prosseguindo com limpeza local.");
-            }
-            // Limpeza local e reexibição do modal de login
-            logged = false;
-            checkAuth();
-            alert('Você saiu do sistema.');
-        };
-
-        // ==================================================================
-        // FUNÇÕES DE NAVEGAÇÃO E UX
-        // ==================================================================
-        
-        function showSection(sectionId) {
-            document.querySelectorAll('.content-section').forEach(section => {
-                section.style.display = 'none';
-            });
-            document.getElementById(sectionId + '-section').style.display = 'block';
-
-            const titleMap = {
-                'products': 'Gerenciamento de Produtos',
-                'insumos': 'Gestão de Insumos',
-                'financeiro': 'Visão Financeira'
-            };
-            document.getElementById('main-title').innerText = titleMap[sectionId] || 'Dashboard';
-            
-            document.querySelectorAll('#sidebar .nav-link').forEach(link => {
-                link.classList.remove('active');
-            });
-            document.querySelector(`[onclick="showSection('${sectionId}')"]`).classList.add('active');
-        }
-
-        // ==================================================================
-        // FUNÇÕES DE CARREGAMENTO DE DADOS (GET)
-        // ==================================================================
-
-        async function loadMenu() {
-            try {
-                const response = await fetch("/api/menu", { cache: "no-store" });
-                if (!response.ok) { throw new Error(`Erro: ${response.status}`); }
-                produtos = await response.json(); 
-                render(); 
-            } catch (e) {
-                console.error("Erro ao carregar cardápio:", e);
-                produtos = []; 
-                render();
-            }
-        }
-        
-        async function loadInsumos() {
-            try {
-                const response = await fetch("/api/insumos", { cache: "no-store" });
-                if (!response.ok) { throw new Error(`Erro: ${response.status}`); }
-                insumos = await response.json(); 
-                renderInsumos();
-            } catch (e) {
-                console.error("Erro ao carregar insumos:", e);
-                insumos = []; 
-                renderInsumos();
-            }
-        }
-
-        async function loadComposicoes() {
-            try {
-                const response = await fetch("/api/composicoes", { cache: "no-store" });
-                if (!response.ok) { throw new Error(`Erro: ${response.status}`); }
-                
-                const data = await response.json();
-                
-                // Converte o array do servidor para o formato de objeto local: { produtoId: [{insumoId, uso}, ...] }
-                composicoes = data.reduce((acc, comp) => {
-                    const prodId = comp.produtoId;
-                    if (!acc[prodId]) {
-                        acc[prodId] = [];
-                    }
-                    acc[prodId].push({ insumoId: comp.insumoId, uso: comp.uso });
-                    return acc;
-                }, {});
-                
-            } catch (e) {
-                console.error("Erro ao carregar composições:", e);
-                composicoes = {}; 
-            }
-        }
-
-        // Função de carregamento inicial
-        async function initialLoad() {
-            // Carrega insumos e composições primeiro, pois o custo do menu depende deles
-            await loadInsumos();
-            await loadComposicoes();
-            await loadMenu();
-            // Inicia na seção de produtos
-            showSection('products');
-        }
-        
-        // ==================================================================
-        // FUNÇÕES DE EXPORTAÇÃO (POST) - CORRIGIDAS
-        // ==================================================================
-
-        const API_BASE = 'https://artesanal-blend.onrender.com/api';
-
-        // Função genérica de exportação para evitar código repetitivo
-        async function genericExport(endpoint, data, successMessage) {
-            try {
-                const response = await fetch(`${API_BASE}${endpoint}`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    credentials: 'include', // CRÍTICO: Garante que o cookie de autenticação é enviado
-                    body: JSON.stringify(data)
-                });
-
-                if (response.status === 401) {
-                    alert('Sessão expirada. Faça login novamente.');
-                    checkAuth(); // Força a reexibição do login
-                    return;
-                }
-
-                if (!response.ok) {
-                    const errorData = await response.json();
-                    throw new Error(`Falha no Servidor (${response.status}): ${errorData.message || 'Erro desconhecido.'}`);
-                }
-
-                alert(successMessage);
-                
-                // CRÍTICO: Recarrega os dados do servidor para atualizar a visualização (Resolve o "desaparecer")
-                if (endpoint.includes('/insumos/export')) {
-                    await loadInsumos(); // Recarrega os insumos
-                } else if (endpoint.includes('/export')) {
-                    // Exportar TUDO: recarrega composições e menu
-                    await loadComposicoes(); 
-                    await loadMenu(); 
-                }
-
-            } catch (error) {
-                console.error("Erro na exportação:", error);
-                alert(`Erro na exportação: ${error.message}`);
-            }
-        }
-
-
-        // Exporta Apenas Insumos
-        async function exportInsumos() {
-            await genericExport(
-                '/insumos/export', 
-                insumos, 
-                'Insumos salvos no MongoDB com sucesso!'
-            );
-        }
-
-        // Exporta Tudo (Produtos e Composições)
-        document.getElementById('exportBtn').onclick = async () => {
-             // 1. Exporta as composições (fichas técnicas)
-             // Nota: O backend precisa de uma rota POST /api/composicoes/export que aceite um ARRAY
-             const composicoesArray = Object.keys(composicoes).flatMap(produtoId => 
-                 composicoes[produtoId].map(comp => ({ 
-                     produtoId: parseInt(produtoId), 
-                     insumoId: comp.insumoId, 
-                     uso: comp.uso 
-                 }))
-             );
-             await genericExport('/composicoes/export', composicoesArray, 'Fichas Técnicas salvas.');
-             
-             // 2. Exporta o cardápio (produtos)
-             await genericExport('/export', produtos, 'Cardápio salvo no MongoDB com sucesso!');
-        };
-        
-        // ==================================================================
-        // LÓGICA DE CUSTO
-        // ==================================================================
-        function calculateProductCost(productId) {
-            const composition = composicoes[productId] || [];
-            let totalCost = 0;
-            
-            composition.forEach(item => {
-                // IDs são strings ou números? Usamos find para segurança
-                const insumo = insumos.find(i => i.id == item.insumoId); 
-                if (insumo) {
-                    // Custo Unitário (R$/unidade padrão) * Uso no produto (unidade padrão)
-                    totalCost += insumo.custoUnitario * item.uso;
-                }
-            });
-            return totalCost;
-        }
-
-        // ==================================================================
-        // FUNÇÕES DE RENDERIZAÇÃO E CRUD (Produtos)
-        // ==================================================================
-        
-        function render() {
-            menuTbody.innerHTML = '';
-            if (produtos.length === 0) {
-                menuTbody.innerHTML = '<tr><td colspan="5" class="text-center">Nenhum produto cadastrado.</td></tr>';
-                return;
-            }
-
-            produtos.forEach(p => {
-                const custo = calculateProductCost(p.id); // Calcula o custo do produto
-                
-                const row = menuTbody.insertRow();
-                row.innerHTML = `
-                    <td>${p.id}</td>
-                    <td>${p.name}</td>
-                    <td>R$ ${Number(p.price).toFixed(2)}</td>
-                    <td>R$ ${custo.toFixed(2)}</td>
-                    <td>
-                        <button class="btn btn-sm btn-info me-1" onclick="openCompositionModal(${p.id}, '${p.name.replace(/'/g, "\\'")}')" title="Gerenciar Ficha Técnica">
-                            <i class="fas fa-receipt"></i> Ficha
-                        </button>
-                        <button class="btn btn-sm btn-warning me-1" onclick="editP(${p.id})"><i class="fas fa-edit"></i></button>
-                        <button class="btn btn-sm btn-danger" onclick="delP(${p.id})"><i class="fas fa-trash-alt"></i></button>
-                    </td>
-                `;
-            });
-        }
-        
-        function openAddProductModal() {
-            document.getElementById('productModalLabel').innerText = 'Adicionar Novo Produto';
-            document.getElementById('product-form').reset(); 
-            document.getElementById('productId').value = ''; 
-            productModal.show();
-        }
-
-        function editP(id) {
-            const produto = produtos.find(p => p.id === id);
-            if (!produto) return;
-
-            document.getElementById('productModalLabel').innerText = 'Editar Produto';
-            
-            document.getElementById('productId').value = produto.id;
-            document.getElementById('productName').value = produto.name;
-            document.getElementById('productPrice').value = produto.price;
-            document.getElementById('productCat').value = produto.cat;
-            document.getElementById('productDesc').value = produto.desc || '';
-            document.getElementById('productImgUrl').value = produto.imgUrl || '';
-
-            productModal.show();
-        }
-
-        saveProductBtn.onclick = () => {
-            const id = document.getElementById('productId').value;
-            const name = document.getElementById('productName').value;
-            const price = parseFloat(document.getElementById('productPrice').value);
-            const cat = document.getElementById('productCat').value;
-            const desc = document.getElementById('productDesc').value;
-            const imgUrl = document.getElementById('productImgUrl').value;
-            
-            if (!name || isNaN(price) || !cat) {
-                alert("Nome, Preço e Categoria são obrigatórios.");
-                return;
-            }
-
-            const novoProduto = {
-                id: id ? parseInt(id) : produtos.length > 0 ? Math.max(...produtos.map(p => p.id)) + 1 : 1, 
-                name, price, cat, desc, imgUrl 
-            };
-            
-            if (id) {
-                // Editando
-                const index = produtos.findIndex(p => p.id == id);
-                if (index !== -1) {
-                    produtos[index] = { ...produtos[index], ...novoProduto };
-                    alert("Produto atualizado localmente. EXPORTE para salvar!");
-                }
-            } else {
-                // Adicionando
-                produtos.push(novoProduto);
-                alert("Produto adicionado localmente. EXPORTE para salvar!");
-            }
-
-            render();
-            productModal.hide();
-        };
-
-        function delP(id) { 
-            if (confirm(`Tem certeza que deseja excluir o produto ID ${id}?`)) {
-                produtos = produtos.filter(p => p.id !== id);
-                delete composicoes[id]; // Remove a composição do produto excluído
-                render();
-                alert('Produto excluído localmente. Lembre-se de EXPORTAR!');
-            }
-        }
-
-        // ==================================================================
-        // FUNÇÕES DE RENDERIZAÇÃO E CRUD (Insumos) - CORRIGIDAS
-        // ==================================================================
-        
-        function renderInsumos() {
-            insumosTbody.innerHTML = '';
-            if (insumos.length === 0) {
-                insumosTbody.innerHTML = '<tr><td colspan="5" class="text-center">Nenhum insumo cadastrado.</td></tr>';
-                return;
-            }
-
-            insumos.forEach(i => {
-                const row = insumosTbody.insertRow();
-                row.innerHTML = `
-                    <td>${i.id}</td>
-                    <td>${i.nome}</td>
-                    <td>R$ ${Number(i.custoUnitario).toFixed(4)} / ${i.unidade}</td>
-                    <td>${Number(i.estoqueAtual).toFixed(2)} ${i.unidade}</td>
-                    <td>
-                        <button class="btn btn-sm btn-warning me-1" onclick="editInsumo(${i.id})"><i class="fas fa-edit"></i></button>
-                        <button class="btn btn-sm btn-danger" onclick="delInsumo(${i.id})"><i class="fas fa-trash-alt"></i></button>
-                    </td>
-                `;
-            });
-        }
-
-        function calculateCustoUnitario() {
-            const precoTotal = parseFloat(insumoPrecoTotal.value);
-            const quantidadeKg = parseFloat(insumoQuantidadeKg.value);
-            const unidadeSelecionada = insumoUnidade.value.toLowerCase(); 
-
-            const calculoKgGroup = document.getElementById('calculoKgGroup');
-            const custoUnitarioGroup = document.getElementById('custoUnitarioGroup');
-            
-            // Lógica para cálculo automático (somente 'g')
-            if (unidadeSelecionada === 'g') {
-                calculoKgGroup.style.display = 'flex'; 
-                custoUnitarioGroup.classList.remove('col-md-12');
-                custoUnitarioGroup.classList.add('col-md-4');
-
-                if (!isNaN(precoTotal) && !isNaN(quantidadeKg) && quantidadeKg > 0) {
-                    const quantidadeGramas = quantidadeKg * 1000;
-                    const custoPorGrama = precoTotal / quantidadeGramas;
-                    insumoCusto.value = custoPorGrama.toFixed(4);
-                } else if (!document.getElementById('insumoId').value) {
-                    // Limpa apenas se estiver adicionando novo e o cálculo falhar
-                    insumoCusto.value = ''; 
-                }
-            } 
-            // Lógica para unidades que precisam de preenchimento manual
-            else {
-                calculoKgGroup.style.display = 'none'; 
-                custoUnitarioGroup.classList.remove('col-md-4');
-                custoUnitarioGroup.classList.add('col-md-12');
-                
-                // Se estiver adicionando e não há valor anterior, limpa o campo
-                if(!document.getElementById('insumoId').value) { 
-                    insumoCusto.value = '';
-                }
-            }
-        }
-        
-        // Configura os listeners para os campos de cálculo e unidade
-        insumoPrecoTotal.addEventListener('input', calculateCustoUnitario);
-        insumoQuantidadeKg.addEventListener('input', calculateCustoUnitario);
-        insumoUnidade.addEventListener('change', calculateCustoUnitario);
-
-        function openAddInsumoModal() {
-            document.getElementById('insumoModalLabel').innerText = 'Adicionar Novo Insumo';
-            document.getElementById('insumo-form').reset();
-            document.getElementById('insumoId').value = ''; 
-            
-            document.getElementById('insumoUnidade').value = 'g'; 
-            insumoPrecoTotal.value = '';
-            insumoQuantidadeKg.value = '';
-            insumoCusto.value = '';
-            
-            calculateCustoUnitario(); 
-            
-            insumoModal.show();
-        }
-
-        function editInsumo(id) {
-            const insumo = insumos.find(i => i.id === id);
-            if (!insumo) return;
-
-            document.getElementById('insumoModalLabel').innerText = 'Editar Insumo';
-            
-            document.getElementById('insumoId').value = insumo.id;
-            document.getElementById('insumoName').value = insumo.nome;
-            
-            // Limpa campos de cálculo na Edição (já que o custo é o que importa)
-            insumoPrecoTotal.value = ''; 
-            insumoQuantidadeKg.value = '';
-            
-            document.getElementById('insumoCusto').value = insumo.custoUnitario;
-            document.getElementById('insumoUnidade').value = insumo.unidade;
-            document.getElementById('insumoEstoque').value = insumo.estoqueAtual;
-
-            calculateCustoUnitario(); // Força a exibição correta dos campos de cálculo/manual
-            
-            insumoModal.show();
-        }
-
-        // CORRIGIDO: Lógica de Salvamento e Atribuição de ID
-        saveInsumoBtn.onclick = () => {
-            const id = document.getElementById('insumoId').value;
-            const nome = document.getElementById('insumoName').value;
-            const unidade = document.getElementById('insumoUnidade').value;
-            const custoUnitario = parseFloat(document.getElementById('insumoCusto').value);
-            const estoqueAtual = parseFloat(document.getElementById('insumoEstoque').value);
-            
-            if (!nome || isNaN(custoUnitario) || isNaN(estoqueAtual)) {
-                alert("Nome, Custo Unitário e Estoque são obrigatórios.");
-                return;
-            }
-
-            const novoInsumo = { 
-                // CORREÇÃO: Usa o ID existente ou calcula o novo ID de forma segura
-                id: id ? parseInt(id) : insumos.length > 0 ? Math.max(...insumos.map(i => i.id)) + 1 : 1, 
-                nome, 
-                unidade, 
-                custoUnitario, 
-                estoqueAtual 
-            };
-
-            if (id) {
-                // Editando insumo existente
-                const index = insumos.findIndex(i => i.id == id);
-                if (index !== -1) {
-                    insumos[index] = novoInsumo;
-                    alert("Insumo atualizado localmente. EXPORTE para salvar!");
-                }
-            } else {
-                // Adicionando novo insumo
-                insumos.push(novoInsumo);
-                alert("Insumo adicionado localmente. EXPORTE para salvar!");
-            }
-
-            renderInsumos(); 
-            insumoModal.hide();
-        };
-
-        function delInsumo(id) { 
-            if (confirm(`Tem certeza que deseja excluir o insumo ID ${id}?`)) {
-                insumos = insumos.filter(i => i.id !== id);
-                renderInsumos();
-                alert('Insumo excluído localmente. Lembre-se de EXPORTAR!');
-            }
-        }
-        
-        // ==================================================================
-        // FUNÇÕES DE FICHA TÉCNICA (COMPOSIÇÃO)
-        // ==================================================================
-        // (Mantenho a lógica original, que não estava quebrada, apenas dependente de dados)
-
-        function renderComposition() {
-            compositionTbody.innerHTML = '';
-            let totalCost = 0;
-            
-            if (!currentProductId || !composicoes[currentProductId]) {
-                totalCostDisplay.innerText = `R$ 0.00`;
-                return;
-            }
-
-            currentProductComposition = composicoes[currentProductId];
-
-            currentProductComposition.forEach((comp, index) => {
-                const insumo = insumos.find(i => i.id == comp.insumoId);
-                
-                if (!insumo) return;
-
-                const custoItem = insumo.custoUnitario * comp.uso;
-                totalCost += custoItem;
-                
-                const row = compositionTbody.insertRow();
-                row.innerHTML = `
-                    <td>${insumo.nome}</td>
-                    <td>${insumo.unidade}</td>
-                    <td>R$ ${insumo.custoUnitario.toFixed(4)}</td>
-                    <td>${comp.uso} ${insumo.unidade}</td>
-                    <td>R$ ${custoItem.toFixed(2)}</td>
-                    <td>
-                        <button class="btn btn-sm btn-danger" onclick="removeInsumoFromComposition(${index})">
-                            <i class="fas fa-trash-alt"></i>
-                        </button>
-                    </td>
-                `;
-            });
-
-            totalCostDisplay.innerText = `R$ ${totalCost.toFixed(2)}`;
-            // Atualiza o custo também no menu (na memória local)
-            const produtoIndex = produtos.findIndex(p => p.id == currentProductId);
-            if (produtoIndex !== -1) {
-                // O dashboard não armazena custo diretamente, mas o recalcula na renderização do menu.
-                // Aqui apenas garantimos que o cálculo na memória está certo.
-            }
-
-        }
-
-        function openCompositionModal(productId, productName) {
-            currentProductId = productId;
-            compositionProductName.innerText = productName;
-            
-            // Clonar a composição para edição temporária
-            if (composicoes[productId]) {
-                currentProductComposition = JSON.parse(JSON.stringify(composicoes[productId]));
-            } else {
-                currentProductComposition = [];
-            }
-            
-            // Preenche o Select de Insumos
-            compInsumoSelect.innerHTML = insumos.map(i => `<option value="${i.id}">${i.nome} (${i.unidade}) - R$ ${i.custoUnitario.toFixed(4)}/${i.unidade}</option>`).join('');
-            
-            compInsumoUso.value = '';
-            renderComposition();
-            
-            compositionModal.show();
-        }
-
-        function addInsumoToComposition() {
-            const insumoId = parseInt(compInsumoSelect.value);
-            const uso = parseFloat(compInsumoUso.value);
-
-            if (isNaN(insumoId) || isNaN(uso) || uso <= 0) {
-                alert("Selecione um insumo e insira um valor de uso válido.");
-                return;
-            }
-            
-            // Salva a alteração localmente na variável global `composicoes`
-            if (!composicoes[currentProductId]) {
-                composicoes[currentProductId] = [];
-            }
-            
-            // Verifica se o insumo já está na composição
-            const existingIndex = composicoes[currentProductId].findIndex(comp => comp.insumoId === insumoId);
-            
-            if (existingIndex > -1) {
-                composicoes[currentProductId][existingIndex].uso += uso;
-            } else {
-                composicoes[currentProductId].push({ insumoId, uso });
-            }
-
-            // Limpa o formulário de adição
-            compInsumoUso.value = '';
-            
-            renderComposition();
-            render(); // Atualiza a tabela de produtos para mostrar o novo custo
-        }
-
-        function removeInsumoFromComposition(index) {
-            if (confirm("Tem certeza que deseja remover este insumo da ficha técnica?")) {
-                composicoes[currentProductId].splice(index, 1);
-                renderComposition();
-                render(); // Atualiza a tabela de produtos para mostrar o novo custo
-            }
-        }
-
-        // ==================================================================
-        // INICIALIZAÇÃO
-        // ==================================================================
-        window.onload = checkAuth;
-
-    </script>
-</body>
-</html>
+  </div>
+
+  <!-- Pedidos Tab -->
+  <div id="pedidos" class="tab-content">
+    <div class="panel">
+      <h2>📦 Pedidos Recebidos</h2>
+      <div id="ordersList" class="orders-list">
+        <!-- Pedidos serão carregados aqui -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Vendas Tab -->
+  <div id="vendas" class="tab-content">
+    <div class="panel">
+      <h2>💰 Relatório de Vendas</h2>
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="num" id="vendasTotal">R$ 0</div>
+          <div class="label">Total em Vendas</div>
+        </div>
+        <div class="stat-card">
+          <div class="num" id="vendasMedia">R$ 0</div>
+          <div class="label">Ticket Médio</div>
+        </div>
+        <div class="stat-card">
+          <div class="num" id="vendasPedidos">0</div>
+          <div class="label">Total de Pedidos</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Login Modal -->
+<div id="loginModal" class="login-backdrop">
+  <div class="login-box">
+    <h3>🔐 Acesso Restrito</h3>
+    <div class="form-group">
+      <label>Usuário</label>
+      <input type="text" id="loginUser" placeholder="admin">
+    </div>
+    <div class="form-group">
+      <label>Senha</label>
+      <input type="password" id="loginPass" placeholder="••••••">
+    </div>
+    <div class="form-actions">
+      <button class="btn btn-primary" onclick="fazerLogin()">Entrar</button>
+      <button class="btn btn-ghost" onclick="fecharLogin()">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Notification -->
+<div id="notification" class="notification"></div>
+
+<script>
+// ==============================
+// DASHBOARD COMPLETO - Artesanal Blend
+// ==============================
+
+const CREDENTIALS = { user: "admin", pass: "1234" };
+let produtos = [];
+let pedidos = [];
+let usuarioLogado = false;
+
+// ========== FUNÇÕES PRINCIPAIS ==========
+
+// Carregar dados iniciais
+async function carregarDadosIniciais() {
+  await carregarProdutos();
+  await carregarPedidos();
+  await carregarEstatisticas();
+  
+  // Verificar login
+  if (!usuarioLogado) {
+    document.getElementById('loginModal').style.display = 'flex';
+  }
+}
+
+// Carregar produtos do servidor
+async function carregarProdutos() {
+  try {
+    const response = await fetch('/api/menu');
+    if (response.ok) {
+      produtos = await response.json();
+      renderizarProdutos();
+    }
+  } catch (error) {
+    console.error('Erro ao carregar produtos:', error);
+    showNotification('Erro ao carregar produtos', 'error');
+  }
+}
+
+// Carregar pedidos do servidor
+async function carregarPedidos() {
+  try {
+    const response = await fetch('/api/orders');
+    if (response.ok) {
+      pedidos = await response.json();
+      renderizarPedidos();
+      renderizarPedidosRecentes();
+    }
+  } catch (error) {
+    console.error('Erro ao carregar pedidos:', error);
+  }
+}
+
+// Carregar estatísticas
+async function carregarEstatisticas() {
+  try {
+    const response = await fetch('/api/stats');
+    if (response.ok) {
+      const stats = await response.json();
+      
+      document.getElementById('statTotalProdutos').textContent = stats.totalProdutos;
+      document.getElementById('statPedidosHoje').textContent = stats.pedidosHoje;
+      document.getElementById('statVendasHoje').textContent = `R$ ${stats.vendasHoje.toFixed(2)}`;
+      document.getElementById('statTotalPedidos').textContent = stats.totalPedidos;
+      
+      // Atualizar aba de vendas
+      document.getElementById('vendasTotal').textContent = `R$ ${stats.vendasHoje.toFixed(2)}`;
+      document.getElementById('vendasPedidos').textContent = stats.totalPedidos;
+      
+      const ticketMedio = stats.pedidosHoje > 0 ? stats.vendasHoje / stats.pedidosHoje : 0;
+      document.getElementById('vendasMedia').textContent = `R$ ${ticketMedio.toFixed(2)}`;
+    }
+  } catch (error) {
+    console.error('Erro ao carregar estatísticas:', error);
+  }
+}
+
+// ========== GERENCIAMENTO DE PRODUTOS ==========
+
+function renderizarProdutos(lista = produtos) {
+  const tbody = document.getElementById('produtosTableBody');
+  tbody.innerHTML = '';
+
+  lista.forEach(produto => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${produto.id}</td>
+      <td><strong>${produto.name}</strong></td>
+      <td>${produto.cat}</td>
+      <td>R$ ${produto.price.toFixed(2)}</td>
+      <td>${produto.imgUrl ? '✅' : '❌'}</td>
+      <td class="action-buttons">
+        <button class="btn btn-ghost btn-sm" onclick="editarProduto(${produto.id})" title="Editar">
+          ✏️
+        </button>
+        <button class="btn btn-ghost btn-sm" onclick="excluirProduto(${produto.id})" title="Excluir">
+          🗑️
+        </button>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+function novoProduto() {
+  document.getElementById('formTitle').textContent = '➕ Adicionar Novo Produto';
+  document.getElementById('prodForm').reset();
+  document.getElementById('prodId').value = '';
+  document.getElementById('imgPreview').innerHTML = '<div class="placeholder">Imagem será exibida aqui</div>';
+}
+
+function editarProduto(id) {
+  const produto = produtos.find(p => p.id === id);
+  if (!produto) return;
+
+  document.getElementById('formTitle').textContent = '✏️ Editar Produto';
+  document.getElementById('prodId').value = produto.id;
+  document.getElementById('prodName').value = produto.name;
+  document.getElementById('prodPrice').value = produto.price;
+  document.getElementById('prodCat').value = produto.cat;
+  document.getElementById('prodImg').value = produto.imgUrl || '';
+  document.getElementById('prodDesc').value = produto.desc || '';
+  
+  // Preview da imagem
+  if (produto.imgUrl) {
+    document.getElementById('imgPreview').innerHTML = `<img src="${produto.imgUrl}" alt="${produto.name}">`;
+  }
+  
+  // Rol
