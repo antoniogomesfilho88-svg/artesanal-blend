@@ -74,19 +74,19 @@ function renderMenu(menu) {
       // Usar imagem padrão se não tiver URL
       const imagemUrl = item.imgUrl && item.imgUrl.trim() !== '' 
         ? item.imgUrl 
-        : 'https://i.imgur.com/6Hb2K3o.jpg'; // Imagem padrão
+        : 'https://via.placeholder.com/300x200/FF6B6B/ffffff?text=Artesanal+Blend';
       
       card.innerHTML = `
-        <img src="${imagemUrl}" alt="${item.name}" onerror="this.src='https://i.imgur.com/6Hb2K3o.jpg'">
-        <div class="item-info">
-          <h4>${item.name}</h4>
-          <p>${item.desc || 'Delicioso produto artesanal'}</p>
-          <div class="item-footer">
-            <span class="price">R$ ${item.price.toFixed(2)}</span>
-            <button class="add-btn" onclick="addToCart(${item.id})">+</button>
-          </div>
-        </div>
-      `;
+        <img src="${imagemUrl}" alt="${item.name}" onerror="this.src='https://via.placeholder.com/300x200/FF6B6B/ffffff?text=Artesanal+Blend'">
+  <div class="item-info">
+    <h4>${item.name}</h4>
+    <p>${item.desc || 'Delicioso produto artesanal'}</p>
+    <div class="item-footer">
+      <span class="price">R$ ${item.price.toFixed(2)}</span>
+      <button class="add-btn" onclick="addToCart(${item.id})">+</button>
+    </div>
+  </div>
+`;
       container.appendChild(card);
     });
   });
@@ -310,3 +310,4 @@ function mostrarTroco() {
 function atualizarTaxa() {
   updateCart();
 }
+
