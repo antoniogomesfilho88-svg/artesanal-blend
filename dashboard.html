@@ -1,94 +1,94 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Dashboard Artesanal Blend</title>
-  <link rel="stylesheet" href="dashboard.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Artesanal Blend - Dashboard</title>
+  <link rel="stylesheet" href="dashboard.css" />
   <script src="https://kit.fontawesome.com/a2d04d6c3f.js" crossorigin="anonymous"></script>
 </head>
 <body>
   <header class="header">
-    <img src="logo.jpg" alt="Logo" class="logo">
-    <h1>Dashboard Artesanal Blend</h1>
+    <div class="header-content">
+      <img src="logo.jpg" alt="Logo" class="logo" />
+      <h1>Artesanal Blend - Dashboard</h1>
+    </div>
   </header>
 
-  <nav class="tabs">
+  <nav class="dashboard-nav">
     <button class="tab-btn active" data-tab="produtos">Produtos</button>
     <button class="tab-btn" data-tab="insumos">Insumos</button>
     <button class="tab-btn" data-tab="pedidos">Pedidos</button>
     <button class="tab-btn" data-tab="financeiro">Financeiro</button>
   </nav>
 
-  <main>
+  <main class="dashboard-main">
     <!-- PRODUTOS -->
     <section id="produtos" class="tab-content active">
-      <h2>Produtos</h2>
+      <h2>Gerenciar Produtos</h2>
       <button id="addProdutoBtn" class="btn primary">➕ Adicionar Produto</button>
-      <table id="produtosTable">
-        <thead>
-          <tr>
-            <th>Imagem</th>
-            <th>Nome</th>
-            <th>Preço</th>
-            <th>Descrição</th>
-            <th>Insumos</th>
-            <th>Ações</th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-      </table>
+      <div id="produtosList" class="list-container"></div>
     </section>
 
     <!-- INSUMOS -->
     <section id="insumos" class="tab-content">
-      <h2>Insumos</h2>
+      <h2>Gerenciar Insumos</h2>
       <button id="addInsumoBtn" class="btn primary">➕ Adicionar Insumo</button>
-      <table id="insumosTable">
-        <thead>
-          <tr>
-            <th>Nome</th>
-            <th>Quantidade</th>
-            <th>Unidade</th>
-            <th>Custo Unitário</th>
-            <th>Ações</th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-      </table>
+      <div id="insumosList" class="list-container"></div>
     </section>
 
     <!-- PEDIDOS -->
     <section id="pedidos" class="tab-content">
       <h2>Pedidos</h2>
-      <table id="pedidosTable">
-        <thead>
-          <tr>
-            <th>Cliente</th>
-            <th>Produtos</th>
-            <th>Total</th>
-            <th>Pagamento</th>
-            <th>Observações</th>
-            <th>Data</th>
-            <th>Ações</th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-      </table>
+      <button id="addPedidoBtn" class="btn primary">➕ Adicionar Pedido Manual</button>
+      <div id="pedidosList" class="list-container"></div>
+      <button id="printPedidosBtn" class="btn secondary">🖨 Imprimir Cupons</button>
     </section>
 
     <!-- FINANCEIRO -->
     <section id="financeiro" class="tab-content">
       <h2>Financeiro</h2>
-      <div class="financeiro-info">
-        <p>Receita Total: R$ <span id="receitaTotal">0,00</span></p>
-        <p>Custo Total: R$ <span id="custoTotal">0,00</span></p>
-        <p>Lucro: R$ <span id="lucroTotal">0,00</span></p>
-        <p>Total de Pedidos: <span id="totalPedidos">0</span></p>
+      <div id="relatorioFinanceiro">
+        <p>Total de Vendas: R$ <span id="totalVendas">0,00</span></p>
+        <p>Total de Custos: R$ <span id="totalCustos">0,00</span></p>
+        <p>Lucro: R$ <span id="lucro">0,00</span></p>
       </div>
+      <table id="financeTable">
+        <thead>
+          <tr>
+            <th>Data</th>
+            <th>Produto</th>
+            <th>Quantidade</th>
+            <th>Preço Unitário</th>
+            <th>Custo</th>
+            <th>Lucro</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
     </section>
   </main>
 
+  <footer>
+    <p>🍔 Artesanal Blend - Dashboard Profissional</p>
+  </footer>
+
   <script src="dashboard.js"></script>
+  <script>
+    // Controle das abas
+    const tabs = document.querySelectorAll(".tab-btn");
+    const contents = document.querySelectorAll(".tab-content");
+
+    tabs.forEach(tab => {
+      tab.addEventListener("click", () => {
+        tabs.forEach(t => t.classList.remove("active"));
+        tab.classList.add("active");
+
+        const target = tab.dataset.tab;
+        contents.forEach(c => c.classList.remove("active"));
+        document.getElementById(target).classList.add("active");
+      });
+    });
+  </script>
 </body>
 </html>
