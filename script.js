@@ -10,7 +10,18 @@ async function carregarMenu() {
   try {
     console.log("🔄 Carregando cardápio...");
     
-    // DADOS LOCAIS - funciona sem API
+    // Tenta carregar da API, se não consegue usa dados locais
+    const resp = await fetch("/api/menu");
+    
+    if (resp.ok) {
+      menuData = await resp.json();
+      console.log("✅ Cardápio carregado da API");
+    } else {
+      throw new Error('API offline');
+    }
+  } catch (err) {
+    console.log("⚠️ Usando dados locais");
+    // Dados locais de fallback
     menuData = [
       {
         "id": 1,
@@ -38,14 +49,6 @@ async function carregarMenu() {
       },
       {
         "id": 4,
-        "name": "Combo Família",
-        "desc": "2 Hambúrgueres + 2 Batatas + 2 Refris",
-        "price": 79.90,
-        "cat": "Combos",
-        "imgUrl": ""
-      },
-      {
-        "id": 5,
         "name": "Batata Frita",
         "desc": "Porção 200g",
         "price": 15.90,
@@ -53,53 +56,17 @@ async function carregarMenu() {
         "imgUrl": "batata.jpg"
       },
       {
-        "id": 6,
-        "name": "Onion Rings",
-        "desc": "Porção 150g",
-        "price": 18.90,
-        "cat": "Acompanhamentos",
-        "imgUrl": ""
-      },
-      {
-        "id": 7,
-        "name": "Queijo Extra",
-        "desc": "Fatia adicional",
-        "price": 4.90,
-        "cat": "Adicionais",
-        "imgUrl": ""
-      },
-      {
-        "id": 8,
-        "name": "Bacon Extra",
-        "desc": "Porção 50g",
-        "price": 6.90,
-        "cat": "Adicionais",
-        "imgUrl": ""
-      },
-      {
-        "id": 9,
+        "id": 5,
         "name": "Refrigerante",
         "desc": "Lata 350ml",
         "price": 8.90,
         "cat": "Bebidas",
         "imgUrl": ""
-      },
-      {
-        "id": 10,
-        "name": "Suco Natural",
-        "desc": "Copo 500ml",
-        "price": 12.90,
-        "cat": "Bebidas",
-        "imgUrl": ""
       }
     ];
-    
-    console.log("✅ Cardápio carregado localmente");
-    renderMenu(menuData);
-    
-  } catch (err) {
-    console.error("❌ Erro ao carregar cardápio:", err);
   }
+  
+  renderMenu(menuData);
 }
 
 // ========== Renderizar o cardápio ==========
