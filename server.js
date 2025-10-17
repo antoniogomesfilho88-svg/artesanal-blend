@@ -5,6 +5,7 @@ import cors from 'cors';
 import bodyParser from 'body-parser';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import fs from 'fs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -32,7 +33,8 @@ const ProdutoSchema = new mongoose.Schema({
   imagem: String,
   categoria: String,
   disponivel: { type: Boolean, default: true },
-  destaque: { type: Boolean, default: false }
+  ingredientes: [String],
+  tempoPreparo: Number
 });
 
 const InsumoSchema = new mongoose.Schema({
@@ -40,21 +42,26 @@ const InsumoSchema = new mongoose.Schema({
   quantidade: Number,
   unidade: String,
   preco: Number,
-  uso: { type: Number, default: 0 }
+  minimo: Number
 });
 
 const PedidoSchema = new mongoose.Schema({
   cliente: String,
   telefone: String,
+  endereco: String,
+  regiao: String,
+  taxaEntrega: Number,
   itens: [{ 
     nome: String, 
     quantidade: Number, 
     preco: Number,
-    produtoId: String 
+    categoria: String
   }],
   total: Number,
-  status: { type: String, default: 'pendente' },
+  formaPagamento: String,
+  troco: Number,
   observacao: String,
+  status: { type: String, default: 'pendente' },
   criadoEm: { type: Date, default: Date.now }
 });
 
@@ -67,21 +74,29 @@ app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));
 });
 
-app.get('/cardapio', async (req, res) => {
+// API para o cardápio - mantém mesma estrutura do seu menu.json
+app.get('/api/cardapio', async (req, res) => {
   try {
     const produtos = await Produto.find({ disponivel: true });
-    res.json(produtos);
+    
+    // Converter para o formato do seu cardápio atual
+    const cardapioFormatado = {
+      "Hambúrgueres": produtos.filter(p => p.categoria === 'Hambúrgueres'),
+      "Combos": produtos.filter(p => p.categoria === 'Combos'),
+      "Acompanhamentos": produtos.filter(p => p.categoria === 'Acompanhamentos'),
+      "Adicionais": produtos.filter(p => p.categoria === 'Adicionais'),
+      "Bebidas": produtos.filter(p => p.categoria === 'Bebidas')
+    };
+    
+    res.json(cardapioFormatado);
   } catch (error) {
-    res.status(500).json({ error: 'Erro ao carregar cardápio' });
-  }
-});
-
-app.get('/api/produtos-ativos', async (req, res) => {
-  try {
-    const produtos = await Produto.find({ disponivel: true });
-    res.json(produtos);
-  } catch (error) {
-    res.status(500).json({ error: 'Erro ao carregar produtos' });
+    // Fallback para o menu.json se a API falhar
+    try {
+      const menuData = fs.readFileSync(path.join(__dirname, 'menu.json'), 'utf8');
+      res.json(JSON.parse(menuData));
+    } catch (fallbackError) {
+      res.status(500).json({ error: 'Erro ao carregar cardápio' });
+    }
   }
 });
 
@@ -93,7 +108,7 @@ app.get('/dashboard', (req, res) => {
 // ===== API Produtos =====
 app.get('/api/produtos', async (req, res) => {
   try {
-    const produtos = await Produto.find().sort({ nome: 1 });
+    const produtos = await Produto.find().sort({ categoria: 1, nome: 1 });
     res.json(produtos);
   } catch (error) {
     res.status(500).json({ error: 'Erro ao carregar produtos' });
@@ -128,26 +143,6 @@ app.delete('/api/produtos/:id', async (req, res) => {
   }
 });
 
-// ===== API Insumos =====
-app.get('/api/insumos', async (req, res) => {
-  try {
-    const insumos = await Insumo.find();
-    res.json(insumos);
-  } catch (error) {
-    res.status(500).json({ error: 'Erro ao carregar insumos' });
-  }
-});
-
-app.post('/api/insumos', async (req, res) => {
-  try {
-    const insumo = new Insumo(req.body);
-    await insumo.save();
-    res.json({ success: true, insumo });
-  } catch (error) {
-    res.status(500).json({ error: 'Erro ao criar insumo' });
-  }
-});
-
 // ===== API Pedidos =====
 app.get('/api/pedidos', async (req, res) => {
   try {
@@ -162,41 +157,9 @@ app.post('/api/pedidos', async (req, res) => {
   try {
     const pedido = new Pedido(req.body);
     await pedido.save();
-    
-    // Atualizar uso de insumos
-    for (const item of pedido.itens) {
-      // Lógica para atualizar insumos baseada nos produtos vendidos
-      // (você pode implementar conforme suas receitas)
-    }
-    
     res.json({ success: true, pedido });
   } catch (error) {
     res.status(500).json({ error: 'Erro ao criar pedido' });
-  }
-});
-
-app.put('/api/pedidos/:id', async (req, res) => {
-  try {
-    const pedido = await Pedido.findByIdAndUpdate(req.params.id, req.body, { new: true });
-    res.json({ success: true, pedido });
-  } catch (error) {
-    res.status(500).json({ error: 'Erro ao atualizar pedido' });
-  }
-});
-
-// ===== API Financeiro =====
-app.get('/api/financeiro', async (req, res) => {
-  try {
-    const pedidos = await Pedido.find();
-    const insumos = await Insumo.find();
-
-    const vendas = pedidos.reduce((acc, p) => acc + p.total, 0);
-    const gastos = insumos.reduce((acc, i) => acc + (i.preco * i.quantidade), 0);
-    const lucro = vendas - gastos;
-
-    res.json({ vendas, gastos, lucro });
-  } catch (error) {
-    res.status(500).json({ error: 'Erro ao carregar dados financeiros' });
   }
 });
 
