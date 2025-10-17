@@ -10,10 +10,9 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 10000;
 
-// Middleware
 app.use(cors());
 app.use(express.json());
-app.use(express.static(path.join('.', '/'))); // Serve arquivos estáticos na raiz
+app.use(express.static(path.join('.', '/')));
 
 // MongoDB connection
 const mongoURI = process.env.MONGO_URI;
@@ -22,10 +21,10 @@ mongoose.connect(mongoURI)
   .then(() => console.log("✅ MongoDB conectado"))
   .catch(err => {
     console.error("⚠️ MongoDB offline:", err.message);
-    process.exit(1); // encerra o processo se não conectar
+    process.exit(1);
   });
 
-// Schema exemplo (substituir pelos seus)
+// Schemas
 const produtoSchema = new mongoose.Schema({
   nome: String,
   preco: Number,
@@ -33,9 +32,27 @@ const produtoSchema = new mongoose.Schema({
   estoque: Number,
 });
 
-const Produto = mongoose.model('Produto', produtoSchema);
+const insumoSchema = new mongoose.Schema({
+  nome: String,
+  quantidade: Number,
+  unidade: String
+});
 
-// Rotas
+const pedidoSchema = new mongoose.Schema({
+  itens: [{
+    produto: String,
+    quantidade: Number,
+    preco: Number
+  }],
+  total: Number,
+  data: { type: Date, default: Date.now }
+});
+
+const Produto = mongoose.model('Produto', produtoSchema);
+const Insumo = mongoose.model('Insumo', insumoSchema);
+const Pedido = mongoose.model('Pedido', pedidoSchema);
+
+// Rotas Produtos
 app.get('/produtos', async (req, res) => {
   try {
     const produtos = await Produto.find();
@@ -55,12 +72,56 @@ app.post('/produtos', async (req, res) => {
   }
 });
 
-// Rota teste para o dashboard
+// Rotas Insumos
+app.get('/insumos', async (req, res) => {
+  try {
+    const insumos = await Insumo.find();
+    res.json(insumos);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/insumos', async (req, res) => {
+  try {
+    const novoInsumo = new Insumo(req.body);
+    await novoInsumo.save();
+    res.status(201).json(novoInsumo);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Rotas Pedidos (PDV)
+app.get('/pedidos', async (req, res) => {
+  try {
+    const pedidos = await Pedido.find();
+    res.json(pedidos);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/pedidos', async (req, res) => {
+  try {
+    const novoPedido = new Pedido(req.body);
+    await novoPedido.save();
+    res.status(201).json(novoPedido);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Dashboard / Frontend
 app.get('/', (req, res) => {
+  res.sendFile(path.join('.', 'index.html'));
+});
+
+app.get('/dashboard', (req, res) => {
   res.sendFile(path.join('.', 'dashboard.html'));
 });
 
-// Inicia servidor
+// Start server
 app.listen(PORT, () => {
   console.log(`🚀 Servidor rodando na porta ${PORT}`);
   console.log("==> Your service is live 🎉");
