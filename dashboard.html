@@ -77,6 +77,7 @@
     <div class="tab-content" id="financeiroTab">
       <div class="section-header">
         <h2>Relatório Financeiro</h2>
+        <button class="btn secondary" onclick="dashboard.updateFinanceiro()">🔄 Atualizar</button>
       </div>
       <div class="financeiro-cards">
         <div class="finance-card">
@@ -92,60 +93,6 @@
           <p id="lucro">R$ 0,00</p>
         </div>
       </div>
-    </div>
-  </div>
-
-  <!-- Modal Produto -->
-  <div id="modalProduto" class="modal" style="display: none;">
-    <div class="modal-content">
-      <h3 id="modalProdutoTitulo">Novo Produto</h3>
-      <form id="formProduto">
-        <input type="hidden" id="produtoId">
-        
-        <div class="form-group">
-          <label>Nome do Produto</label>
-          <input type="text" id="produtoNome" required>
-        </div>
-
-        <div class="form-group">
-          <label>Categoria</label>
-          <select id="produtoCategoria" required>
-            <option value="">Selecione...</option>
-            <option value="Hambúrgueres">🍔 Hambúrgueres</option>
-            <option value="Combos">🥡 Combos</option>
-            <option value="Acompanhamentos">🍟 Acompanhamentos</option>
-            <option value="Adicionais">➕ Adicionais</option>
-            <option value="Bebidas">🥤 Bebidas</option>
-          </select>
-        </div>
-
-        <div class="form-group">
-          <label>Preço (R$)</label>
-          <input type="number" id="produtoPreco" step="0.01" required>
-        </div>
-
-        <div class="form-group">
-          <label>Descrição</label>
-          <textarea id="produtoDescricao" rows="3"></textarea>
-        </div>
-
-        <div class="form-group">
-          <label>URL da Imagem</label>
-          <input type="text" id="produtoImagem">
-        </div>
-
-        <div class="form-group">
-          <label>
-            <input type="checkbox" id="produtoDisponivel" checked>
-            Disponível no cardápio
-          </label>
-        </div>
-
-        <div class="modal-actions">
-          <button type="submit" class="btn primary">💾 Salvar</button>
-          <button type="button" class="btn secondary" onclick="dashboard.fecharModal()">❌ Cancelar</button>
-        </div>
-      </form>
     </div>
   </div>
 
