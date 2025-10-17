@@ -1,44 +1,38 @@
-{
-  "menu": [
-    {
-      "id": 1,
-      "name": "Hambúrguer Artesanal",
-      "desc": "Pão brioche, blend 180g, queijo, alface, tomate",
-      "price": 28.90,
-      "cat": "Hambúrgueres",
-      "imgUrl": "https://via.placeholder.com/300x200/FF6B6B/ffffff?text=Hambúrguer"
-    },
-    {
-      "id": 2,
-      "name": "Cheese Bacon",
-      "desc": "Blend 180g, queijo cheddar, bacon crocante",
-      "price": 32.90,
-      "cat": "Hambúrgueres",
-      "imgUrl": ""
-    },
-    {
-      "id": 3,
-      "name": "Combo Classic",
-      "desc": "Hambúrguer + Batata + Refri",
-      "price": 45.90,
-      "cat": "Combos",
-      "imgUrl": ""
-    },
-    {
-      "id": 4,
-      "name": "Batata Frita",
-      "desc": "Porção 200g",
-      "price": 15.90,
-      "cat": "Acompanhamentos",
-      "imgUrl": ""
-    },
-    {
-      "id": 5,
-      "name": "Refrigerante",
-      "desc": "Lata 350ml",
-      "price": 8.90,
-      "cat": "Bebidas",
-      "imgUrl": ""
-    }
-  ]
-}
+[
+  {
+    "_id": "68f1ae6ef5af2fe4ffb9013e",
+    "name": "bacon blend ",
+    "price": 23,
+    "cat": "Hambúrgueres",
+    "imgUrl": "",
+    "desc": "ddddddddfff",
+    "id": 1760669295905
+  },
+  {
+    "_id": "68f1af02f5af2fe4ffb9013f",
+    "name": "classico blend ",
+    "price": 50,
+    "cat": "Combos",
+    "imgUrl": "",
+    "desc": "dfffff",
+    "id": 1760669443794
+  },
+  {
+    "_id": "68f1b013f5af2fe4ffb90140",
+    "name": "ererrtre",
+    "price": 23,
+    "cat": "Hambúrgueres",
+    "imgUrl": "https://imgur.com/a/VpG7wjG",
+    "desc": "",
+    "id": 1760669716657
+  },
+  {
+    "_id": "68f1b2eb510b3fbeaa549d99",
+    "name": "gfghdhd",
+    "price": 65,
+    "cat": "Hambúrgueres",
+    "imgUrl": "https://imgur.com/a/VpG7wjG",
+    "desc": "fdhhdfd",
+    "id": 1760670444339
+  }
+]
