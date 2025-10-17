@@ -1,128 +1,147 @@
-const express = require('express');
-const mongoose = require('mongoose');
-const bodyParser = require('body-parser');
-const cors = require('cors');
+// server.js
+import express from "express";
+import mongoose from "mongoose";
+import cors from "cors";
+import bodyParser from "body-parser";
+import path from "path";
 
 const app = express();
+const PORT = process.env.PORT || 10000;
+
+// Middlewares
 app.use(cors());
 app.use(bodyParser.json());
-app.use(express.static('.'));
+app.use(express.static("public"));
 
-// --- Conexão MongoDB ---
-const mongoURI = 'SUA_URI_MONGODB_AQUI';
-mongoose.connect(mongoURI)
-  .then(() => console.log('✅ MongoDB conectado'))
-  .catch(err => console.error('⚠️ MongoDB offline', err));
+// MongoDB
+const MONGO_URI = process.env.MONGO_URI || "mongodb://localhost:27017/artesanal_blend";
 
-// --- Schemas ---
+mongoose.connect(MONGO_URI)
+  .then(() => console.log("✅ MongoDB conectado"))
+  .catch(err => console.error("❌ Erro MongoDB:", err));
+
+// Schemas
 const InsumoSchema = new mongoose.Schema({
   nome: String,
   quantidade: Number,
   unidade: String,
-  precoUnitario: Number
+  custoUnitario: Number
 });
-const Insumo = mongoose.model('Insumo', InsumoSchema);
 
 const ProdutoSchema = new mongoose.Schema({
   nome: String,
   preco: Number,
-  descricao: String,
   imagem: String,
-  insumos: [{ insumo: { type: mongoose.Schema.Types.ObjectId, ref: 'Insumo' }, quantidade: Number }]
+  descricao: String,
+  insumos: [InsumoSchema]
 });
-const Produto = mongoose.model('Produto', ProdutoSchema);
 
 const PedidoSchema = new mongoose.Schema({
+  produtos: [{ produtoId: mongoose.Schema.Types.ObjectId, quantidade: Number }],
+  total: Number,
   cliente: {
     nome: String,
     telefone: String,
     endereco: String,
     regiao: String
   },
-  itens: [{ produto: { type: mongoose.Schema.Types.ObjectId, ref: 'Produto' }, quantidade: Number }],
-  total: Number,
   pagamento: String,
   troco: Number,
   obs: String,
-  criadoEm: { type: Date, default: Date.now }
+  data: { type: Date, default: Date.now }
 });
-const Pedido = mongoose.model('Pedido', PedidoSchema);
 
-// --- Rotas API ---
+const Produto = mongoose.model("Produto", ProdutoSchema);
+const Pedido = mongoose.model("Pedido", PedidoSchema);
+const Insumo = mongoose.model("Insumo", InsumoSchema);
 
-// Produtos
-app.get('/api/produtos', async (req, res) => {
-  const produtos = await Produto.find().populate('insumos.insumo');
+// Rotas de Produtos
+app.get("/produtos", async (req, res) => {
+  const produtos = await Produto.find();
   res.json(produtos);
 });
 
-app.post('/api/produtos', async (req, res) => {
+app.post("/produtos", async (req, res) => {
   const produto = new Produto(req.body);
   await produto.save();
   res.json(produto);
 });
 
-app.put('/api/produtos/:id', async (req, res) => {
+app.put("/produtos/:id", async (req, res) => {
   const produto = await Produto.findByIdAndUpdate(req.params.id, req.body, { new: true });
   res.json(produto);
 });
 
-app.delete('/api/produtos/:id', async (req, res) => {
+app.delete("/produtos/:id", async (req, res) => {
   await Produto.findByIdAndDelete(req.params.id);
-  res.json({ sucesso: true });
+  res.json({ message: "Produto removido" });
 });
 
-// Insumos
-app.get('/api/insumos', async (req, res) => {
+// Rotas de Insumos
+app.get("/insumos", async (req, res) => {
   const insumos = await Insumo.find();
   res.json(insumos);
 });
 
-app.post('/api/insumos', async (req, res) => {
+app.post("/insumos", async (req, res) => {
   const insumo = new Insumo(req.body);
   await insumo.save();
   res.json(insumo);
 });
 
-app.put('/api/insumos/:id', async (req, res) => {
+app.put("/insumos/:id", async (req, res) => {
   const insumo = await Insumo.findByIdAndUpdate(req.params.id, req.body, { new: true });
   res.json(insumo);
 });
 
-app.delete('/api/insumos/:id', async (req, res) => {
+app.delete("/insumos/:id", async (req, res) => {
   await Insumo.findByIdAndDelete(req.params.id);
-  res.json({ sucesso: true });
+  res.json({ message: "Insumo removido" });
 });
 
-// Pedidos
-app.get('/api/pedidos', async (req, res) => {
-  const pedidos = await Pedido.find().populate('itens.produto');
+// Rotas de Pedidos
+app.get("/pedidos", async (req, res) => {
+  const pedidos = await Pedido.find().sort({ data: -1 });
   res.json(pedidos);
 });
 
-app.post('/api/pedidos', async (req, res) => {
+app.post("/pedidos", async (req, res) => {
   const pedido = new Pedido(req.body);
   await pedido.save();
   res.json(pedido);
 });
 
-// --- Dashboard financeiro
-app.get('/api/financeiro', async (req, res) => {
-  const pedidos = await Pedido.find().populate('itens.produto');
-  let totalVendas = 0;
-  let totalCusto = 0;
+// Relatório Financeiro
+app.get("/financeiro", async (req, res) => {
+  const pedidos = await Pedido.find();
+  const produtos = await Produto.find();
 
-  pedidos.forEach(p => {
-    totalVendas += p.total;
-    p.itens.forEach(i => {
-      const custoItem = i.produto.insumos.reduce((acc, ins) => acc + (ins.insumo.precoUnitario * ins.quantidade), 0);
-      totalCusto += custoItem * i.quantidade;
+  let receitaTotal = 0;
+  let custoTotal = 0;
+
+  pedidos.forEach(pedido => {
+    receitaTotal += pedido.total;
+    pedido.produtos.forEach(item => {
+      const produto = produtos.find(p => p._id.equals(item.produtoId));
+      if (produto) {
+        let custoProduto = 0;
+        produto.insumos.forEach(insumo => {
+          custoProduto += insumo.custoUnitario * (insumo.quantidade / 1); // ajusta unidade se necessário
+        });
+        custoTotal += custoProduto * item.quantidade;
+      }
     });
   });
 
-  res.json({ totalVendas, totalCusto, lucro: totalVendas - totalCusto });
+  res.json({
+    receitaTotal,
+    custoTotal,
+    lucro: receitaTotal - custoTotal,
+    totalPedidos: pedidos.length
+  });
 });
 
-// --- Start server
-const PORT = process.env.PORT || 10000;
-app.listen(PORT, () => console.log(`🚀 Servidor rodando na porta ${PORT}`));
+// Inicializa servidor
+app.listen(PORT, () => {
+  console.log(`🚀 Servidor rodando na porta ${PORT}`);
+});
