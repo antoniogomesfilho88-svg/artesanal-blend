@@ -1,145 +1,144 @@
-const apiBase = '/api';
+let secaoAtual = 'produtos';
+mostrarSecao(secaoAtual);
 
-// Containers
-const produtosContainer = document.getElementById('produtosContainer');
-const insumosContainer = document.getElementById('insumosContainer');
-const pedidosContainer = document.getElementById('pedidosContainer');
-const financeiroContainer = document.getElementById('financeiroContainer');
-
-// Função para atualizar o dashboard
-async function carregarDashboard() {
-  await carregarProdutos();
-  await carregarInsumos();
-  await carregarPedidos();
-  await atualizarFinanceiro();
+// FUNÇÃO PARA NAVEGAR ENTRE SEÇÕES
+function mostrarSecao(secao) {
+  document.querySelectorAll('.secao').forEach(s => s.style.display = 'none');
+  document.getElementById(secao).style.display = 'block';
+  secaoAtual = secao;
 }
 
-// ==================== PRODUTOS ====================
+// ================= PRODUTOS =================
+const formProduto = document.getElementById('formProduto');
+const tabelaProdutos = document.querySelector('#tabelaProdutos tbody');
+
 async function carregarProdutos() {
-  produtosContainer.innerHTML = '';
-  const res = await fetch(`${apiBase}/produtos`);
+  const res = await fetch('/api/produtos');
   const produtos = await res.json();
-  produtos.forEach(prod => {
-    const card = document.createElement('div');
-    card.className = 'card produto-card';
-    card.innerHTML = `
-      <img src="${prod.imagem || 'batata.jpg'}" alt="${prod.nome}" />
-      <h3>${prod.nome}</h3>
-      <p>Preço: R$ ${prod.preco.toFixed(2)}</p>
-      <button onclick="editarProduto('${prod._id}')">✏️ Editar</button>
-      <button onclick="deletarProduto('${prod._id}')">🗑️ Excluir</button>
-    `;
-    produtosContainer.appendChild(card);
+  tabelaProdutos.innerHTML = '';
+  produtos.forEach(p => {
+    tabelaProdutos.innerHTML += `<tr>
+      <td>${p.nome}</td>
+      <td>R$ ${p.preco.toFixed(2)}</td>
+      <td><img src="${p.imagem}" alt="${p.nome}" width="50"></td>
+      <td>
+        <button onclick="editarProduto('${p._id}','${p.nome}',${p.preco},'${p.imagem}')">✏️</button>
+        <button onclick="deletarProduto('${p._id}')">🗑️</button>
+      </td>
+    </tr>`;
   });
 }
-
-async function adicionarProduto() {
-  const nome = prompt('Nome do produto:');
-  const preco = parseFloat(prompt('Preço do produto:'));
-  const imagem = prompt('URL da imagem:');
-  if (!nome || !preco) return;
-  await fetch(`${apiBase}/produtos`, {
-    method: 'POST',
-    headers: {'Content-Type':'application/json'},
-    body: JSON.stringify({nome, preco, imagem})
+formProduto.addEventListener('submit', async e => {
+  e.preventDefault();
+  const nome = document.getElementById('produtoNome').value;
+  const preco = parseFloat(document.getElementById('produtoPreco').value);
+  const imagem = document.getElementById('produtoImagem').value;
+  await fetch('/api/produtos', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({nome, preco, imagem})
   });
-  carregarDashboard();
-}
-
-async function editarProduto(id) {
-  const nome = prompt('Novo nome:');
-  const preco = parseFloat(prompt('Novo preço:'));
-  const imagem = prompt('Nova URL da imagem:');
-  await fetch(`${apiBase}/produtos/${id}`, {
-    method: 'PUT',
-    headers: {'Content-Type':'application/json'},
-    body: JSON.stringify({nome, preco, imagem})
-  });
-  carregarDashboard();
-}
-
+  formProduto.reset();
+  carregarProdutos();
+});
 async function deletarProduto(id) {
-  if (!confirm('Deseja realmente excluir?')) return;
-  await fetch(`${apiBase}/produtos/${id}`, {method:'DELETE'});
-  carregarDashboard();
+  await fetch(`/api/produtos/${id}`,{method:'DELETE'});
+  carregarProdutos();
 }
+async function editarProduto(id, nome, preco, imagem) {
+  const novoNome = prompt("Novo nome:", nome);
+  const novoPreco = parseFloat(prompt("Novo preço:", preco));
+  const novaImagem = prompt("Nova imagem URL:", imagem);
+  if(novoNome && !isNaN(novoPreco)){
+    await fetch(`/api/produtos/${id}`, {
+      method:'PUT', headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({nome:novoNome, preco:novaPreco, imagem:novaImagem})
+    });
+    carregarProdutos();
+  }
+}
+carregarProdutos();
 
-// ==================== INSUMOS ====================
+// ================= INSUMOS =================
+const formInsumo = document.getElementById('formInsumo');
+const tabelaInsumos = document.querySelector('#tabelaInsumos tbody');
+
 async function carregarInsumos() {
-  insumosContainer.innerHTML = '';
-  const res = await fetch(`${apiBase}/insumos`);
+  const res = await fetch('/api/insumos');
   const insumos = await res.json();
-  insumos.forEach(insumo => {
-    const card = document.createElement('div');
-    card.className = 'card insumo-card';
-    card.innerHTML = `
-      <h3>${insumo.nome}</h3>
-      <p>Quantidade: ${insumo.quantidade}</p>
-      <button onclick="editarInsumo('${insumo._id}')">✏️ Editar</button>
-      <button onclick="deletarInsumo('${insumo._id}')">🗑️ Excluir</button>
-    `;
-    insumosContainer.appendChild(card);
+  tabelaInsumos.innerHTML = '';
+  insumos.forEach(i => {
+    tabelaInsumos.innerHTML += `<tr>
+      <td>${i.nome}</td>
+      <td>${i.quantidade}</td>
+      <td>
+        <button onclick="editarInsumo('${i._id}','${i.nome}',${i.quantidade})">✏️</button>
+        <button onclick="deletarInsumo('${i._id}')">🗑️</button>
+      </td>
+    </tr>`;
   });
 }
-
-async function adicionarInsumo() {
-  const nome = prompt('Nome do insumo:');
-  const quantidade = parseInt(prompt('Quantidade:'), 10);
-  if (!nome || isNaN(quantidade)) return;
-  await fetch(`${apiBase}/insumos`, {
-    method: 'POST',
-    headers: {'Content-Type':'application/json'},
-    body: JSON.stringify({nome, quantidade})
+formInsumo.addEventListener('submit', async e => {
+  e.preventDefault();
+  const nome = document.getElementById('insumoNome').value;
+  const quantidade = parseInt(document.getElementById('insumoQuantidade').value);
+  await fetch('/api/insumos',{
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({nome, quantidade})
   });
-  carregarDashboard();
-}
-
-async function editarInsumo(id) {
-  const nome = prompt('Novo nome:');
-  const quantidade = parseInt(prompt('Nova quantidade:'), 10);
-  await fetch(`${apiBase}/insumos/${id}`, {
-    method: 'PUT',
-    headers: {'Content-Type':'application/json'},
-    body: JSON.stringify({nome, quantidade})
-  });
-  carregarDashboard();
-}
-
+  formInsumo.reset();
+  carregarInsumos();
+});
 async function deletarInsumo(id) {
-  if (!confirm('Deseja realmente excluir?')) return;
-  await fetch(`${apiBase}/insumos/${id}`, {method:'DELETE'});
-  carregarDashboard();
+  await fetch(`/api/insumos/${id}`,{method:'DELETE'});
+  carregarInsumos();
 }
+async function editarInsumo(id, nome, quantidade){
+  const novoNome = prompt("Novo nome:", nome);
+  const novaQtd = parseInt(prompt("Nova quantidade:", quantidade));
+  if(novoNome && !isNaN(novaQtd)){
+    await fetch(`/api/insumos/${id}`,{
+      method:'PUT', headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({nome:novoNome, quantidade:novaQtd})
+    });
+    carregarInsumos();
+  }
+}
+carregarInsumos();
 
-// ==================== PEDIDOS ====================
+// ================= PEDIDOS =================
+const tabelaPedidos = document.querySelector('#tabelaPedidos tbody');
 async function carregarPedidos() {
-  pedidosContainer.innerHTML = '';
-  const res = await fetch(`${apiBase}/pedidos`);
+  const res = await fetch('/api/pedidos');
   const pedidos = await res.json();
+  tabelaPedidos.innerHTML = '';
   pedidos.forEach(p => {
-    const card = document.createElement('div');
-    card.className = 'card pedido-card';
-    card.innerHTML = `
-      <h3>${p.clienteNome}</h3>
-      <p>Total: R$ ${p.total.toFixed(2)}</p>
-      <p>${p.itens.map(i => i.nome + ' x' + i.qtd).join(', ')}</p>
-      <p>Obs: ${p.obsCliente || '-'}</p>
-      <p>Status: ${p.status}</p>
-    `;
-    pedidosContainer.appendChild(card);
+    tabelaPedidos.innerHTML += `<tr>
+      <td>${p.clienteNome}</td>
+      <td>R$ ${p.total.toFixed(2)}</td>
+      <td>${p.status}</td>
+      <td>${p.itens.map(i=>i.nome+" x"+i.qtd).join(", ")}</td>
+      <td>
+        <button onclick="atualizarStatus('${p._id}')">✅ Concluir</button>
+      </td>
+    </tr>`;
   });
 }
-
-// ==================== FINANCEIRO ====================
-async function atualizarFinanceiro() {
-  const res = await fetch(`${apiBase}/financeiro`);
-  const total = await res.json();
-  financeiroContainer.innerHTML = `<h3>Total de vendas: R$ ${total.toFixed(2)}</h3>`;
+async function atualizarStatus(id){
+  await fetch(`/api/pedidos/${id}`, {
+    method:'PUT', headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({status:'Concluído'})
+  });
+  carregarPedidos();
 }
+carregarPedidos();
 
-// ==================== EVENTOS ====================
-document.getElementById('btnAddProduto').addEventListener('click', adicionarProduto);
-document.getElementById('btnAddInsumo').addEventListener('click', adicionarInsumo);
+// ================= FINANCEIRO =================
+async function carregarFinanceiro(){
+  const res = await fetch('/api/financeiro');
+  const total = await res.json();
+  document.getElementById('totalFinanceiro').textContent = total.toFixed(2);
+}
+carregarFinanceiro();
 
-// Inicializa dashboard
-carregarDashboard();
+// Atualiza financeiro e pedidos a cada 10s
+setInterval(()=>{carregarPedidos(); carregarFinanceiro();},10000);
