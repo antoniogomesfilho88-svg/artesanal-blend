@@ -1,170 +1,174 @@
-// ===== Dashboard.js =====
+// dashboard.js
+class Dashboard {
+  constructor() {
+    this.produtos = JSON.parse(localStorage.getItem('produtos')) || [];
+    this.insumos = JSON.parse(localStorage.getItem('insumos')) || [];
+    this.pedidos = JSON.parse(localStorage.getItem('pedidos')) || [];
+    this.init();
+  }
 
-// Inicializações
-let produtos = [];
-let insumos = [];
-let pedidos = [];
-let financeiro = { vendas: 0, gastos: 0, lucro: 0 };
+  init() {
+    this.setupEventListeners();
+    this.renderProdutos();
+    this.renderInsumos();
+    this.renderPedidos();
+    this.updateFinanceiro();
+  }
 
-// ===== Funções de Produtos =====
-function carregarProdutos() {
-  fetch('/api/produtos')
-    .then(res => res.json())
-    .then(data => {
-      produtos = data;
-      renderProdutos();
+  setupEventListeners() {
+    // Formulário de produtos
+    document.getElementById('produtoForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      this.adicionarProduto();
     });
-}
 
-function renderProdutos() {
-  const container = document.getElementById('produtos-container');
-  container.innerHTML = '';
-  produtos.forEach(prod => {
-    const card = document.createElement('div');
-    card.className = 'product-card';
-    card.innerHTML = `
-      <img src="${prod.imagem}" alt="${prod.nome}">
-      <h3>${prod.nome}</h3>
-      <p>${prod.descricao}</p>
-      <p class="price">R$ ${prod.preco.toFixed(2)}</p>
-      <button class="btn btn-secondary" onclick="editarProduto('${prod.id}')">Editar</button>
-      <button class="btn btn-primary" onclick="removerProduto('${prod.id}')">Remover</button>
-    `;
-    container.appendChild(card);
-  });
-}
+    // Formulário de insumos
+    document.getElementById('insumoForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      this.adicionarInsumo();
+    });
 
-function adicionarProduto(produto) {
-  fetch('/api/produtos', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(produto)
-  }).then(() => carregarProdutos());
-}
+    // Botão imprimir pedidos
+    document.getElementById('imprimirPedidos').addEventListener('click', () => {
+      this.imprimirPedidos();
+    });
+  }
 
-function editarProduto(id) {
-  const produto = produtos.find(p => p.id === id);
-  const novoNome = prompt('Nome:', produto.nome);
-  const novoPreco = parseFloat(prompt('Preço:', produto.preco));
-  const novaDescricao = prompt('Descrição:', produto.descricao);
-  if (novoNome && !isNaN(novoPreco) && novaDescricao) {
-    fetch(`/api/produtos/${id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ nome: novoNome, preco: novoPreco, descricao: novaDescricao })
-    }).then(() => carregarProdutos());
+  // Produtos
+  adicionarProduto() {
+    const produto = {
+      id: Date.now(),
+      nome: document.getElementById('produtoNome').value,
+      preco: parseFloat(document.getElementById('produtoPreco').value),
+      imagem: document.getElementById('produtoImagem').value,
+      descricao: document.getElementById('produtoDescricao').value
+    };
+
+    this.produtos.push(produto);
+    this.salvarNoLocalStorage('produtos', this.produtos);
+    this.renderProdutos();
+    this.limparForm('produtoForm');
+  }
+
+  renderProdutos() {
+    const container = document.getElementById('produtosContainer');
+    
+    if (this.produtos.length === 0) {
+      container.innerHTML = '<div class="empty-state">Nenhum produto cadastrado</div>';
+      return;
+    }
+
+    container.innerHTML = this.produtos.map(produto => `
+      <div class="produto-card">
+        ${produto.imagem ? `<img src="${produto.imagem}" alt="${produto.nome}" class="produto-imagem">` : ''}
+        <h3>${produto.nome}</h3>
+        <div class="preco">R$ ${produto.preco.toFixed(2)}</div>
+        <div class="descricao">${produto.descricao}</div>
+        <div class="card-actions">
+          <button class="btn-editar" onclick="dashboard.editarProduto(${produto.id})">✏️ Editar</button>
+          <button class="btn-excluir" onclick="dashboard.excluirProduto(${produto.id})">🗑️ Excluir</button>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  // Insumos
+  adicionarInsumo() {
+    const insumo = {
+      id: Date.now(),
+      nome: document.getElementById('insumoNome').value,
+      quantidade: parseInt(document.getElementById('insumoQtd').value),
+      unidade: document.getElementById('insumoUnidade').value,
+      custo: parseFloat(document.getElementById('insumoCusto').value)
+    };
+
+    this.insumos.push(insumo);
+    this.salvarNoLocalStorage('insumos', this.insumos);
+    this.renderInsumos();
+    this.limparForm('insumoForm');
+  }
+
+  renderInsumos() {
+    const container = document.getElementById('insumosContainer');
+    
+    if (this.insumos.length === 0) {
+      container.innerHTML = '<div class="empty-state">Nenhum insumo cadastrado</div>';
+      return;
+    }
+
+    container.innerHTML = this.insumos.map(insumo => `
+      <div class="insumo-card">
+        <h3>${insumo.nome}</h3>
+        <div class="quantidade">${insumo.quantidade} ${insumo.unidade}</div>
+        <div class="custo">Custo: R$ ${insumo.custo.toFixed(2)}/${insumo.unidade}</div>
+        <div class="card-actions">
+          <button class="btn-editar" onclick="dashboard.editarInsumo(${insumo.id})">✏️ Editar</button>
+          <button class="btn-excluir" onclick="dashboard.excluirInsumo(${insumo.id})">🗑️ Excluir</button>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  // Pedidos
+  renderPedidos() {
+    const container = document.getElementById('pedidosContainer');
+    
+    if (this.pedidos.length === 0) {
+      container.innerHTML = '<div class="empty-state">Nenhum pedido registrado</div>';
+      return;
+    }
+
+    container.innerHTML = this.pedidos.map(pedido => `
+      <div class="pedido-card">
+        <h3>Pedido #${pedido.id}</h3>
+        <div>Cliente: ${pedido.cliente}</div>
+        <div>Total: R$ ${pedido.total.toFixed(2)}</div>
+        <div>Status: ${pedido.status}</div>
+      </div>
+    `).join('');
+  }
+
+  // Financeiro
+  updateFinanceiro() {
+    const totalVendas = this.pedidos.reduce((sum, pedido) => sum + pedido.total, 0);
+    const totalCustos = this.insumos.reduce((sum, insumo) => sum + (insumo.custo * insumo.quantidade), 0);
+    const lucro = totalVendas - totalCustos;
+
+    document.getElementById('totalVendas').textContent = totalVendas.toFixed(2);
+    document.getElementById('totalCustos').textContent = totalCustos.toFixed(2);
+    document.getElementById('lucro').textContent = lucro.toFixed(2);
+  }
+
+  // Utilitários
+  salvarNoLocalStorage(chave, dados) {
+    localStorage.setItem(chave, JSON.stringify(dados));
+  }
+
+  limparForm(formId) {
+    document.getElementById(formId).reset();
+  }
+
+  imprimirPedidos() {
+    window.print();
+  }
+
+  // Métodos de edição/exclusão (simplificados)
+  excluirProduto(id) {
+    if (confirm('Tem certeza que deseja excluir este produto?')) {
+      this.produtos = this.produtos.filter(p => p.id !== id);
+      this.salvarNoLocalStorage('produtos', this.produtos);
+      this.renderProdutos();
+    }
+  }
+
+  excluirInsumo(id) {
+    if (confirm('Tem certeza que deseja excluir este insumo?')) {
+      this.insumos = this.insumos.filter(i => i.id !== id);
+      this.salvarNoLocalStorage('insumos', this.insumos);
+      this.renderInsumos();
+    }
   }
 }
 
-function removerProduto(id) {
-  if (confirm('Deseja realmente remover o produto?')) {
-    fetch(`/api/produtos/${id}`, { method: 'DELETE' }).then(() => carregarProdutos());
-  }
-}
-
-// ===== Funções de Insumos =====
-function carregarInsumos() {
-  fetch('/api/insumos')
-    .then(res => res.json())
-    .then(data => {
-      insumos = data;
-      renderInsumos();
-    });
-}
-
-function renderInsumos() {
-  const container = document.getElementById('insumos-container');
-  container.innerHTML = '';
-  insumos.forEach(insumo => {
-    const tr = document.createElement('tr');
-    tr.innerHTML = `
-      <td>${insumo.nome}</td>
-      <td>${insumo.quantidade}</td>
-      <td>${insumo.unidade}</td>
-      <td><input type="number" value="${insumo.uso}" onchange="atualizarCusto('${insumo.id}', this.value)"></td>
-      <td>R$ ${(insumo.preco * insumo.uso).toFixed(2)}</td>
-    `;
-    container.appendChild(tr);
-  });
-}
-
-function atualizarCusto(id, valor) {
-  const insumo = insumos.find(i => i.id === id);
-  insumo.uso = parseFloat(valor);
-  renderInsumos();
-}
-
-// ===== Funções de Pedidos =====
-function carregarPedidos() {
-  fetch('/api/pedidos')
-    .then(res => res.json())
-    .then(data => {
-      pedidos = data;
-      renderPedidos();
-    });
-}
-
-function renderPedidos() {
-  const container = document.getElementById('pedidos-container');
-  container.innerHTML = '';
-  pedidos.forEach(p => {
-    const card = document.createElement('div');
-    card.className = 'order-card';
-    card.innerHTML = `
-      <h4>Pedido #${p.id}</h4>
-      <p>Cliente: ${p.cliente}</p>
-      <p>Total: R$ ${p.total.toFixed(2)}</p>
-      <p>Status: <span class="status ${p.status}">${p.status}</span></p>
-      <button class="btn btn-primary" onclick="imprimirPedido('${p.id}')">Imprimir Cupom</button>
-      <button class="btn btn-secondary" onclick="atualizarStatus('${p.id}')">Atualizar Status</button>
-    `;
-    container.appendChild(card);
-  });
-}
-
-function atualizarStatus(id) {
-  const status = prompt('Novo status (pending/completed/cancelled):');
-  if (status) {
-    fetch(`/api/pedidos/${id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ status })
-    }).then(() => carregarPedidos());
-  }
-}
-
-function imprimirPedido(id) {
-  const pedido = pedidos.find(p => p.id === id);
-  let printContent = `Pedido #${pedido.id}\nCliente: ${pedido.cliente}\nTotal: R$ ${pedido.total.toFixed(2)}\nItens:\n`;
-  pedido.itens.forEach(i => {
-    printContent += `- ${i.nome} x${i.qtd} = R$ ${(i.preco * i.qtd).toFixed(2)}\n`;
-  });
-  const win = window.open('', '', 'width=400,height=600');
-  win.document.write('<pre>' + printContent + '</pre>');
-  win.print();
-  win.close();
-}
-
-// ===== Funções Financeiro =====
-function carregarFinanceiro() {
-  fetch('/api/financeiro')
-    .then(res => res.json())
-    .then(data => {
-      financeiro = data;
-      renderFinanceiro();
-    });
-}
-
-function renderFinanceiro() {
-  document.getElementById('vendas').textContent = `R$ ${financeiro.vendas.toFixed(2)}`;
-  document.getElementById('gastos').textContent = `R$ ${financeiro.gastos.toFixed(2)}`;
-  document.getElementById('lucro').textContent = `R$ ${financeiro.lucro.toFixed(2)}`;
-}
-
-// ===== Inicialização =====
-document.addEventListener('DOMContentLoaded', () => {
-  carregarProdutos();
-  carregarInsumos();
-  carregarPedidos();
-  carregarFinanceiro();
-});
+// Inicializar dashboard
+const dashboard = new Dashboard();
