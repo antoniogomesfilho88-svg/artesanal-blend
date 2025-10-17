@@ -1,49 +1,76 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Artesanal Blend - Dashboard</title>
-  <link rel="stylesheet" href="dashboard.css" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard - Artesanal Blend</title>
+  <link rel="stylesheet" href="dashboard.css">
   <script src="https://kit.fontawesome.com/a2d04d6c3f.js" crossorigin="anonymous"></script>
 </head>
 <body>
-  <header class="header">
-    <div class="header-content">
-      <img src="logo.jpg" alt="Logo" class="logo" />
-      <h1>Dashboard Artesanal Blend</h1>
-    </div>
+  <header class="dashboard-header">
+    <img src="logo.jpg" alt="Logo" class="logo">
+    <h1>Dashboard Artesanal Blend</h1>
   </header>
 
-  <main class="dashboard-main">
-    <!-- Produtos -->
-    <section class="dashboard-section">
-      <h2>Produtos <button id="btnAddProduto" class="btn">➕ Adicionar Produto</button></h2>
-      <div id="produtosContainer" class="dashboard-grid"></div>
+  <nav class="dashboard-nav">
+    <button onclick="mostrarSecao('produtos')">Produtos</button>
+    <button onclick="mostrarSecao('insumos')">Insumos</button>
+    <button onclick="mostrarSecao('pedidos')">Pedidos</button>
+    <button onclick="mostrarSecao('financeiro')">Financeiro</button>
+  </nav>
+
+  <main>
+    <!-- PRODUTOS -->
+    <section id="produtos" class="secao">
+      <h2>Gerenciar Produtos</h2>
+      <form id="formProduto">
+        <input type="text" id="produtoNome" placeholder="Nome do produto" required>
+        <input type="number" id="produtoPreco" placeholder="Preço" required step="0.01">
+        <input type="text" id="produtoImagem" placeholder="URL da Imagem">
+        <button type="submit">Adicionar Produto</button>
+      </form>
+      <table id="tabelaProdutos">
+        <thead>
+          <tr><th>Nome</th><th>Preço</th><th>Imagem</th><th>Ações</th></tr>
+        </thead>
+        <tbody></tbody>
+      </table>
     </section>
 
-    <!-- Insumos -->
-    <section class="dashboard-section">
-      <h2>Insumos <button id="btnAddInsumo" class="btn">➕ Adicionar Insumo</button></h2>
-      <div id="insumosContainer" class="dashboard-grid"></div>
+    <!-- INSUMOS -->
+    <section id="insumos" class="secao">
+      <h2>Gerenciar Insumos</h2>
+      <form id="formInsumo">
+        <input type="text" id="insumoNome" placeholder="Nome do insumo" required>
+        <input type="number" id="insumoQuantidade" placeholder="Quantidade" required>
+        <button type="submit">Adicionar Insumo</button>
+      </form>
+      <table id="tabelaInsumos">
+        <thead>
+          <tr><th>Nome</th><th>Quantidade</th><th>Ações</th></tr>
+        </thead>
+        <tbody></tbody>
+      </table>
     </section>
 
-    <!-- Pedidos -->
-    <section class="dashboard-section">
-      <h2>Pedidos Recebidos</h2>
-      <div id="pedidosContainer" class="dashboard-grid"></div>
+    <!-- PEDIDOS -->
+    <section id="pedidos" class="secao">
+      <h2>Pedidos</h2>
+      <table id="tabelaPedidos">
+        <thead>
+          <tr><th>Cliente</th><th>Total</th><th>Status</th><th>Itens</th><th>Ações</th></tr>
+        </thead>
+        <tbody></tbody>
+      </table>
     </section>
 
-    <!-- Financeiro -->
-    <section class="dashboard-section">
+    <!-- FINANCEIRO -->
+    <section id="financeiro" class="secao">
       <h2>Financeiro</h2>
-      <div id="financeiroContainer"></div>
+      <p>Total acumulado: R$ <span id="totalFinanceiro">0.00</span></p>
     </section>
   </main>
-
-  <footer>
-    <p>🍔 Artesanal Blend - Dashboard</p>
-  </footer>
 
   <script src="dashboard.js"></script>
 </body>
