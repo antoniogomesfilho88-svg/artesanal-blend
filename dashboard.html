@@ -1,67 +1,114 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Dashboard - Artesanal Blend</title>
-  <link rel="stylesheet" href="dashboard.css">
-  <script src="https://kit.fontawesome.com/a2d04d6c3f.js" crossorigin="anonymous"></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Artesanal Blend - Dashboard</title>
+  <link rel="stylesheet" href="dashboard.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
+  <!-- Cabeçalho -->
   <header class="header">
-    <div class="header-content">
-      <img src="logo.jpg" alt="Logo" class="logo">
-      <h1>Dashboard - Artesanal Blend</h1>
-    </div>
+    <img src="logo.jpg" alt="Logo" class="logo">
+    <h1>Dashboard Artesanal Blend</h1>
   </header>
 
-  <main>
-    <section class="tabs">
-      <button class="tab-button active" data-tab="produtos">Produtos</button>
-      <button class="tab-button" data-tab="insumos">Insumos</button>
-      <button class="tab-button" data-tab="pedidos">Pedidos</button>
-      <button class="tab-button" data-tab="financeiro">Financeiro</button>
-    </section>
+  <!-- Navegação por tabs -->
+  <div class="tabs">
+    <button class="tab-button active" data-tab="produtosTab">Produtos</button>
+    <button class="tab-button" data-tab="insumosTab">Insumos</button>
+    <button class="tab-button" data-tab="pedidosTab">Pedidos</button>
+    <button class="tab-button" data-tab="financeiroTab">Financeiro</button>
+  </div>
 
-    <section id="produtos" class="tab-content active">
-      <h2>Gerenciar Produtos</h2>
-      <form id="produtoForm">
-        <input type="text" id="nomeProduto" placeholder="Nome" required>
-        <input type="number" id="precoProduto" placeholder="Preço" required>
-        <input type="text" id="descricaoProduto" placeholder="Descrição" required>
-        <input type="text" id="imagemProduto" placeholder="URL da Imagem">
-        <button type="submit">Adicionar Produto</button>
-      </form>
-      <div id="listaProdutos"></div>
-    </section>
+  <!-- Conteúdo Tabs -->
+  <div class="tab-content active" id="produtosTab">
+    <h2>📦 Produtos</h2>
+    <form id="produtoForm">
+      <input type="text" placeholder="Nome" id="produtoNome" required />
+      <input type="number" placeholder="Preço (R$)" id="produtoPreco" required />
+      <input type="text" placeholder="Imagem URL" id="produtoImagem" required />
+      <input type="text" placeholder="Descrição" id="produtoDescricao" required />
+      <button type="submit">Adicionar Produto</button>
+    </form>
+    <div id="produtosContainer"></div>
+  </div>
 
-    <section id="insumos" class="tab-content">
-      <h2>Gerenciar Insumos</h2>
-      <form id="insumoForm">
-        <input type="text" id="nomeInsumo" placeholder="Nome" required>
-        <input type="number" id="quantidadeInsumo" placeholder="Quantidade em estoque (g ou und)" required>
-        <input type="text" id="unidadeInsumo" placeholder="Unidade (g, ml, und)" required>
-        <input type="number" id="precoInsumo" placeholder="Preço" required>
-        <button type="submit">Adicionar Insumo</button>
-      </form>
-      <div id="listaInsumos"></div>
-    </section>
+  <div class="tab-content" id="insumosTab">
+    <h2>🥫 Insumos</h2>
+    <form id="insumoForm">
+      <input type="text" placeholder="Nome do insumo" id="insumoNome" required />
+      <input type="number" placeholder="Quantidade disponível" id="insumoQtd" required />
+      <input type="text" placeholder="Unidade (g, ml, un)" id="insumoUnidade" required />
+      <input type="number" placeholder="Custo unitário (R$)" id="insumoCusto" required />
+      <button type="submit">Adicionar Insumo</button>
+    </form>
+    <div id="insumosContainer"></div>
+  </div>
 
-    <section id="pedidos" class="tab-content">
-      <h2>Pedidos</h2>
-      <div id="listaPedidos"></div>
-    </section>
+  <div class="tab-content" id="pedidosTab">
+    <h2>📝 Pedidos</h2>
+    <div id="pedidosContainer"></div>
+    <button id="imprimirPedidos" class="btn">🖨 Imprimir Todos</button>
+  </div>
 
-    <section id="financeiro" class="tab-content">
-      <h2>Financeiro</h2>
-      <div id="relatorioFinanceiro">
-        <p>Total Vendas: R$ <span id="totalVendas">0.00</span></p>
-        <p>Total Custos: R$ <span id="totalCustos">0.00</span></p>
-        <p>Lucro: R$ <span id="lucro">0.00</span></p>
-      </div>
-    </section>
-  </main>
+  <div class="tab-content" id="financeiroTab">
+    <h2>💰 Financeiro</h2>
+    <div id="relatorioFinanceiro">
+      <p>Total Vendas: R$ <span id="totalVendas">0,00</span></p>
+      <p>Total Custos: R$ <span id="totalCustos">0,00</span></p>
+      <p>Lucro: R$ <span id="lucro">0,00</span></p>
+    </div>
+    <canvas id="graficoVendas" height="150"></canvas>
+    <canvas id="graficoLucro" height="150"></canvas>
+  </div>
 
+  <!-- Scripts -->
   <script src="dashboard.js"></script>
+  <script>
+    // Controle de Tabs
+    const tabButtons = document.querySelectorAll('.tab-button');
+    const tabContents = document.querySelectorAll('.tab-content');
+    tabButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        tabButtons.forEach(b => b.classList.remove('active'));
+        tabContents.forEach(tc => tc.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById(btn.dataset.tab).classList.add('active');
+      });
+    });
+
+    // Placeholder gráficos
+    const ctxVendas = document.getElementById('graficoVendas').getContext('2d');
+    const graficoVendas = new Chart(ctxVendas, {
+      type: 'bar',
+      data: {
+        labels: ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'],
+        datasets: [{
+          label: 'Vendas (R$)',
+          data: [120, 190, 300, 250, 400, 500, 450],
+          backgroundColor: '#3498db'
+        }]
+      },
+      options: { responsive: true }
+    });
+
+    const ctxLucro = document.getElementById('graficoLucro').getContext('2d');
+    const graficoLucro = new Chart(ctxLucro, {
+      type: 'line',
+      data: {
+        labels: ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'],
+        datasets: [{
+          label: 'Lucro (R$)',
+          data: [50, 120, 150, 90, 200, 220, 180],
+          borderColor: '#2ecc71',
+          fill: false,
+          tension: 0.4
+        }]
+      },
+      options: { responsive: true }
+    });
+  </script>
 </body>
 </html>
