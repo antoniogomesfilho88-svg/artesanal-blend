@@ -1,419 +1,64 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Dashboard - Artesanal Blend</title>
-<style>
-:root {
-  --bg:#f9f9f9; --panel:#fff; --accent:#3b82f6; --accent-hover:#2563eb;
-  --muted:#666; --text:#222; --border:#ddd; --success:#22c55e; --danger:#ef4444; --warning:#f59e0b;
-}
-*{margin:0;padding:0;box-sizing:border-box;}
-body{font-family:'Segoe UI',sans-serif;background:var(--bg);color:var(--text);line-height:1.6;}
-.wrap{max-width:1400px;margin:0 auto;padding:20px;}
-header{display:flex;align-items:center;justify-content:space-between;background:var(--panel);border-radius:12px;padding:16px 24px;margin-bottom:24px;box-shadow:0 2px 10px rgba(0,0,0,0.1);border:1px solid var(--border);}
-.header-left{display:flex;align-items:center;gap:16px;}
-header img{width:60px;height:60px;border-radius:10px;object-fit:cover;}
-header h1{font-size:24px;font-weight:700;color:var(--text);}
-.header-right{display:flex;align-items:center;gap:16px;}
-.user-info{font-size:14px;color:var(--muted);}
-.grid{display:grid;grid-template-columns:1fr 400px;gap:24px;}
-@media(max-width:1200px){.grid{grid-template-columns:1fr;}}
-.panel{background:var(--panel);padding:24px;border-radius:12px;box-shadow:0 2px 10px rgba(0,0,0,0.08);border:1px solid var(--border);margin-bottom:20px;}
-.panel h2{margin:0 0 20px 0;font-size:20px;font-weight:600;color:var(--text);display:flex;align-items:center;gap:8px;}
-.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:20px;}
-.stat-card{background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:white;padding:20px;border-radius:10px;text-align:center;}
-.stat-card .num{font-size:32px;font-weight:700;margin-bottom:8px;}
-.stat-card .label{font-size:14px;opacity:0.9;}
-.table-container{overflow-x:auto;border-radius:8px;border:1px solid var(--border);}
-table{width:100%;border-collapse:collapse;background:var(--panel);}
-th,td{padding:12px 16px;text-align:left;border-bottom:1px solid var(--border);font-size:14px;}
-th{background:#f8fafc;font-weight:600;color:var(--text);}
-tr:hover{background:#f8fafc;}
-.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
-@media(max-width:768px){.form-grid{grid-template-columns:1fr;}}
-.form-group{margin-bottom:16px;}
-.form-group label{display:block;margin-bottom:6px;font-weight:500;color:var(--text);font-size:14px;}
-.form-group input,.form-group select,.form-group textarea{width:100%;padding:12px;border:1px solid var(--border);border-radius:8px;font-size:14px;transition:border-color 0.2s;background:var(--panel);}
-.form-group input:focus,.form-group select:focus,.form-group textarea:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(59,130,246,0.1);}
-.img-preview{width:100%;height:200px;background:#f8fafc;border:2px dashed var(--border);border-radius:8px;display:flex;align-items:center;justify-content:center;overflow:hidden;margin-bottom:16px;}
-.img-preview img{width:100%;height:100%;object-fit:cover;}
-.img-preview .placeholder{color:var(--muted);text-align:center;padding:20px;}
-.btn{display:inline-flex;align-items:center;gap:6px;padding:12px 20px;border:none;border-radius:8px;font-size:14px;font-weight:500;cursor:pointer;transition:all 0.2s;text-decoration:none;}
-.btn-primary{background:var(--accent);color:white;}
-.btn-primary:hover{background:var(--accent-hover);transform:translateY(-1px);}
-.btn-success{background:var(--success);color:white;}
-.btn-danger{background:var(--danger);color:white;}
-.btn-warning{background:var(--warning);color:white;}
-.btn-ghost{background:transparent;color:var(--text);border:1px solid var(--border);}
-.btn-ghost:hover{background:#f8fafc;}
-.btn-sm{padding:8px 12px;font-size:12px;}
-.form-actions{display:flex;gap:12px;margin-top:24px;padding-top:20px;border-top:1px solid var(--border);}
-.tools{display:flex;flex-wrap:wrap;gap:12px;margin-top:20px;padding-top:20px;border-top:1px solid var(--border);}
-.orders-list{max-height:500px;overflow-y:auto;}
-.order-item{background:#f8fafc;border-radius:8px;padding:16px;margin-bottom:12px;border-left:4px solid var(--accent);}
-.order-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
-.order-id{font-weight:600;color:var(--text);}
-.order-date{color:var(--muted);font-size:12px;}
-.order-total{font-weight:600;color:var(--success);}
-.login-backdrop{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);display:none;align-items:center;justify-content:center;z-index:1000;}
-.login-box{background:white;padding:32px;border-radius:12px;width:400px;max-width:90vw;box-shadow:0 20px 40px rgba(0,0,0,0.1);}
-.login-box h3{margin-bottom:24px;text-align:center;color:var(--text);}
-.tabs{display:flex;gap:4px;margin-bottom:24px;background:#f8fafc;padding:4px;border-radius:8px;}
-.tab{flex:1;padding:12px 16px;text-align:center;background:transparent;border:none;border-radius:6px;cursor:pointer;font-weight:500;transition:all 0.2s;}
-.tab.active{background:white;box-shadow:0 2px 4px rgba(0,0,0,0.1);}
-.tab-content{display:none;}
-.tab-content.active{display:block;}
-.status-badge{padding:4px 8px;border-radius:4px;font-size:12px;font-weight:500;}
-.status-pending{background:#fef3c7;color:#92400e;}
-.status-completed{background:#d1fae5;color:#065f46;}
-.status-cancelled{background:#fee2e2;color:#991b1b;}
-.action-buttons{display:flex;gap:8px;}
-.loading{opacity:0.6;pointer-events:none;}
-.notification{position:fixed;top:20px;right:20px;padding:16px 20px;border-radius:8px;background:white;box-shadow:0 4px 12px rgba(0,0,0,0.15);border-left:4px solid var(--success);z-index:1001;transform:translateX(400px);transition:transform 0.3s;}
-.notification.show{transform:translateX(0);}
-.notification.error{border-left-color:var(--danger);}
-.chart-container{background:white;padding:16px;border-radius:8px;border:1px solid var(--border);margin-top:16px;}
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Artesanal Blend - Dashboard</title>
+  <link rel="stylesheet" href="dashboard.css" />
+  <script src="https://kit.fontawesome.com/a2d04d6c3f.js" crossorigin="anonymous"></script>
 </head>
 <body>
-<div class="wrap">
-  <header>
-    <div class="header-left">
-      <img src="logo.jpg" alt="Artesanal Blend">
-      <h1>Dashboard Artesanal Blend</h1>
-    </div>
-    <div class="header-right">
-      <div class="user-info">Usuário: <strong id="currentUser">—</strong></div>
-      <button id="logoutBtn" class="btn btn-ghost" style="display:none">Sair</button>
-    </div>
+  <!-- Cabeçalho -->
+  <header class="dashboard-header">
+    <img src="logo.jpg" alt="Logo" class="logo" />
+    <h1>Dashboard - Artesanal Blend</h1>
   </header>
 
-  <div class="tabs">
-    <button class="tab active" onclick="showTab('dashboard')">📊 Dashboard</button>
-    <button class="tab" onclick="showTab('produtos')">🍔 Produtos</button>
-    <button class="tab" onclick="showTab('insumos')">🧾 Insumos</button>
-    <button class="tab" onclick="showTab('pdv')">🛒 PDV</button>
-    <button class="tab" onclick="showTab('vendas')">💰 Financeiro</button>
-  </div>
+  <!-- Navegação do dashboard -->
+  <nav class="dashboard-nav">
+    <button class="tab-btn active" data-tab="produtos-tab">Produtos</button>
+    <button class="tab-btn" data-tab="insumos-tab">Insumos</button>
+    <button class="tab-btn" data-tab="pedidos-tab">Pedidos</button>
+    <button class="tab-btn" data-tab="financeiro-tab">Financeiro</button>
+  </nav>
 
-  <!-- DASHBOARD -->
-  <div id="dashboard" class="tab-content active">
-    <div class="stats-grid">
-      <div class="stat-card"><div class="num" id="statTotalProdutos">0</div><div class="label">Total de Produtos</div></div>
-      <div class="stat-card"><div class="num" id="statPedidosHoje">0</div><div class="label">Pedidos Hoje</div></div>
-      <div class="stat-card"><div class="num" id="statVendasHoje">R$ 0</div><div class="label">Vendas Hoje</div></div>
-      <div class="stat-card"><div class="num" id="statTotalPedidos">0</div><div class="label">Total de Pedidos</div></div>
-    </div>
-    <div class="grid">
-      <div class="panel">
-        <h2>🚨 Pedidos Recentes</h2>
-        <div id="recentOrders" class="orders-list"></div>
-      </div>
-      <div class="panel">
-        <h2>⚡ Ações Rápidas</h2>
-        <div style="display:flex;flex-direction:column;gap:12px;">
-          <button class="btn btn-primary" onclick="showTab('produtos')">➕ Adicionar Produto</button>
-          <button class="btn btn-primary" onclick="showTab('insumos')">➕ Adicionar Insumo</button>
-          <button class="btn btn-ghost" onclick="carregarDados()">🔄 Atualizar Dados</button>
-        </div>
-      </div>
-    </div>
-  </div>
+  <!-- Conteúdos das abas -->
+  <section id="produtos-tab" class="tab-content active">
+    <h2>Produtos</h2>
+    <button id="addProdutoBtn" class="btn primary">➕ Adicionar Produto</button>
+    <div id="produtos-list" class="table-container"></div>
+  </section>
 
-  <!-- PRODUTOS -->
-  <div id="produtos" class="tab-content">
-    <div class="panel">
-      <h2>🍔 Gerenciar Produtos</h2>
-      <div style="display:flex;gap:12px;margin-bottom:20px;">
-        <input type="text" id="searchProd" placeholder="Buscar produtos..." style="flex:1;">
-        <select id="filterCatProd">
-          <option value="">Todas categorias</option>
-          <option value="Hambúrgueres">Hambúrgueres</option>
-          <option value="Combos">Combos</option>
-          <option value="Acompanhamentos">Acompanhamentos</option>
-          <option value="Bebidas">Bebidas</option>
-        </select>
-        <button class="btn btn-primary" onclick="abrirFormProduto()">Novo Produto</button>
-      </div>
-      <div class="table-container">
-        <table id="tableProdutos">
-          <thead>
-            <tr><th>Nome</th><th>Categoria</th><th>Preço</th><th>Ações</th></tr>
-          </thead>
-          <tbody></tbody>
-        </table>
-      </div>
+  <section id="insumos-tab" class="tab-content">
+    <h2>Insumos</h2>
+    <button id="addInsumoBtn" class="btn primary">➕ Adicionar Insumo</button>
+    <div id="insumos-list" class="table-container"></div>
+  </section>
+
+  <section id="pedidos-tab" class="tab-content">
+    <h2>Pedidos</h2>
+    <div id="pedidos-list" class="table-container"></div>
+  </section>
+
+  <section id="financeiro-tab" class="tab-content">
+    <h2>Financeiro</h2>
+    <p>Total de pedidos: <strong id="totalPedidos">0</strong></p>
+    <p>Total em vendas: <strong id="totalVendas">R$ 0,00</strong></p>
+  </section>
+
+  <!-- Modal para adicionar/editar produtos e insumos -->
+  <div id="modal" class="modal">
+    <div class="modal-content">
+      <span class="close-modal">&times;</span>
+      <h3 id="modalTitle">Adicionar Item</h3>
+      <input type="text" id="itemNome" placeholder="Nome" />
+      <input type="text" id="itemCategoria" placeholder="Categoria (só produtos)" />
+      <input type="number" id="itemPreco" placeholder="Preço (só produtos)" />
+      <textarea id="itemDescricao" placeholder="Descrição"></textarea>
+      <button id="saveItemBtn" class="btn primary">💾 Salvar</button>
     </div>
   </div>
 
-  <!-- INSUMOS -->
-  <div id="insumos" class="tab-content">
-    <div class="panel">
-      <h2>🧾 Gerenciar Insumos</h2>
-      <div class="tools">
-        <input type="text" id="searchInsumo" placeholder="Buscar insumos..." style="flex:1;">
-        <button class="btn btn-primary" onclick="abrirFormInsumo()">Novo Insumo</button>
-      </div>
-      <div class="table-container" style="margin-top:16px;">
-        <table id="tableInsumos">
-          <thead>
-            <tr><th>Nome</th><th>Quantidade</th><th>Unidade</th><th>Custo Unitário</th><th>Ações</th></tr>
-          </thead>
-          <tbody></tbody>
-        </table>
-      </div>
-    </div>
-  </div>
-
-  <!-- PDV -->
-  <div id="pdv" class="tab-content">
-    <div class="panel">
-      <h2>🛒 Ponto de Venda (PDV)</h2>
-      <div style="display:flex;gap:12px;margin-bottom:16px;">
-        <select id="selectProdutoPDV" style="flex:1;"></select>
-        <input type="number" id="inputQtdPDV" value="1" min="1" style="width:80px;">
-        <button class="btn btn-success" onclick="adicionarAoPedido()">Adicionar</button>
-      </div>
-      <div class="table-container">
-        <table id="tablePedidoPDV">
-          <thead><tr><th>Produto</th><th>Qtd</th><th>Preço Unitário</th><th>Total</th><th>Ações</th></tr></thead>
-          <tbody></tbody>
-        </table>
-      </div>
-      <div class="form-actions">
-        <div>Total: R$ <span id="totalPedidoPDV">0</span></div>
-        <button class="btn btn-primary" onclick="finalizarPedido()">Finalizar Pedido</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- FINANCEIRO -->
-  <div id="vendas" class="tab-content">
-    <div class="panel">
-      <h2>💰 Financeiro</h2>
-      <div class="stats-grid">
-        <div class="stat-card"><div class="num" id="financeiroTotalPedidos">0</div><div class="label">Total de Pedidos</div></div>
-        <div class="stat-card"><div class="num" id="financeiroTotalVendas">R$ 0</div><div class="label">Total Vendas</div></div>
-        <div class="stat-card"><div class="num" id="financeiroTicketMedio">R$ 0</div><div class="label">Ticket Médio</div></div>
-      </div>
-      <div class="chart-container">
-        <canvas id="graficoVendas" width="400" height="200"></canvas>
-      </div>
-    </div>
-  </div>
-
-</div>
-
-<div class="notification" id="notification"></div>
-
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script>
-let produtos = [];
-let insumos = [];
-let pedidos = [];
-let pedidoAtual = [];
-
-function showTab(tabId){
-  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
-  document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));
-  document.querySelector(`[onclick="showTab('${tabId}')"]`).classList.add('active');
-  document.getElementById(tabId).classList.add('active');
-  if(tabId==='dashboard') carregarDashboard();
-  if(tabId==='produtos') carregarProdutos();
-  if(tabId==='insumos') carregarInsumos();
-  if(tabId==='pdv') carregarProdutosPDV();
-  if(tabId==='vendas') carregarFinanceiro();
-}
-
-function notify(msg,type='success'){
-  const n = document.getElementById('notification');
-  n.textContent=msg;
-  n.className='notification show'+(type==='error'?' error':'');
-  setTimeout(()=>n.className='notification',3000);
-}
-
-// -------------------- PRODUTOS --------------------
-function carregarProdutos(){
-  fetch('/api/menu').then(r=>r.json()).then(data=>{
-    produtos=data;
-    const tbody = document.querySelector('#tableProdutos tbody');
-    tbody.innerHTML='';
-    data.forEach(p=>{
-      const tr=document.createElement('tr');
-      tr.innerHTML=`<td>${p.name}</td><td>${p.cat}</td><td>R$ ${p.price.toFixed(2)}</td>
-      <td class="action-buttons">
-        <button class="btn btn-sm btn-warning" onclick="editarProduto('${p._id}')">✏️</button>
-        <button class="btn btn-sm btn-danger" onclick="deletarProduto('${p._id}')">🗑️</button>
-      </td>`;
-      tbody.appendChild(tr);
-    });
-  });
-}
-
-function abrirFormProduto(prod=null){
-  const nome = prompt("Nome do Produto:",prod?prod.name:'');
-  if(!nome) return;
-  const cat = prompt("Categoria:",prod?prod.cat:'');
-  const preco = parseFloat(prompt("Preço:",prod?prod.price:'0'));
-  if(isNaN(preco)) return alert('Preço inválido');
-  const novo={name:nome,cat,price:preco,insumos:[]};
-  if(prod){
-    fetch('/api/menu/item/'+prod._id,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(novo)})
-      .then(()=>{notify('Produto atualizado'); carregarProdutos(); carregarProdutosPDV();});
-  }else{
-    fetch('/api/menu/item',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(novo)})
-      .then(()=>{notify('Produto criado'); carregarProdutos(); carregarProdutosPDV();});
-  }
-}
-
-function editarProduto(id){
-  const p = produtos.find(x=>x._id===id);
-  abrirFormProduto(p);
-}
-
-function deletarProduto(id){
-  if(confirm('Deseja realmente deletar este produto?')){
-    fetch('/api/menu/item/'+id,{method:'DELETE'}).then(()=>{notify('Produto deletado'); carregarProdutos(); carregarProdutosPDV();});
-  }
-}
-
-// -------------------- INSUMOS --------------------
-function carregarInsumos(){
-  fetch('/api/insumos').then(r=>r.json()).then(data=>{
-    insumos=data;
-    const tbody=document.querySelector('#tableInsumos tbody');
-    tbody.innerHTML='';
-    data.forEach(i=>{
-      const tr=document.createElement('tr');
-      tr.innerHTML=`<td>${i.nome}</td><td>${i.quantidade}</td><td>${i.unidade}</td><td>R$ ${i.custoUnitario}</td>
-      <td class="action-buttons">
-        <button class="btn btn-sm btn-warning" onclick="editarInsumo('${i._id}')">✏️</button>
-        <button class="btn btn-sm btn-danger" onclick="deletarInsumo('${i._id}')">🗑️</button>
-      </td>`;
-      tbody.appendChild(tr);
-    });
-  });
-}
-
-function abrirFormInsumo(ins=null){
-  const nome=prompt('Nome do insumo:',ins?ins.nome:'');
-  if(!nome) return;
-  const qtd=parseFloat(prompt('Quantidade:',ins?ins.quantidade:'0'));
-  const unidade=prompt('Unidade:',ins?ins.unidade:'un');
-  const custo=parseFloat(prompt('Custo unitário:',ins?ins.custoUnitario:'0'));
-  if(ins){
-    fetch('/api/insumos/'+ins._id,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({nome,nome,quantidade:qtd,unidade,custoUnitario:custo})})
-      .then(()=>{notify('Insumo atualizado'); carregarInsumos();});
-  }else{
-    fetch('/api/insumos',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({nome,quantidade:qtd,unidade,custoUnitario:custo})})
-      .then(()=>{notify('Insumo criado'); carregarInsumos();});
-  }
-}
-
-function editarInsumo(id){
-  const i = insumos.find(x=>x._id===id);
-  abrirFormInsumo(i);
-}
-
-function deletarInsumo(id){
-  if(confirm('Deseja deletar este insumo?')){
-    fetch('/api/insumos/'+id,{method:'DELETE'}).then(()=>{notify('Insumo deletado'); carregarInsumos();});
-  }
-}
-
-// -------------------- PDV --------------------
-function carregarProdutosPDV(){
-  const sel = document.getElementById('selectProdutoPDV');
-  sel.innerHTML='';
-  produtos.forEach(p=>{
-    const opt = document.createElement('option');
-    opt.value=p._id; opt.textContent=p.name+' - R$ '+p.price.toFixed(2);
-    sel.appendChild(opt);
-  });
-}
-
-function adicionarAoPedido(){
-  const sel = document.getElementById('selectProdutoPDV');
-  const qtd = parseInt(document.getElementById('inputQtdPDV').value)||1;
-  const prod = produtos.find(x=>x._id===sel.value);
-  const item = {produtoId:prod._id,nome:prod.name,quantidade:qtd,precoUnitario:prod.price};
-  pedidoAtual.push(item);
-  renderPedidoPDV();
-}
-
-function renderPedidoPDV(){
-  const tbody = document.querySelector('#tablePedidoPDV tbody');
-  tbody.innerHTML='';
-  let total=0;
-  pedidoAtual.forEach((i,idx)=>{
-    const tr=document.createElement('tr');
-    const itemTotal=i.precoUnitario*i.quantidade; total+=itemTotal;
-    tr.innerHTML=`<td>${i.nome}</td><td>${i.quantidade}</td><td>R$ ${i.precoUnitario.toFixed(2)}</td><td>R$ ${itemTotal.toFixed(2)}</td>
-    <td><button class="btn btn-sm btn-danger" onclick="removerItemPDV(${idx})">❌</button></td>`;
-    tbody.appendChild(tr);
-  });
-  document.getElementById('totalPedidoPDV').textContent=total.toFixed(2);
-}
-
-function removerItemPDV(idx){ pedidoAtual.splice(idx,1); renderPedidoPDV(); }
-
-function finalizarPedido(){
-  if(pedidoAtual.length===0) return alert('Adicione produtos antes');
-  const cliente=prompt('Nome do Cliente:','Cliente');
-  const total = pedidoAtual.reduce((acc,i)=>acc+i.precoUnitario*i.quantidade,0);
-  fetch('/api/pedidos',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({itens:pedidoAtual,total,cliente})})
-    .then(r=>r.json()).then(()=>{notify('Pedido finalizado'); pedidoAtual=[]; renderPedidoPDV(); carregarDashboard(); carregarFinanceiro();});
-}
-
-// -------------------- DASHBOARD --------------------
-function carregarDashboard(){
-  fetch('/api/stats').then(r=>r.json()).then(s=>{
-    document.getElementById('statTotalProdutos').textContent=s.totalProdutos;
-    document.getElementById('statTotalPedidos').textContent=s.totalPedidos;
-    document.getElementById('statPedidosHoje').textContent=s.pedidosHoje;
-    document.getElementById('statVendasHoje').textContent='R$ '+s.vendasHoje.toFixed(2);
-  });
-  fetch('/api/pedidos').then(r=>r.json()).then(data=>{
-    pedidos=data.slice(0,5);
-    const container=document.getElementById('recentOrders'); container.innerHTML='';
-    pedidos.forEach(p=>{
-      const div=document.createElement('div'); div.className='order-item';
-      div.innerHTML=`<div class="order-header"><div class="order-id">#${p._id.slice(-5)}</div><div class="order-date">${new Date(p.data).toLocaleString()}</div></div>
-      <div>Total: R$ ${(p.total).toFixed(2)}</div>`;
-      container.appendChild(div);
-    });
-  });
-}
-
-// -------------------- FINANCEIRO --------------------
-function carregarFinanceiro(){
-  fetch('/api/pedidos').then(r=>r.json()).then(data=>{
-    const totalPedidos = data.length;
-    const totalVendas = data.reduce((acc,p)=>acc+p.total,0);
-    const ticket = totalPedidos? totalVendas/totalPedidos:0;
-    document.getElementById('financeiroTotalPedidos').textContent=totalPedidos;
-    document.getElementById('financeiroTotalVendas').textContent='R$ '+totalVendas.toFixed(2);
-    document.getElementById('financeiroTicketMedio').textContent='R$ '+ticket.toFixed(2);
-    const ctx = document.getElementById('graficoVendas').getContext('2d');
-    const vendasPorDia = {};
-    data.forEach(p=>{
-      const d = new Date(p.data).toLocaleDateString();
-      vendasPorDia[d] = (vendasPorDia[d]||0)+p.total;
-    });
-    const chartData = {
-      labels:Object.keys(vendasPorDia),
-      datasets:[{label:'Vendas R$',data:Object.values(vendasPorDia),backgroundColor:'#3b82f6'}]
-    };
-    if(window.myChart) window.myChart.destroy();
-    window.myChart=new Chart(ctx,{type:'bar',data:chartData,options:{responsive:true,plugins:{legend:{display:false}}}});
-  });
-}
-
-// -------------------- CARREGAR INICIAL --------------------
-function carregarDados(){ carregarProdutos(); carregarInsumos(); carregarProdutosPDV(); carregarDashboard(); carregarFinanceiro(); }
-carregarDados();
-</script>
+  <script src="dashboard.js"></script>
 </body>
 </html>
