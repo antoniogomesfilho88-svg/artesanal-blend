@@ -1,5 +1,5 @@
 // ==============================
-//  Artesanal Blend - Cardápio Online
+//  Artesanal Blend - Cardápio Online ATUALIZADO
 // ==============================
 
 let menuData = [];
@@ -10,8 +10,21 @@ async function carregarMenu() {
   try {
     console.log("🔄 Carregando cardápio...");
     
-    // Dados locais em vez de API
-    const menuLocal = [
+    // URL DA SUA API NO RENDER
+    const resp = await fetch("https://artesanal-blend.onrender.com/api/menu");
+    
+    if (!resp.ok) {
+      throw new Error(`Erro HTTP: ${resp.status}`);
+    }
+    
+    menuData = await resp.json();
+    console.log("✅ Cardápio carregado:", menuData);
+    renderMenu(menuData);
+  } catch (err) {
+    console.error("❌ Erro ao carregar cardápio:", err);
+    
+    // Dados de emergência se a API falhar
+    menuData = [
       {
         "id": 1,
         "name": "Hambúrguer Artesanal",
@@ -38,14 +51,6 @@ async function carregarMenu() {
       },
       {
         "id": 4,
-        "name": "Combo Família",
-        "desc": "2 Hambúrgueres + 2 Batatas + 2 Refris",
-        "price": 79.90,
-        "cat": "Combos",
-        "imgUrl": ""
-      },
-      {
-        "id": 5,
         "name": "Batata Frita",
         "desc": "Porção 200g",
         "price": 15.90,
@@ -53,58 +58,21 @@ async function carregarMenu() {
         "imgUrl": ""
       },
       {
-        "id": 6,
-        "name": "Onion Rings",
-        "desc": "Porção 150g",
-        "price": 18.90,
-        "cat": "Acompanhamentos",
-        "imgUrl": ""
-      },
-      {
-        "id": 7,
-        "name": "Queijo Extra",
-        "desc": "Fatia adicional",
-        "price": 4.90,
-        "cat": "Adicionais",
-        "imgUrl": ""
-      },
-      {
-        "id": 8,
-        "name": "Bacon Extra",
-        "desc": "Porção 50g",
-        "price": 6.90,
-        "cat": "Adicionais",
-        "imgUrl": ""
-      },
-      {
-        "id": 9,
+        "id": 5,
         "name": "Refrigerante",
         "desc": "Lata 350ml",
         "price": 8.90,
         "cat": "Bebidas",
         "imgUrl": ""
-      },
-      {
-        "id": 10,
-        "name": "Suco Natural",
-        "desc": "Copo 500ml",
-        "price": 12.90,
-        "cat": "Bebidas",
-        "imgUrl": ""
       }
     ];
     
-    menuData = menuLocal;
-    console.log("✅ Cardápio carregado localmente:", menuData);
     renderMenu(menuData);
     
-  } catch (err) {
-    console.error("❌ Erro ao carregar cardápio:", err);
-    document.querySelector("main").innerHTML = `
-      <div style="text-align: center; padding: 40px; color: #fff;">
-        <h3>⚠️ Erro ao carregar cardápio</h3>
-        <p>Tente recarregar a página</p>
-        <button onclick="carregarMenu()" style="padding: 10px 20px; background: #f56f76; color: white; border: none; border-radius: 5px; cursor: pointer;">
+    document.querySelector("main").innerHTML += `
+      <div style="text-align: center; padding: 20px; color: #ff6b6b; background: #fff3f3; margin: 20px; border-radius: 10px;">
+        <p>⚠️ Modo offline - Conectando à API...</p>
+        <button onclick="carregarMenu()" style="padding: 10px 20px; background: #ff6b6b; color: white; border: none; border-radius: 5px; cursor: pointer;">
           🔄 Tentar Novamente
         </button>
       </div>
@@ -151,14 +119,13 @@ function renderMenu(menu) {
       const card = document.createElement("div");
       card.classList.add("menu-item");
       
-      // CORREÇÃO AQUI: Link correto do placeholder
+      // Placeholder para imagens
       const imagemUrl = item.imgUrl && item.imgUrl.trim() !== '' 
         ? item.imgUrl 
-       : 'https://placehold.co/300x200/FF6B6B/ffffff?text=Artesanal+Blend';
+        : 'https://placehold.co/300x200/FF6B6B/FFFFFF?text=Artesanal+Blend';
       
       card.innerHTML = `
-        <img src="${imagemUrl}" alt="${item.name}" 
-     onerror="this.src='https://placehold.co/300x200/FF6B6B/ffffff?text=Artesanal+Blend'">
+        <img src="${imagemUrl}" alt="${item.name}" onerror="this.src='https://placehold.co/300x200/FF6B6B/FFFFFF?text=Artesanal+Blend'">
         <div class="item-info">
           <h4>${item.name}</h4>
           <p>${item.desc || 'Delicioso produto artesanal'}</p>
@@ -224,9 +191,29 @@ function updateCart() {
     container.appendChild(div);
   });
 
-  const total = subtotal;
+  // Calcular taxa de entrega
+  const regionSelect = document.getElementById("clienteRegiao");
+  let taxa = 0;
+  
+  if (regionSelect && regionSelect.value) {
+    const regionText = regionSelect.options[regionSelect.selectedIndex].text;
+    const taxaMatch = regionText.match(/R\$\s*([0-9,]+)/);
+    if (taxaMatch) {
+      taxa = parseFloat(taxaMatch[1].replace(',', '.'));
+    }
+  }
 
-  if (totalElem) totalElem.textContent = `Total: R$ ${total.toFixed(2)}`;
+  const total = subtotal + taxa;
+
+  if (totalElem) {
+    if (taxa > 0) {
+      totalElem.innerHTML = `Subtotal: R$ ${subtotal.toFixed(2)}<br>
+                            Taxa de entrega: R$ ${taxa.toFixed(2)}<br>
+                            <strong>Total: R$ ${total.toFixed(2)}</strong>`;
+    } else {
+      totalElem.innerHTML = `<strong>Total: R$ ${total.toFixed(2)}</strong>`;
+    }
+  }
   
   if (checkoutBtn) {
     checkoutBtn.disabled = carrinho.length === 0;
@@ -259,25 +246,38 @@ function hideCart() {
 function enviarPedidoWhatsApp() {
   if (carrinho.length === 0) return;
 
+  // Obter informações de entrega
   const regionSelect = document.getElementById("clienteRegiao");
-  const region = regionSelect ? regionSelect.value : "Retirada";
-  const taxa = regionSelect ? parseFloat(regionSelect.selectedOptions[0].textContent.match(/R\$\s*([0-9,]+)/)?.[1].replace(',', '.')) || 0 : 0;
+  const region = regionSelect ? regionSelect.value : "Não informado";
   
-  const total = carrinho.reduce((sum, item) => sum + item.qtd * item.price, 0) + taxa;
+  let taxa = 0;
+  if (regionSelect && regionSelect.value) {
+    const regionText = regionSelect.options[regionSelect.selectedIndex].text;
+    const taxaMatch = regionText.match(/R\$\s*([0-9,]+)/);
+    if (taxaMatch) {
+      taxa = parseFloat(taxaMatch[1].replace(',', '.'));
+    }
+  }
+
+  const subtotal = carrinho.reduce((sum, item) => sum + item.qtd * item.price, 0);
+  const total = subtotal + taxa;
 
   // Montar mensagem WhatsApp
   let msg = `*ARTESANAL BLEND - NOVO PEDIDO*%0A%0A`;
+  msg += `*Itens do pedido:*%0A`;
   
   carrinho.forEach(item => {
     msg += `▪️ ${item.qtd}x ${item.name} - R$ ${(item.qtd * item.price).toFixed(2)}%0A`;
   });
   
+  msg += `%0A`;
+  msg += `*Subtotal:* R$ ${subtotal.toFixed(2)}%0A`;
+  
   if (taxa > 0) {
-    msg += `%0A*Taxa de entrega:* R$ ${taxa.toFixed(2)}%0A`;
+    msg += `*Taxa de entrega:* R$ ${taxa.toFixed(2)}%0A`;
   }
   
   msg += `*Total:* R$ ${total.toFixed(2)}%0A%0A`;
-  msg += `*Região:* ${region}%0A`;
   
   // Informações do cliente
   const nome = document.getElementById("clienteNome")?.value || "Não informado";
@@ -286,17 +286,19 @@ function enviarPedidoWhatsApp() {
   const pagamento = document.getElementById("pagamento")?.value || "Não informado";
   const observacoes = document.getElementById("obsCliente")?.value || "Nenhuma";
   
-  msg += `*Nome:* ${nome}%0A`;
-  msg += `*Telefone:* ${telefone}%0A`;
-  msg += `*Endereço:* ${endereco}%0A`;
-  msg += `*Pagamento:* ${pagamento}%0A`;
+  msg += `*Dados do cliente:*%0A`;
+  msg += `👤 Nome: ${nome}%0A`;
+  msg += `📞 Telefone: ${telefone}%0A`;
+  msg += `🏠 Endereço: ${endereco}%0A`;
+  msg += `📍 Região: ${region}%0A`;
+  msg += `💳 Pagamento: ${pagamento}%0A`;
   
   if (pagamento === "Dinheiro") {
     const troco = document.getElementById("troco")?.value || "Não informado";
-    msg += `*Troco para:* R$ ${troco}%0A`;
+    msg += `💰 Troco para: R$ ${troco}%0A`;
   }
   
-  msg += `*Observações:* ${observacoes}%0A%0A`;
+  msg += `📝 Observações: ${observacoes}%0A%0A`;
   msg += `_Pedido gerado automaticamente via site_`;
 
   // Abrir WhatsApp
@@ -311,16 +313,31 @@ function enviarPedidoWhatsApp() {
   alert("Pedido enviado para o WhatsApp! 🎉");
 }
 
-// ========== Event Listeners ==========
+// ========== Funções Auxiliares ==========
+function mostrarTroco() {
+  const pagamento = document.getElementById("pagamento");
+  const campoTroco = document.getElementById("campoTroco");
+  if (pagamento && campoTroco) {
+    campoTroco.style.display = pagamento.value === "Dinheiro" ? "block" : "none";
+  }
+}
+
+function atualizarTaxa() {
+  updateCart();
+}
+
+// ========== Inicialização ==========
 document.addEventListener("DOMContentLoaded", () => {
   console.log("🚀 Iniciando cardápio...");
   carregarMenu();
   updateCart();
 
-  // Carrinho
+  // Event Listeners
   const openCartBtn = document.getElementById("openCartBtn");
   const closeCartBtn = document.getElementById("closeCartBtn");
   const checkoutBtn = document.getElementById("checkoutBtn");
+  const regionSelect = document.getElementById("clienteRegiao");
+  const pagamentoSelect = document.getElementById("pagamento");
 
   if (openCartBtn) {
     openCartBtn.addEventListener("click", showCart);
@@ -334,23 +351,11 @@ document.addEventListener("DOMContentLoaded", () => {
     checkoutBtn.addEventListener("click", enviarPedidoWhatsApp);
   }
 
-  // Taxa de entrega
-  const regionSelect = document.getElementById("clienteRegiao");
   if (regionSelect) {
-    regionSelect.addEventListener("change", updateCart);
+    regionSelect.addEventListener("change", atualizarTaxa);
+  }
+
+  if (pagamentoSelect) {
+    pagamentoSelect.addEventListener("change", mostrarTroco);
   }
 });
-
-// ========== Funções auxiliares ==========
-function mostrarTroco() {
-  const pagamento = document.getElementById("pagamento");
-  const campoTroco = document.getElementById("campoTroco");
-  if (pagamento && campoTroco) {
-    campoTroco.style.display = pagamento.value === "Dinheiro" ? "block" : "none";
-  }
-}
-
-function atualizarTaxa() {
-  updateCart();
-}
-
