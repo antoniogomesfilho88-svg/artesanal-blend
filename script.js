@@ -139,20 +139,25 @@ function renderCarrinho() {
     if (cartCount) cartCount.textContent = totalItens;
     
     // Itens
-    cartItems.innerHTML = carrinho.map((item, index) => `
-        <div class="cart-item">
-            <div class="item-info">
-                <strong>${item.nome}</strong>
-                <span>R$ ${(item.preco || 0).toFixed(2)}</span> 
+    cartItems.innerHTML = carrinho.map((item, index) => {
+        // CORREÇÃO: Garante que item.preco não é undefined antes de toFixed
+        const precoItem = (item.preco || 0).toFixed(2);
+        
+        return `
+            <div class="cart-item">
+                <div class="item-info">
+                    <strong>${item.nome}</strong>
+                    <span>R$ ${precoItem}</span>
+                </div>
+                <div class="item-controls">
+                    <button onclick="alterarQuantidade(${index}, -1)">−</button>
+                    <span>${item.qtd}</span>
+                    <button onclick="alterarQuantidade(${index}, 1)">+</button>
+                    <button onclick="removerDoCarrinho(${index})" class="remove">🗑️</button>
+                </div>
             </div>
-            <div class="item-controls">
-                <button onclick="alterarQuantidade(${index}, -1)">−</button>
-                <span>${item.qtd}</span>
-                <button onclick="alterarQuantidade(${index}, 1)">+</button>
-                <button onclick="removerDoCarrinho(${index})" class="remove">🗑️</button>
-            </div>
-        </div>
-    `).join('');
+        `;
+    }).join(''); // <--- O join('') garante que o array seja uma única string HTML
     
     // Total
     const total = carrinho.reduce((acc, item) => acc + ((item.preco || 0) * item.qtd), 0);
@@ -172,7 +177,6 @@ function renderCarrinho() {
         checkoutBtn.disabled = carrinho.length === 0;
     }
 }
-
 // ===== FUNÇÕES DE ENTREGA E PAGAMENTO (MANTIDAS IGUAIS) =====
 function atualizarTaxa() {
     renderCarrinho();
@@ -298,5 +302,6 @@ window.alterarQuantidade = alterarQuantidade;
 window.atualizarTaxa = atualizarTaxa;
 window.mostrarTroco = mostrarTroco;
 window.finalizarPedido = finalizarPedido;
+
 
 
