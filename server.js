@@ -1,23 +1,34 @@
 // ==============================
-//  Artesanal Blend - Backend SIMPLES
+//  Artesanal Blend - Backend + Frontend Estático
 // ==============================
 
 import express from 'express';
 import mongoose from 'mongoose';
 import cors from 'cors';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
+// --- Configuração inicial ---
 const app = express();
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
-// Middlewares
+// --- Middlewares ---
 app.use(cors());
 app.use(express.json());
 
-// Conectar ao MongoDB
-mongoose.connect('mongodb+srv://antoniogomesfilho88_db_user:Regiane2020@cluster0.nkg5z7v.mongodb.net/artesanal-blend?retryWrites=true&w=majority')
-.then(() => console.log('✅ MongoDB conectado'))
-.catch(err => console.log('⚠️ MongoDB offline:', err.message));
+// --- Servir arquivos estáticos (HTML, CSS, JS, imagens) ---
+app.use(express.static(path.join(__dirname)));
 
-// Schema do Produto
+// --- Conexão MongoDB Atlas ---
+mongoose.connect(
+  process.env.MONGO_URI ||
+    'mongodb+srv://antoniogomesfilho88_db_user:Regiane2020@cluster0.nkg5z7v.mongodb.net/artesanal-blend?retryWrites=true&w=majority'
+)
+  .then(() => console.log('✅ MongoDB conectado'))
+  .catch(err => console.log('⚠️ MongoDB offline:', err.message));
+
+// --- Schema do Produto ---
 const produtoSchema = new mongoose.Schema({
   id: Number,
   name: String,
@@ -29,7 +40,7 @@ const produtoSchema = new mongoose.Schema({
 
 const Produto = mongoose.model('Produto', produtoSchema);
 
-// Dados locais de fallback
+// --- Dados locais de fallback (caso o banco caia) ---
 const menuLocal = [
   {
     id: 1,
@@ -37,33 +48,23 @@ const menuLocal = [
     desc: "Pão brioche, blend 180g, queijo, alface, tomate",
     price: 28.90,
     cat: "Hambúrgueres",
-    imgUrl: ""
+    imgUrl: "nd.jpg"
   },
   {
     id: 2,
     name: "Cheese Bacon",
     desc: "Blend 180g, queijo cheddar, bacon crocante",
     price: 32.90,
-    cat: "Hambúrgueres", 
-    imgUrl: ""
+    cat: "Hambúrgueres",
+    imgUrl: "batata.jpg"
   }
 ];
 
-// ========== ROTAS PRINCIPAIS ==========
+// --- Rotas da API ---
 
-// Rota 1: Página inicial SIMPLES
+// Rota 1: Página inicial redireciona para index.html
 app.get('/', (req, res) => {
-  res.send(`
-    <html>
-      <head><title>Artesanal Blend</title></head>
-      <body>
-        <h1>🍔 Artesanal Blend - API</h1>
-        <p><a href="/dashboard">Dashboard Admin</a></p>
-        <p><a href="/api/menu">Ver Cardápio (JSON)</a></p>
-        <p><a href="/health">Status do Sistema</a></p>
-      </body>
-    </html>
-  `);
+  res.sendFile(path.join(__dirname, 'index.html'));
 });
 
 // Rota 2: API do Cardápio
@@ -80,31 +81,20 @@ app.get('/api/menu', async (req, res) => {
   }
 });
 
-// Rota 3: Health Check
+// Rota 3: Status do sistema (health check)
 app.get('/health', (req, res) => {
-  res.json({ 
+  res.json({
     status: 'OK',
     database: mongoose.connection.readyState === 1 ? 'Conectado' : 'Offline'
   });
 });
 
-// Rota 4: Dashboard SIMPLES
-app.get('/dashboard', (req, res) => {
-  res.send(`
-    <html>
-      <head><title>Dashboard</title></head>
-      <body>
-        <h1>📊 Dashboard Artesanal Blend</h1>
-        <p>Status: ${mongoose.connection.readyState === 1 ? '✅ Conectado' : '⚠️ Offline'}</p>
-        <p><a href="/api/menu" target="_blank">Ver Cardápio</a></p>
-        <p><a href="/">Voltar</a></p>
-      </body>
-    </html>
-  `);
+// --- Rota final (para outras páginas HTML, como dashboard) ---
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'index.html'));
 });
 
-// ========== INICIAR SERVIDOR ==========
-
+// --- Iniciar servidor ---
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`🚀 Servidor rodando na porta ${PORT}`);
