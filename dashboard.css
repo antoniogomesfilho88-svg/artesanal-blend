@@ -1,235 +1,119 @@
-/* ============================================
-   Dashboard Claro — Artesanal Blend
-   Layout moderno, neutro e profissional
-   ============================================ */
-
-/* ---------- Variáveis principais ---------- */
-:root {
-  --bg: #f9f9f9;
-  --panel: #e3e3e3;
-  --accent: #3b82f6;
-  --muted: #666;
-  --text: #222;
-  --border: #ccc;
-  --success: #22c55e;
-}
-
-/* ---------- Base ---------- */
-html, body {
+/* Reset e base */
+* {
   margin: 0;
   padding: 0;
-  font-family: "Inter", system-ui, Arial, sans-serif;
-  background: var(--bg);
-  color: var(--text);
+  box-sizing: border-box;
+  font-family: Arial, sans-serif;
 }
 
-.wrap {
-  max-width: 1200px;
-  margin: auto;
-  padding: 20px;
+body {
+  background-color: #f9f9f9;
+  color: #333;
 }
 
-/* ---------- Cabeçalho ---------- */
-header {
+header.dashboard-header {
+  background-color: #4a2f27;
+  color: #fff;
+  padding: 15px;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  margin-bottom: 16px;
-  background: #fff;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 10px 16px;
+  gap: 15px;
 }
 
-header h1 {
-  font-size: 22px;
-  margin: 0;
-  color: var(--text);
+header.dashboard-header .logo {
+  height: 50px;
 }
 
-header img {
-  width: 64px;
-  border-radius: 8px;
+.dashboard-nav {
+  display: flex;
+  gap: 10px;
+  background-color: #fff;
+  padding: 10px;
+  border-bottom: 1px solid #ddd;
 }
 
-/* ---------- Botões ---------- */
-button {
-  cursor: pointer;
+.tab-btn {
+  background-color: #eee;
   border: none;
-  border-radius: 8px;
-  padding: 8px 12px;
-  background: var(--accent);
-  color: #fff;
-  font-weight: 500;
+  padding: 10px 20px;
+  cursor: pointer;
+  border-radius: 5px;
   transition: 0.2s;
 }
 
-button:hover {
-  opacity: 0.9;
+.tab-btn.active {
+  background-color: #4a2f27;
+  color: #fff;
 }
 
-button.ghost {
-  background: #fff;
-  color: var(--text);
-  border: 1px solid var(--border);
+.tab-content {
+  display: none;
+  padding: 20px;
 }
 
-/* ---------- Layout principal ---------- */
-.grid {
-  display: grid;
-  grid-template-columns: 1fr 380px;
-  gap: 16px;
+.tab-content.active {
+  display: block;
 }
 
-@media (max-width: 900px) {
-  .grid {
-    grid-template-columns: 1fr;
-  }
+.btn {
+  padding: 8px 12px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
 }
 
-/* ---------- Painéis ---------- */
-.panel {
-  background: var(--panel);
-  padding: 14px;
-  border-radius: 10px;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+.btn.primary {
+  background-color: #4a2f27;
+  color: #fff;
 }
 
-.panel h2 {
-  margin-top: 0;
-  color: var(--text);
+.table-container {
+  margin-top: 15px;
+  overflow-x: auto;
 }
 
-/* ---------- Tabelas ---------- */
 table {
   width: 100%;
   border-collapse: collapse;
 }
 
-th, td {
-  padding: 8px;
-  border-bottom: 1px solid var(--border);
+table th, table td {
+  padding: 10px;
+  border: 1px solid #ddd;
   text-align: left;
-  font-size: 14px;
 }
 
-th {
-  color: var(--muted);
+table th {
+  background-color: #f2f2f2;
 }
 
-/* ---------- Formulários ---------- */
-input[type=text],
-input[type=number],
-select,
-textarea {
-  width: 100%;
-  padding: 8px;
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  background: #fff;
-  color: var(--text);
-}
-
-textarea {
-  min-height: 70px;
-  resize: vertical;
-}
-
-label {
-  font-size: 13px;
-  color: var(--muted);
-  display: block;
-  margin-bottom: 4px;
-}
-
-.form-actions {
-  display: flex;
-  gap: 8px;
-  margin-top: 8px;
-}
-
-/* ---------- Imagem ---------- */
-.img-preview {
-  width: 100%;
-  height: 150px;
-  background: #fff;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
-  color: var(--muted);
-}
-
-.img-preview img {
+/* Modal */
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 999;
+  left: 0;
+  top: 0;
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  overflow: auto;
+  background-color: rgba(0,0,0,0.6);
 }
 
-/* ---------- Ferramentas ---------- */
-.tools {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 10px;
-}
-
-.hint {
-  font-size: 12px;
-  color: var(--muted);
-  margin-top: 4px;
-}
-
-/* ---------- Estatísticas ---------- */
-.stat {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 8px;
-}
-
-.stat .num {
-  font-size: 18px;
-  font-weight: 600;
-  color: var(--accent);
-}
-
-/* ---------- Gráfico ---------- */
-.chart-wrap {
-  background: #fff;
-  border-radius: 8px;
-  padding: 8px;
-  margin-top: 8px;
-  border: 1px solid var(--border);
-}
-
-/* ---------- Login ---------- */
-.login-backdrop {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 99;
-}
-
-.login-box {
-  background: #fff;
+.modal-content {
+  background-color: #fff;
+  margin: 100px auto;
   padding: 20px;
-  border-radius: 8px;
-  width: 300px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+  border-radius: 10px;
+  width: 90%;
+  max-width: 400px;
+  position: relative;
 }
 
-.login-box h3 {
-  margin-top: 0;
-  color: var(--text);
-}
-
-.muted {
-  color: var(--muted);
-  font-size: 13px;
+.close-modal {
+  position: absolute;
+  right: 15px;
+  top: 10px;
+  font-size: 24px;
+  cursor: pointer;
 }
