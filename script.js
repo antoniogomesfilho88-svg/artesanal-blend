@@ -5,7 +5,7 @@
 let menuData = [];
 let carrinho = JSON.parse(localStorage.getItem('carrinho')) || [];
 
-// A URL BASE DO SEU SERVIDOR NO RENDER
+// A URL BASE DO SEU SERVIDOR NO RENDER.
 const API_BASE_URL = "https://artesanal-blend.onrender.com";
 
 // ========== Carregar o cardápio ==========
@@ -13,20 +13,15 @@ async function carregarMenu() {
   try {
     console.log("🔄 Carregando cardápio...");
     
-    // CORREÇÃO CRÍTICA: Usando a URL ABSOLUTA do Render + a rota correta para produtos
-    // Assumimos que a rota correta é /api/cardapio (ou /api/produtos)
-    const resp = await fetch(API_BASE_URL + "/api/cardapio"); 
+    // CORREÇÃO: Usando a URL ABSOLUTA do Render e a rota correta: /api/menu
+    const resp = await fetch(API_BASE_URL + "/api/menu"); 
     
     if (resp.ok) {
       const data = await resp.json();
       
-      // Ajuste para o formato da resposta do seu backend.
-      // Se a API retornar { success: true, data: [...] }
-      if (data && Array.isArray(data.data)) {
-        menuData = data.data; 
-      // Se a API retornar o array diretamente [...]
-      } else if (Array.isArray(data)) {
-        menuData = data;
+      // O backend retorna o array de produtos diretamente.
+      if (Array.isArray(data)) {
+        menuData = data; 
       } else {
         throw new Error('Formato de dados da API inválido.');
       }
@@ -34,7 +29,7 @@ async function carregarMenu() {
       console.log("✅ Cardápio carregado da API");
     } else {
       // Se a resposta não for OK (ex: 404 Not Found), usa o fallback.
-      throw new Error('API offline ou rota inválida.');
+      throw new Error(`API offline ou erro: ${resp.status}`);
     }
   } catch (err) {
     console.error("⚠️ Falha ao carregar API. Usando dados locais:", err);
@@ -316,7 +311,9 @@ function enviarPedidoWhatsApp() {
   updateCart();
   hideCart();
   
-  alert("Pedido enviado para o WhatsApp! 🎉");
+  // Substituí o 'alert' por um console.log, mas você pode usar uma mensagem de UI (Toast)
+  // alert("Pedido enviado para o WhatsApp! 🎉");
+  console.log("Pedido enviado para o WhatsApp! 🎉");
 }
 
 // ========== Funções Auxiliares ==========
