@@ -2,125 +2,167 @@
 class Dashboard {
     constructor() {
         this.produtos = [];
-        this.insumos = [];
         this.pedidos = [];
+        this.insumos = [];
         this.init();
     }
 
     async init() {
-        await this.carregarDadosAPI();
+        await this.carregarDados();
         this.setupEventListeners();
         this.renderProdutos();
-        this.renderInsumos();
         this.renderPedidos();
+        this.renderInsumos();
         this.updateFinanceiro();
     }
 
-    async carregarDadosAPI() {
+    async carregarDados() {
         try {
-            const [produtosRes, insumosRes, pedidosRes] = await Promise.all([
+            const [produtosRes, pedidosRes, insumosRes] = await Promise.all([
                 fetch('/api/produtos'),
-                fetch('/api/insumos'),
-                fetch('/api/pedidos')
+                fetch('/api/pedidos'),
+                fetch('/api/insumos')
             ]);
 
             if (produtosRes.ok) this.produtos = await produtosRes.json();
-            if (insumosRes.ok) this.insumos = await insumosRes.json();
             if (pedidosRes.ok) this.pedidos = await pedidosRes.json();
+            if (insumosRes.ok) this.insumos = await insumosRes.json();
 
         } catch (error) {
-            console.log('Erro ao carregar dados da API:', error);
+            console.log('Erro ao carregar dados:', error);
         }
     }
 
     setupEventListeners() {
-        // Formulário de produtos
-        document.getElementById('produtoForm').addEventListener('submit', (e) => {
+        // Tabs
+        document.querySelectorAll('.tab-button').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+                
+                btn.classList.add('active');
+                document.getElementById(btn.dataset.tab).classList.add('active');
+            });
+        });
+
+        // Formulário de produto
+        document.getElementById('formProduto').addEventListener('submit', (e) => {
             e.preventDefault();
-            this.adicionarProduto();
+            this.salvarProduto();
         });
 
-        // Formulário de insumos
-        document.getElementById('insumoForm').addEventListener('submit', (e) => {
-            e.preventDefault();
-            this.adicionarInsumo();
-        });
-
-        // Botão imprimir pedidos
-        document.getElementById('imprimirPedidos').addEventListener('click', () => {
-            this.imprimirPedidos();
-        });
-
-        // Botão visualizar cardápio
+        // Botão ver cardápio
         document.getElementById('visualizarCardapio').addEventListener('click', () => {
             window.open('/', '_blank');
         });
     }
 
     // ===== PRODUTOS =====
-    async adicionarProduto() {
-        const produto = {
+    abrirModalProduto(produto = null) {
+        const modal = document.getElementById('modalProduto');
+        const titulo = document.getElementById('modalProdutoTitulo');
+        const form = document.getElementById('formProduto');
+        
+        if (produto) {
+            titulo.textContent = 'Editar Produto';
+            document.getElementById('produtoId').value = produto._id;
+            document.getElementById('produtoNome').value = produto.nome;
+            document.getElementById('produtoCategoria').value = produto.categoria;
+            document.getElementById('produtoPreco').value = produto.preco;
+            document.getElementById('produtoDescricao').value = produto.descricao || '';
+            document.getElementById('produtoImagem').value = produto.imagem || '';
+            document.getElementById('produtoDisponivel').checked = produto.disponivel;
+        } else {
+            titulo.textContent = 'Novo Produto';
+            form.reset();
+            document.getElementById('produtoId').value = '';
+        }
+        
+        modal.style.display = 'flex';
+    }
+
+    fecharModal() {
+        document.getElementById('modalProduto').style.display = 'none';
+    }
+
+    async salvarProduto() {
+        const formData = {
             nome: document.getElementById('produtoNome').value,
-            preco: parseFloat(document.getElementById('produtoPreco').value),
-            imagem: document.getElementById('produtoImagem').value,
-            descricao: document.getElementById('produtoDescricao').value,
             categoria: document.getElementById('produtoCategoria').value,
-            disponivel: document.getElementById('produtoDisponivel').checked,
-            destaque: document.getElementById('produtoDestaque').checked
+            preco: parseFloat(document.getElementById('produtoPreco').value),
+            descricao: document.getElementById('produtoDescricao').value,
+            imagem: document.getElementById('produtoImagem').value,
+            disponivel: document.getElementById('produtoDisponivel').checked
         };
 
+        const produtoId = document.getElementById('produtoId').value;
+        const url = produtoId ? `/api/produtos/${produtoId}` : '/api/produtos';
+        const method = produtoId ? 'PUT' : 'POST';
+
         try {
-            const response = await fetch('/api/produtos', {
-                method: 'POST',
+            const response = await fetch(url, {
+                method: method,
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(produto)
+                body: JSON.stringify(formData)
             });
 
             if (response.ok) {
-                const data = await response.json();
-                this.produtos.push(data.produto);
+                await this.carregarDados();
                 this.renderProdutos();
-                this.limparForm('produtoForm');
-                this.mostrarMensagem('Produto adicionado com sucesso!');
+                this.fecharModal();
+                this.mostrarMensagem('Produto salvo com sucesso!');
             }
         } catch (error) {
-            this.mostrarMensagem('Erro ao adicionar produto', 'erro');
+            this.mostrarMensagem('Erro ao salvar produto', 'erro');
         }
     }
 
     renderProdutos() {
         const container = document.getElementById('produtosContainer');
-        
-        if (this.produtos.length === 0) {
-            container.innerHTML = '<div class="empty-state">Nenhum produto cadastrado</div>';
+        const filtroCategoria = document.getElementById('filtroCategoria').value;
+        const filtroStatus = document.getElementById('filtroStatus').value;
+
+        let produtosFiltrados = this.produtos;
+
+        if (filtroCategoria) {
+            produtosFiltrados = produtosFiltrados.filter(p => p.categoria === filtroCategoria);
+        }
+
+        if (filtroStatus === 'disponivel') {
+            produtosFiltrados = produtosFiltrados.filter(p => p.disponivel);
+        } else if (filtroStatus === 'indisponivel') {
+            produtosFiltrados = produtosFiltrados.filter(p => !p.disponivel);
+        }
+
+        if (produtosFiltrados.length === 0) {
+            container.innerHTML = '<div class="empty-state">Nenhum produto encontrado</div>';
             return;
         }
 
-        container.innerHTML = this.produtos.map(produto => `
+        container.innerHTML = produtosFiltrados.map(produto => `
             <div class="produto-card ${!produto.disponivel ? 'indisponivel' : ''}">
-                <div class="produto-header">
-                    <h3>${produto.nome}</h3>
-                    <div class="produto-badges">
-                        ${produto.destaque ? '<span class="badge destaque">🌟 Destaque</span>' : ''}
-                        ${!produto.disponivel ? '<span class="badge indisponivel">⏸️ Indisponível</span>' : ''}
-                        <span class="badge categoria">${produto.categoria || 'Geral'}</span>
-                    </div>
-                </div>
+                <span class="categoria">${produto.categoria}</span>
+                <span class="status ${produto.disponivel ? 'disponivel' : 'indisponivel'}">
+                    ${produto.disponivel ? '✅' : '⏸️'}
+                </span>
                 
-                ${produto.imagem ? `<img src="${produto.imagem}" alt="${produto.nome}" class="produto-imagem">` : ''}
-                
+                <h3>${produto.nome}</h3>
                 <div class="preco">R$ ${produto.preco?.toFixed(2) || '0.00'}</div>
-                <div class="descricao">${produto.descricao}</div>
+                <div class="descricao">${produto.descricao || ''}</div>
+                
+                ${produto.imagem ? `
+                    <div style="margin: 1rem 0;">
+                        <img src="${produto.imagem}" alt="${produto.nome}" 
+                             style="max-width: 100%; height: 150px; object-fit: cover; border-radius: 4px;">
+                    </div>
+                ` : ''}
                 
                 <div class="card-actions">
-                    <button class="btn-editar" onclick="dashboard.editarProduto('${produto._id}')">
+                    <button class="btn-editar" onclick="dashboard.abrirModalProduto(${JSON.stringify(produto).replace(/"/g, '&quot;')})">
                         ✏️ Editar
                     </button>
                     <button class="btn-toggle" onclick="dashboard.toggleDisponibilidade('${produto._id}')">
                         ${produto.disponivel ? '⏸️' : '▶️'} ${produto.disponivel ? 'Pausar' : 'Ativar'}
-                    </button>
-                    <button class="btn-destaque" onclick="dashboard.toggleDestaque('${produto._id}')">
-                        ${produto.destaque ? '⭐' : '☆'} ${produto.destaque ? 'Remover' : 'Destacar'}
                     </button>
                     <button class="btn-excluir" onclick="dashboard.excluirProduto('${produto._id}')">
                         🗑️ Excluir
@@ -130,119 +172,25 @@ class Dashboard {
         `).join('');
     }
 
-    async editarProduto(id) {
-        const produto = this.produtos.find(p => p._id === id);
-        if (!produto) return;
-
-        const modalHTML = `
-            <div class="modal-overlay">
-                <div class="modal">
-                    <h3>Editar Produto</h3>
-                    <form id="editarProdutoForm">
-                        <input type="text" placeholder="Nome" value="${produto.nome}" required>
-                        <input type="number" placeholder="Preço (R$)" value="${produto.preco}" step="0.01" required>
-                        <input type="text" placeholder="Imagem URL" value="${produto.imagem || ''}">
-                        <input type="text" placeholder="Categoria" value="${produto.categoria || ''}">
-                        <textarea placeholder="Descrição">${produto.descricao || ''}</textarea>
-                        <div class="form-checkbox">
-                            <label>
-                                <input type="checkbox" ${produto.disponivel ? 'checked' : ''}> Disponível no cardápio
-                            </label>
-                        </div>
-                        <div class="form-checkbox">
-                            <label>
-                                <input type="checkbox" ${produto.destaque ? 'checked' : ''}> Produto em destaque
-                            </label>
-                        </div>
-                        <div class="modal-actions">
-                            <button type="submit" class="btn">💾 Salvar Alterações</button>
-                            <button type="button" class="btn btn-cancelar" onclick="dashboard.fecharModal()">❌ Cancelar</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        `;
-
-        document.body.insertAdjacentHTML('beforeend', modalHTML);
-        
-        document.getElementById('editarProdutoForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            await this.salvarEdicaoProduto(id);
-        });
-    }
-
-    async salvarEdicaoProduto(id) {
-        const form = document.getElementById('editarProdutoForm');
-        const formData = new FormData(form);
-        
-        const produtoAtualizado = {
-            nome: form.querySelector('input[type="text"]').value,
-            preco: parseFloat(form.querySelector('input[type="number"]').value),
-            imagem: form.querySelector('input[placeholder="Imagem URL"]').value,
-            categoria: form.querySelector('input[placeholder="Categoria"]').value,
-            descricao: form.querySelector('textarea').value,
-            disponivel: form.querySelector('input[type="checkbox"]').checked,
-            destaque: form.querySelectorAll('input[type="checkbox"]')[1].checked
-        };
-
-        try {
-            const response = await fetch(`/api/produtos/${id}`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(produtoAtualizado)
-            });
-
-            if (response.ok) {
-                await this.carregarDadosAPI();
-                this.renderProdutos();
-                this.fecharModal();
-                this.mostrarMensagem('Produto atualizado com sucesso!');
-            }
-        } catch (error) {
-            this.mostrarMensagem('Erro ao atualizar produto', 'erro');
-        }
+    filtrarProdutos() {
+        this.renderProdutos();
     }
 
     async toggleDisponibilidade(id) {
         const produto = this.produtos.find(p => p._id === id);
         if (!produto) return;
 
-        const atualizado = { disponivel: !produto.disponivel };
-
         try {
             const response = await fetch(`/api/produtos/${id}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(atualizado)
+                body: JSON.stringify({ disponivel: !produto.disponivel })
             });
 
             if (response.ok) {
                 produto.disponivel = !produto.disponivel;
                 this.renderProdutos();
                 this.mostrarMensagem(`Produto ${produto.disponivel ? 'ativado' : 'pausado'} no cardápio!`);
-            }
-        } catch (error) {
-            this.mostrarMensagem('Erro ao atualizar produto', 'erro');
-        }
-    }
-
-    async toggleDestaque(id) {
-        const produto = this.produtos.find(p => p._id === id);
-        if (!produto) return;
-
-        const atualizado = { destaque: !produto.destaque };
-
-        try {
-            const response = await fetch(`/api/produtos/${id}`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(atualizado)
-            });
-
-            if (response.ok) {
-                produto.destaque = !produto.destaque;
-                this.renderProdutos();
-                this.mostrarMensagem(`Produto ${produto.destaque ? 'destacado' : 'removido dos destaques'}!`);
             }
         } catch (error) {
             this.mostrarMensagem('Erro ao atualizar produto', 'erro');
@@ -267,78 +215,50 @@ class Dashboard {
         }
     }
 
-    // ===== INSUMOS =====
-    async adicionarInsumo() {
-        const insumo = {
-            nome: document.getElementById('insumoNome').value,
-            quantidade: parseInt(document.getElementById('insumoQtd').value),
-            unidade: document.getElementById('insumoUnidade').value,
-            preco: parseFloat(document.getElementById('insumoCusto').value)
-        };
-
-        try {
-            const response = await fetch('/api/insumos', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(insumo)
-            });
-
-            if (response.ok) {
-                const data = await response.json();
-                this.insumos.push(data.insumo);
-                this.renderInsumos();
-                this.limparForm('insumoForm');
-                this.mostrarMensagem('Insumo adicionado com sucesso!');
-            }
-        } catch (error) {
-            this.mostrarMensagem('Erro ao adicionar insumo', 'erro');
-        }
-    }
-
-    renderInsumos() {
-        const container = document.getElementById('insumosContainer');
-        
-        if (this.insumos.length === 0) {
-            container.innerHTML = '<div class="empty-state">Nenhum insumo cadastrado</div>';
-            return;
-        }
-
-        container.innerHTML = this.insumos.map(insumo => `
-            <div class="insumo-card">
-                <h3>${insumo.nome}</h3>
-                <div class="quantidade ${insumo.quantidade < 10 ? 'estoque-baixo' : ''}">
-                    ${insumo.quantidade} ${insumo.unidade}
-                </div>
-                <div class="custo">Custo: R$ ${insumo.preco?.toFixed(2) || '0.00'}/${insumo.unidade}</div>
-                <div class="card-actions">
-                    <button class="btn-editar" onclick="dashboard.editarInsumo('${insumo._id}')">✏️ Editar</button>
-                    <button class="btn-excluir" onclick="dashboard.excluirInsumo('${insumo._id}')">🗑️ Excluir</button>
-                </div>
-            </div>
-        `).join('');
-    }
-
     // ===== PEDIDOS =====
+    async atualizarPedidos() {
+        await this.carregarDados();
+        this.renderPedidos();
+        this.mostrarMensagem('Pedidos atualizados!');
+    }
+
     renderPedidos() {
         const container = document.getElementById('pedidosContainer');
         
         if (this.pedidos.length === 0) {
-            container.innerHTML = '<div class="empty-state">Nenhum pedido registrado</div>';
+            container.innerHTML = '<div class="empty-state">Nenhum pedido recebido</div>';
             return;
         }
 
         container.innerHTML = this.pedidos.map(pedido => `
-            <div class="pedido-card">
-                <h3>Pedido #${pedido._id.slice(-6)}</h3>
-                <div><strong>Cliente:</strong> ${pedido.cliente || 'Não informado'}</div>
-                <div><strong>Itens:</strong> ${pedido.itens?.length || 0} produtos</div>
-                <div><strong>Total:</strong> R$ ${pedido.total?.toFixed(2) || '0.00'}</div>
-                <div class="status status-${pedido.status || 'pendente'}">
-                    ${this.formatarStatus(pedido.status)}
+            <div class="produto-card">
+                <div style="display: flex; justify-content: between; align-items: start; margin-bottom: 1rem;">
+                    <div>
+                        <h3>Pedido #${pedido._id?.slice(-6) || 'N/A'}</h3>
+                        <p><strong>Cliente:</strong> ${pedido.cliente}</p>
+                        <p><strong>Telefone:</strong> ${pedido.telefone}</p>
+                        <p><strong>Endereço:</strong> ${pedido.endereco}</p>
+                    </div>
+                    <span class="status ${pedido.status}">
+                        ${this.formatarStatus(pedido.status)}
+                    </span>
                 </div>
-                <div class="card-actions">
-                    <button class="btn-editar" onclick="dashboard.editarPedido('${pedido._id}')">✏️ Editar</button>
-                    <button class="btn-excluir" onclick="dashboard.excluirPedido('${pedido._id}')">🗑️ Excluir</button>
+                
+                <div style="margin-bottom: 1rem;">
+                    <strong>Itens:</strong>
+                    ${pedido.itens?.map(item => `
+                        <div style="display: flex; justify-content: between; margin: 0.25rem 0;">
+                            <span>${item.qtd}x ${item.nome}</span>
+                            <span>R$ ${(item.preco * item.qtd).toFixed(2)}</span>
+                        </div>
+                    `).join('') || ''}
+                </div>
+                
+                <div style="border-top: 1px solid var(--border); padding-top: 1rem;">
+                    <div style="display: flex; justify-content: between;">
+                        <strong>Total: R$ ${pedido.total?.toFixed(2) || '0.00'}</strong>
+                        <span>${new Date(pedido.criadoEm).toLocaleString()}</span>
+                    </div>
                 </div>
             </div>
         `).join('');
@@ -361,43 +281,19 @@ class Dashboard {
             const response = await fetch('/api/financeiro');
             if (response.ok) {
                 const financeiro = await response.json();
-                this.atualizarUIFinanceiro(financeiro);
+                document.getElementById('totalVendas').textContent = `R$ ${financeiro.vendas.toFixed(2)}`;
+                document.getElementById('totalCustos').textContent = `R$ ${financeiro.gastos.toFixed(2)}`;
+                document.getElementById('lucro').textContent = `R$ ${financeiro.lucro.toFixed(2)}`;
             }
         } catch (error) {
-            console.log('Erro ao carregar dados financeiros:', error);
+            console.log('Erro ao carregar dados financeiros');
         }
     }
 
-    atualizarUIFinanceiro({ vendas, gastos, lucro }) {
-        document.getElementById('totalVendas').textContent = vendas.toFixed(2);
-        document.getElementById('totalCustos').textContent = gastos.toFixed(2);
-        document.getElementById('lucro').textContent = lucro.toFixed(2);
-    }
-
-    // ===== UTILITÁRIOS =====
-    limparForm(formId) {
-        document.getElementById(formId).reset();
-    }
-
-    fecharModal() {
-        const modal = document.querySelector('.modal-overlay');
-        if (modal) modal.remove();
-    }
-
+    // ===== MENSAGENS =====
     mostrarMensagem(mensagem, tipo = 'sucesso') {
-        const mensagemDiv = document.createElement('div');
-        mensagemDiv.className = `mensagem mensagem-${tipo}`;
-        mensagemDiv.textContent = mensagem;
-        
-        document.body.appendChild(mensagemDiv);
-        
-        setTimeout(() => {
-            mensagemDiv.remove();
-        }, 3000);
-    }
-
-    imprimirPedidos() {
-        window.print();
+        // Implementação simples de mensagens
+        alert(mensagem); // Você pode substituir por um sistema de notificações mais elaborado
     }
 }
 
