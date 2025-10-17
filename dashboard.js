@@ -1,114 +1,207 @@
-const tabs = document.querySelectorAll(".tab-btn");
-const contents = document.querySelectorAll(".tab-content");
+// Dados simulados (substituir por chamadas API/DB)
+let produtos = [];
+let insumos = [];
+let pedidos = [];
 
-tabs.forEach(tab => {
-  tab.addEventListener("click", () => {
-    tabs.forEach(t => t.classList.remove("active"));
-    contents.forEach(c => c.classList.remove("active"));
-    tab.classList.add("active");
-    document.getElementById(tab.dataset.tab).classList.add("active");
+// ======= PRODUTOS =======
+const produtosList = document.getElementById("produtosList");
+const addProdutoBtn = document.getElementById("addProdutoBtn");
+
+function renderProdutos() {
+  produtosList.innerHTML = "";
+  produtos.forEach((p, index) => {
+    const div = document.createElement("div");
+    div.classList.add("item");
+    div.innerHTML = `
+      <img src="${p.imagem}" alt="${p.nome}" class="thumb" />
+      <h3>${p.nome}</h3>
+      <p>${p.descricao}</p>
+      <p>R$ ${p.preco.toFixed(2)}</p>
+      <button class="btn edit" onclick="editarProduto(${index})">✏️ Editar</button>
+      <button class="btn delete" onclick="deletarProduto(${index})">🗑 Deletar</button>
+    `;
+    produtosList.appendChild(div);
   });
+}
+
+addProdutoBtn.addEventListener("click", () => {
+  const nome = prompt("Nome do produto:");
+  const descricao = prompt("Descrição:");
+  const preco = parseFloat(prompt("Preço:"));
+  const imagem = prompt("URL da imagem:");
+  if (!nome || !descricao || isNaN(preco) || !imagem) return alert("Dados inválidos");
+  produtos.push({ nome, descricao, preco, imagem, insumos: [] });
+  renderProdutos();
 });
 
-// Funções API
-const api = {
-  getProdutos: () => fetch("/produtos").then(res => res.json()),
-  postProduto: data => fetch("/produtos", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data) }).then(res => res.json()),
-  putProduto: (id, data) => fetch(`/produtos/${id}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data) }).then(res => res.json()),
-  deleteProduto: id => fetch(`/produtos/${id}`, { method: "DELETE" }).then(res => res.json()),
+function editarProduto(index) {
+  const p = produtos[index];
+  const nome = prompt("Nome do produto:", p.nome);
+  const descricao = prompt("Descrição:", p.descricao);
+  const preco = parseFloat(prompt("Preço:", p.preco));
+  const imagem = prompt("URL da imagem:", p.imagem);
+  if (!nome || !descricao || isNaN(preco) || !imagem) return alert("Dados inválidos");
+  produtos[index] = { ...p, nome, descricao, preco, imagem };
+  renderProdutos();
+}
 
-  getInsumos: () => fetch("/insumos").then(res => res.json()),
-  postInsumo: data => fetch("/insumos", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data) }).then(res => res.json()),
-  putInsumo: (id, data) => fetch(`/insumos/${id}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data) }).then(res => res.json()),
-  deleteInsumo: id => fetch(`/insumos/${id}`, { method: "DELETE" }).then(res => res.json()),
+function deletarProduto(index) {
+  if (confirm("Deseja deletar este produto?")) {
+    produtos.splice(index, 1);
+    renderProdutos();
+  }
+}
 
-  getPedidos: () => fetch("/pedidos").then(res => res.json()),
-  postPedido: data => fetch("/pedidos", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data) }).then(res => res.json()),
+// ======= INSUMOS =======
+const insumosList = document.getElementById("insumosList");
+const addInsumoBtn = document.getElementById("addInsumoBtn");
 
-  getFinanceiro: () => fetch("/financeiro").then(res => res.json())
-};
-
-// Renderizar produtos
-async function loadProdutos() {
-  const produtos = await api.getProdutos();
-  const tbody = document.querySelector("#produtosTable tbody");
-  tbody.innerHTML = "";
-  produtos.forEach(p => {
-    const tr = document.createElement("tr");
-    tr.innerHTML = `
-      <td><img src="${p.imagem}" width="50"></td>
-      <td>${p.nome}</td>
-      <td>R$ ${p.preco.toFixed(2)}</td>
-      <td>${p.descricao}</td>
-      <td>${p.insumos.map(i => i.nome).join(", ")}</td>
-      <td>
-        <button onclick="editProduto('${p._id}')">✏️</button>
-        <button onclick="deleteProduto('${p._id}')">🗑️</button>
-      </td>
+function renderInsumos() {
+  insumosList.innerHTML = "";
+  insumos.forEach((i, index) => {
+    const div = document.createElement("div");
+    div.classList.add("item");
+    div.innerHTML = `
+      <h3>${i.nome}</h3>
+      <p>Quantidade: ${i.quantidade} ${i.unidade}</p>
+      <p>Custo unitário: R$ ${i.custo.toFixed(2)}</p>
+      <button class="btn edit" onclick="editarInsumo(${index})">✏️ Editar</button>
+      <button class="btn delete" onclick="deletarInsumo(${index})">🗑 Deletar</button>
     `;
-    tbody.appendChild(tr);
+    insumosList.appendChild(div);
   });
 }
 
-// Renderizar insumos
-async function loadInsumos() {
-  const insumos = await api.getInsumos();
-  const tbody = document.querySelector("#insumosTable tbody");
-  tbody.innerHTML = "";
-  insumos.forEach(i => {
-    const tr = document.createElement("tr");
-    tr.innerHTML = `
-      <td>${i.nome}</td>
-      <td>${i.quantidade}</td>
-      <td>${i.unidade}</td>
-      <td>R$ ${i.custoUnitario.toFixed(2)}</td>
-      <td>
-        <button onclick="editInsumo('${i._id}')">✏️</button>
-        <button onclick="deleteInsumo('${i._id}')">🗑️</button>
-      </td>
+addInsumoBtn.addEventListener("click", () => {
+  const nome = prompt("Nome do insumo:");
+  const quantidade = parseFloat(prompt("Quantidade disponível:"));
+  const unidade = prompt("Unidade (g, ml, und):");
+  const custo = parseFloat(prompt("Custo total do insumo:"));
+  if (!nome || isNaN(quantidade) || !unidade || isNaN(custo)) return alert("Dados inválidos");
+  insumos.push({ nome, quantidade, unidade, custo });
+  renderInsumos();
+});
+
+function editarInsumo(index) {
+  const i = insumos[index];
+  const nome = prompt("Nome do insumo:", i.nome);
+  const quantidade = parseFloat(prompt("Quantidade disponível:", i.quantidade));
+  const unidade = prompt("Unidade:", i.unidade);
+  const custo = parseFloat(prompt("Custo total:", i.custo));
+  if (!nome || isNaN(quantidade) || !unidade || isNaN(custo)) return alert("Dados inválidos");
+  insumos[index] = { nome, quantidade, unidade, custo };
+  renderInsumos();
+}
+
+function deletarInsumo(index) {
+  if (confirm("Deseja deletar este insumo?")) {
+    insumos.splice(index, 1);
+    renderInsumos();
+  }
+}
+
+// ======= PEDIDOS =======
+const pedidosList = document.getElementById("pedidosList");
+const addPedidoBtn = document.getElementById("addPedidoBtn");
+const printPedidosBtn = document.getElementById("printPedidosBtn");
+
+function renderPedidos() {
+  pedidosList.innerHTML = "";
+  pedidos.forEach((p, index) => {
+    const div = document.createElement("div");
+    div.classList.add("item");
+    div.innerHTML = `
+      <h3>Pedido #${index + 1}</h3>
+      <p>Cliente: ${p.cliente}</p>
+      <p>Produto: ${p.produto}</p>
+      <p>Quantidade: ${p.quantidade}</p>
+      <p>Total: R$ ${(p.preco * p.quantidade).toFixed(2)}</p>
+      <button class="btn delete" onclick="deletarPedido(${index})">🗑 Deletar</button>
     `;
-    tbody.appendChild(tr);
+    pedidosList.appendChild(div);
   });
 }
 
-// Renderizar pedidos
-async function loadPedidos() {
-  const pedidos = await api.getPedidos();
-  const tbody = document.querySelector("#pedidosTable tbody");
-  tbody.innerHTML = "";
+addPedidoBtn.addEventListener("click", () => {
+  const cliente = prompt("Nome do cliente:");
+  const produto = prompt("Produto:");
+  const quantidade = parseInt(prompt("Quantidade:"));
+  const preco = parseFloat(prompt("Preço unitário:"));
+  if (!cliente || !produto || isNaN(quantidade) || isNaN(preco)) return alert("Dados inválidos");
+  pedidos.push({ cliente, produto, quantidade, preco });
+  atualizarFinanceiro();
+  renderPedidos();
+});
+
+function deletarPedido(index) {
+  if (confirm("Deseja deletar este pedido?")) {
+    pedidos.splice(index, 1);
+    atualizarFinanceiro();
+    renderPedidos();
+  }
+}
+
+printPedidosBtn.addEventListener("click", () => {
+  let conteudo = "";
+  pedidos.forEach((p, i) => {
+    conteudo += `Pedido #${i + 1}\nCliente: ${p.cliente}\nProduto: ${p.produto}\nQuantidade: ${p.quantidade}\nTotal: R$ ${(p.preco * p.quantidade).toFixed(2)}\n\n`;
+  });
+  const printWindow = window.open('', '', 'width=600,height=600');
+  printWindow.document.write('<pre>' + conteudo + '</pre>');
+  printWindow.print();
+});
+
+// ======= FINANCEIRO =======
+const totalVendasEl = document.getElementById("totalVendas");
+const totalCustosEl = document.getElementById("totalCustos");
+const lucroEl = document.getElementById("lucro");
+const financeTableBody = document.querySelector("#financeTable tbody");
+
+function atualizarFinanceiro() {
+  let totalVendas = 0;
+  let totalCustos = 0;
+
+  financeTableBody.innerHTML = "";
   pedidos.forEach(p => {
+    const custoProduto = calcularCustoProduto(p.produto) * p.quantidade;
+    const lucro = (p.preco * p.quantidade) - custoProduto;
+    totalVendas += p.preco * p.quantidade;
+    totalCustos += custoProduto;
+
     const tr = document.createElement("tr");
     tr.innerHTML = `
-      <td>${p.cliente.nome}</td>
-      <td>${p.produtos.map(prod => `${prod.produtoId} x${prod.quantidade}`).join(", ")}</td>
-      <td>R$ ${p.total.toFixed(2)}</td>
-      <td>${p.pagamento}</td>
-      <td>${p.obs || ""}</td>
-      <td>${new Date(p.data).toLocaleString()}</td>
-      <td><button onclick="printPedido('${p._id}')">🖨️ Imprimir</button></td>
+      <td>${new Date().toLocaleString()}</td>
+      <td>${p.produto}</td>
+      <td>${p.quantidade}</td>
+      <td>R$ ${p.preco.toFixed(2)}</td>
+      <td>R$ ${custoProduto.toFixed(2)}</td>
+      <td>R$ ${lucro.toFixed(2)}</td>
     `;
-    tbody.appendChild(tr);
+    financeTableBody.appendChild(tr);
   });
+
+  totalVendasEl.textContent = totalVendas.toFixed(2);
+  totalCustosEl.textContent = totalCustos.toFixed(2);
+  lucroEl.textContent = (totalVendas - totalCustos).toFixed(2);
 }
 
-// Renderizar financeiro
-async function loadFinanceiro() {
-  const data = await api.getFinanceiro();
-  document.getElementById("receitaTotal").textContent = data.receitaTotal.toFixed(2);
-  document.getElementById("custoTotal").textContent = data.custoTotal.toFixed(2);
-  document.getElementById("lucroTotal").textContent = data.lucro.toFixed(2);
-  document.getElementById("totalPedidos").textContent = data.totalPedidos;
+function calcularCustoProduto(nomeProduto) {
+  const produto = produtos.find(p => p.nome === nomeProduto);
+  if (!produto || !produto.insumos.length) return 0;
+
+  let custoTotal = 0;
+  produto.insumos.forEach(insumoUso => {
+    const i = insumos.find(ins => ins.nome === insumoUso.nome);
+    if (i) {
+      const custoUnit = i.custo / i.quantidade;
+      custoTotal += custoUnit * insumoUso.quantidade;
+    }
+  });
+  return custoTotal;
 }
 
-// Inicializar
-async function initDashboard() {
-  await loadProdutos();
-  await loadInsumos();
-  await loadPedidos();
-  await loadFinanceiro();
-}
-
-initDashboard();
-
-// Aqui você pode criar funções como addProduto, editProduto, deleteProduto, addInsumo, etc.
-// E também printPedido para enviar para impressora via JavaScript
+// ======= Inicialização =======
+renderProdutos();
+renderInsumos();
+renderPedidos();
+atualizarFinanceiro();
