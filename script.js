@@ -1,4 +1,4 @@
-// script.js - MANTENDO TOTALMENTE A MESMA FUNCIONALIDADE
+// script.js - CORRIGIDO
 let carrinho = JSON.parse(localStorage.getItem('carrinho')) || [];
 const TAXAS = {
     "Jardim Canadá": 6.00,
@@ -16,49 +16,73 @@ async function carregarCardapio() {
         
         // Popular as categorias mantendo a mesma estrutura
         Object.keys(cardapio).forEach(categoria => {
-            const container = document.getElementById(`cat-${categoria}`);
+            // NOTE: O nome da categoria deve ser igual ao ID do container no index.html
+            // Se as categorias no index.html são 'cat-Hambúrgueres', 'cat-Combos', etc.
+            const container = document.getElementById(`cat-${categoria}`); 
+            
             if (container) {
-                container.innerHTML = cardapio[categoria].map(produto => `
-                    <div class="menu-item" onclick="adicionarAoCarrinho('${categoria}', '${produto.nome}', ${produto.preco})">
-                        ${produto.imagem ? `<img src="${produto.imagem}" alt="${produto.nome}" />` : ''}
-                        <h3>${produto.nome}</h3>
-                        <p>${produto.descricao || ''}</p>
-                        <span class="price">R$ ${produto.preco.toFixed(2)}</span>
-                    </div>
-                `).join('');
+                container.innerHTML = cardapio[categoria].map(produto => {
+                    // CORREÇÃO 1: Trata produto.preco como 0 se for undefined para evitar TypeError
+                    // CORREÇÃO 3: Trata produto.imagem se for null
+                    const precoFormatado = (produto.preco || 0).toFixed(2);
+                    const imagemUrl = produto.imagem || '';
+
+                    return `
+                        <div class="menu-item" onclick="adicionarAoCarrinho('${categoria}', '${produto.nome}', ${produto.preco || 0})">
+                            ${imagemUrl ? `<img src="${imagemUrl}" alt="${produto.nome}" />` : ''}
+                            <h3>${produto.nome}</h3>
+                            <p>${produto.descricao || ''}</p>
+                            <span class="price">R$ ${precoFormatado}</span>
+                        </div>
+                    `;
+                }).join('');
             }
         });
         
         renderCarrinho();
     } catch (error) {
-        console.log('Usando cardápio local');
-        carregarCardapioLocal();
+        console.log('⚠️ Erro ao carregar cardápio da API. Usando cardápio local ou falha de conexão.');
+        // Este é o log que você viu quando o Cardápio falhou.
+        // Ele vai para o fallback abaixo.
+        carregarCardapioLocal(); 
     }
 }
 
 // Fallback para o menu.json local
 function carregarCardapioLocal() {
     fetch('menu.json')
-        .then(response => response.json())
+        .then(response => {
+             if (!response.ok) {
+                throw new Error('menu.json não encontrado ou erro de leitura.');
+             }
+             return response.json();
+        })
         .then(cardapio => {
             Object.keys(cardapio).forEach(categoria => {
                 const container = document.getElementById(`cat-${categoria}`);
                 if (container) {
-                    container.innerHTML = cardapio[categoria].map(produto => `
-                        <div class="menu-item" onclick="adicionarAoCarrinho('${categoria}', '${produto.nome}', ${produto.preco})">
-                            ${produto.imagem ? `<img src="${produto.imagem}" alt="${produto.nome}" />` : ''}
-                            <h3>${produto.nome}</h3>
-                            <p>${produto.descricao || ''}</p>
-                            <span class="price">R$ ${produto.preco.toFixed(2)}</span>
-                        </div>
-                    `).join('');
+                    container.innerHTML = cardapio[categoria].map(produto => {
+                        // CORREÇÃO 1: Garante que o preço seja tratado como 0 se for undefined
+                        const precoFormatado = (produto.preco || 0).toFixed(2);
+                        const imagemUrl = produto.imagem || '';
+
+                        return `
+                            <div class="menu-item" onclick="adicionarAoCarrinho('${categoria}', '${produto.nome}', ${produto.preco || 0})">
+                                ${imagemUrl ? `<img src="${imagemUrl}" alt="${produto.nome}" />` : ''}
+                                <h3>${produto.nome}</h3>
+                                <p>${produto.descricao || ''}</p>
+                                <span class="price">R$ ${precoFormatado}</span>
+                            </div>
+                        `;
+                    }).join('');
                 }
             });
+            renderCarrinho();
         })
-        .catch(err => console.error('Erro ao carregar cardápio:', err));
+        .catch(err => console.error('❌ Erro fatal ao carregar cardápio local ou API:', err));
 }
 
-// ===== FUNÇÕES DO CARRINHO (MANTIDAS IGUAIS) =====
+// ===== FUNÇÕES DO CARRINHO (MANTIDAS IGUAIS, sem erro) =====
 function adicionarAoCarrinho(categoria, nome, preco) {
     const itemExistente = carrinho.find(item => item.nome === nome);
     
@@ -73,8 +97,10 @@ function adicionarAoCarrinho(categoria, nome, preco) {
     
     // Feedback visual
     const btn = event.target.closest('.menu-item');
-    btn.style.transform = 'scale(0.95)';
-    setTimeout(() => btn.style.transform = 'scale(1)', 150);
+    if (btn) { // Adiciona verificação para garantir que o botão existe
+        btn.style.transform = 'scale(0.95)';
+        setTimeout(() => btn.style.transform = 'scale(1)', 150);
+    }
 }
 
 function removerDoCarrinho(index) {
@@ -115,7 +141,7 @@ function renderCarrinho() {
         <div class="cart-item">
             <div class="item-info">
                 <strong>${item.nome}</strong>
-                <span>R$ ${item.preco.toFixed(2)}</span>
+                <span>R$ ${(item.preco || 0).toFixed(2)}</span> 
             </div>
             <div class="item-controls">
                 <button onclick="alterarQuantidade(${index}, -1)">−</button>
@@ -127,7 +153,7 @@ function renderCarrinho() {
     `).join('');
     
     // Total
-    const total = carrinho.reduce((acc, item) => acc + (item.preco * item.qtd), 0);
+    const total = carrinho.reduce((acc, item) => acc + ((item.preco || 0) * item.qtd), 0);
     const taxa = TAXAS[document.getElementById('clienteRegiao')?.value] || 0;
     const totalComTaxa = total + taxa;
     
@@ -176,7 +202,7 @@ function finalizarPedido() {
     }
     
     const taxa = TAXAS[clienteRegiao] || 0;
-    const total = carrinho.reduce((acc, item) => acc + (item.preco * item.qtd), 0) + taxa;
+    const total = carrinho.reduce((acc, item) => acc + ((item.preco || 0) * item.qtd), 0) + taxa;
     
     // Montar mensagem para WhatsApp
     let mensagem = `*NOVO PEDIDO - Artesanal Blend* 🍔\n\n`;
@@ -187,7 +213,7 @@ function finalizarPedido() {
     mensagem += `*ITENS DO PEDIDO:*\n`;
     
     carrinho.forEach(item => {
-        mensagem += `• ${item.qtd}x ${item.nome} - R$ ${(item.preco * item.qtd).toFixed(2)}\n`;
+        mensagem += `• ${item.qtd}x ${item.nome} - R$ ${((item.preco || 0) * item.qtd).toFixed(2)}\n`;
     });
     
     mensagem += `\n*Taxa de entrega:* R$ ${taxa.toFixed(2)}\n`;
@@ -241,13 +267,14 @@ function finalizarPedido() {
 
 async function salvarPedidoNoBanco(pedidoData) {
     try {
-        await fetch('/api/pedidos', {
+        // CORREÇÃO 2: ROTA MUDADA para '/api/orders'
+        await fetch('/api/orders', { 
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(pedidoData)
         });
     } catch (error) {
-        console.log('Pedido salvo localmente (sem conexão com servidor)');
+        console.log('⚠️ Pedido salvo localmente (sem conexão com servidor)', error);
     }
 }
 
