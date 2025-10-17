@@ -1,5 +1,5 @@
 // ==============================
-//  Artesanal Blend - Backend API SIMPLES
+//  Artesanal Blend - Backend API
 // ==============================
 
 import express from 'express';
@@ -12,8 +12,8 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Conectar ao MongoDB Atlas
-mongoose.connect(process.env.MONGO_URI, {
+// Conectar ao MongoDB Atlas (URI DIRETA - SEM VARIÁVEIS DE AMBIENTE)
+mongoose.connect('mongodb+srv://antoniogomesfilho88_db_user:Regiane2020ac1@cluster0.nkg5z7v.mongodb.net/artesanal-blend?retryWrites=true&w=majority', {
   useNewUrlParser: true,
   useUnifiedTopology: true
 })
@@ -93,6 +93,22 @@ app.put('/api/produtos/:id', async (req, res) => {
   }
 });
 
+// DELETE - Deletar produto
+app.delete('/api/produtos/:id', async (req, res) => {
+  try {
+    const produto = await Produto.findOneAndDelete({ id: parseInt(req.params.id) });
+    
+    if (!produto) {
+      return res.status(404).json({ error: 'Produto não encontrado' });
+    }
+    
+    res.json({ message: 'Produto deletado com sucesso' });
+  } catch (err) {
+    console.error('Erro ao deletar produto:', err);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
 // Health check
 app.get('/health', (req, res) => {
   res.json({ 
@@ -108,6 +124,7 @@ app.get('/', (req, res) => {
     message: '🍔 Artesanal Blend API Online!',
     endpoints: {
       menu: '/api/menu',
+      produtos: '/api/produtos',
       health: '/health'
     }
   });
@@ -120,4 +137,9 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`🚀 Servidor rodando na porta ${PORT}`);
   console.log(`🍔 API: http://localhost:${PORT}/api/menu`);
+});
+
+// Tratamento de erros
+process.on('unhandledRejection', (err) => {
+  console.error('❌ Erro não tratado:', err);
 });
