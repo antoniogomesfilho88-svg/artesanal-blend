@@ -1,210 +1,114 @@
-let produtos = [];
-let insumos = [];
-let pedidos = [];
-let editarProdutoId = null;
-let editarInsumoId = null;
+const tabs = document.querySelectorAll(".tab-btn");
+const contents = document.querySelectorAll(".tab-content");
 
-// --- Navegação ---
-function mostrarSecao(secao) {
-  document.querySelectorAll('.secao').forEach(s => s.style.display='none');
-  document.getElementById(secao).style.display='block';
-  if(secao==='produtos') carregarProdutos();
-  if(secao==='insumos') carregarInsumos();
-  if(secao==='pedidos') carregarPedidos();
-  if(secao==='financeiro') carregarFinanceiro();
-}
+tabs.forEach(tab => {
+  tab.addEventListener("click", () => {
+    tabs.forEach(t => t.classList.remove("active"));
+    contents.forEach(c => c.classList.remove("active"));
+    tab.classList.add("active");
+    document.getElementById(tab.dataset.tab).classList.add("active");
+  });
+});
 
-// --- Modal Produto ---
-function abrirModalProduto() {
-  document.getElementById('modal-produto').style.display='block';
-  carregarListaInsumos();
-}
-function fecharModalProduto() { 
-  document.getElementById('modal-produto').style.display='none';
-  editarProdutoId=null;
-}
+// Funções API
+const api = {
+  getProdutos: () => fetch("/produtos").then(res => res.json()),
+  postProduto: data => fetch("/produtos", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data) }).then(res => res.json()),
+  putProduto: (id, data) => fetch(`/produtos/${id}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data) }).then(res => res.json()),
+  deleteProduto: id => fetch(`/produtos/${id}`, { method: "DELETE" }).then(res => res.json()),
 
-// --- Modal Insumo ---
-function abrirModalInsumo() { document.getElementById('modal-insumo').style.display='block'; }
-function fecharModalInsumo() { document.getElementById('modal-insumo').style.display='none'; editarInsumoId=null; }
+  getInsumos: () => fetch("/insumos").then(res => res.json()),
+  postInsumo: data => fetch("/insumos", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data) }).then(res => res.json()),
+  putInsumo: (id, data) => fetch(`/insumos/${id}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data) }).then(res => res.json()),
+  deleteInsumo: id => fetch(`/insumos/${id}`, { method: "DELETE" }).then(res => res.json()),
 
-// --- Produtos ---
-async function carregarProdutos() {
-  const res = await fetch('/api/produtos');
-  produtos = await res.json();
-  const tbody = document.querySelector('#tabela-produtos tbody');
-  tbody.innerHTML='';
-  produtos.forEach(p=>{
-    const tr = document.createElement('tr');
-    tr.innerHTML=`<td>${p.nome}</td><td>${p.preco.toFixed(2)}</td><td>${p.descricao}</td>
+  getPedidos: () => fetch("/pedidos").then(res => res.json()),
+  postPedido: data => fetch("/pedidos", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data) }).then(res => res.json()),
+
+  getFinanceiro: () => fetch("/financeiro").then(res => res.json())
+};
+
+// Renderizar produtos
+async function loadProdutos() {
+  const produtos = await api.getProdutos();
+  const tbody = document.querySelector("#produtosTable tbody");
+  tbody.innerHTML = "";
+  produtos.forEach(p => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td><img src="${p.imagem}" width="50"></td>
+      <td>${p.nome}</td>
+      <td>R$ ${p.preco.toFixed(2)}</td>
+      <td>${p.descricao}</td>
+      <td>${p.insumos.map(i => i.nome).join(", ")}</td>
       <td>
-        <button onclick="editarProduto('${p._id}')">✏️</button>
-        <button onclick="excluirProduto('${p._id}')">🗑️</button>
-      </td>`;
+        <button onclick="editProduto('${p._id}')">✏️</button>
+        <button onclick="deleteProduto('${p._id}')">🗑️</button>
+      </td>
+    `;
     tbody.appendChild(tr);
   });
 }
 
-function carregarListaInsumos() {
-  const div = document.getElementById('lista-insumos-produto');
-  div.innerHTML='';
-  insumos.forEach(i=>{
-    const input = document.createElement('input');
-    input.type='number';
-    input.min='0';
-    input.value=0;
-    input.dataset.id=i._id;
-    input.addEventListener('input', atualizarCustoProduto);
-
-    const label = document.createElement('label');
-    label.textContent = `${i.nome} (${i.unidade}, R$ ${i.precoUnitario.toFixed(2)}): `;
-    label.appendChild(input);
-    div.appendChild(label);
-    div.appendChild(document.createElement('br'));
-  });
-  atualizarCustoProduto();
-}
-
-function atualizarCustoProduto() {
-  const inputs = document.querySelectorAll('#lista-insumos-produto input');
-  let custoTotal = 0;
-  inputs.forEach(inp=>{
-    const insumo = insumos.find(i=>i._id===inp.dataset.id);
-    const qtd = parseFloat(inp.value) || 0;
-    custoTotal += qtd * insumo.precoUnitario;
-  });
-  document.getElementById('custo-total-produto').textContent = custoTotal.toFixed(2);
-
-  const precoVenda = parseFloat(document.getElementById('produto-preco').value) || 0;
-  const lucro = precoVenda - custoTotal;
-  document.getElementById('lucro-produto').textContent = lucro.toFixed(2);
-}
-
-document.getElementById('produto-preco').addEventListener('input', atualizarCustoProduto);
-
-function editarProduto(id) {
-  const p = produtos.find(x=>x._id===id);
-  editarProdutoId = id;
-  document.getElementById('produto-nome').value=p.nome;
-  document.getElementById('produto-preco').value=p.preco;
-  document.getElementById('produto-descricao').value=p.descricao;
-  document.getElementById('produto-imagem').value=p.imagem;
-  abrirModalProduto();
-}
-
-async function salvarProduto() {
-  const nome = document.getElementById('produto-nome').value;
-  const preco = parseFloat(document.getElementById('produto-preco').value);
-  const descricao = document.getElementById('produto-descricao').value;
-  const imagem = document.getElementById('produto-imagem').value;
-  const insumosInputs = document.querySelectorAll('#lista-insumos-produto input');
-  const insumosProduto = [];
-  insumosInputs.forEach(inp=>{
-    if(parseFloat(inp.value)>0) insumosProduto.push({insumo: inp.dataset.id, quantidade: parseFloat(inp.value)});
-  });
-
-  const body = { nome, preco, descricao, imagem, insumos: insumosProduto };
-  if(editarProdutoId) await fetch('/api/produtos/'+editarProdutoId, {method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)});
-  else await fetch('/api/produtos', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)});
-  
-  fecharModalProduto();
-  carregarProdutos();
-}
-
-// --- Excluir Produto ---
-async function excluirProduto(id){
-  await fetch('/api/produtos/'+id,{method:'DELETE'});
-  carregarProdutos();
-}
-
-// --- Insumos ---
-async function carregarInsumos() {
-  const res = await fetch('/api/insumos');
-  insumos = await res.json();
-  const tbody = document.querySelector('#tabela-insumos tbody');
-  tbody.innerHTML='';
-  insumos.forEach(i=>{
-    const tr = document.createElement('tr');
-    tr.innerHTML=`<td>${i.nome}</td><td>${i.quantidade}</td><td>${i.unidade}</td><td>${i.precoUnitario.toFixed(2)}</td>
+// Renderizar insumos
+async function loadInsumos() {
+  const insumos = await api.getInsumos();
+  const tbody = document.querySelector("#insumosTable tbody");
+  tbody.innerHTML = "";
+  insumos.forEach(i => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${i.nome}</td>
+      <td>${i.quantidade}</td>
+      <td>${i.unidade}</td>
+      <td>R$ ${i.custoUnitario.toFixed(2)}</td>
       <td>
-        <button onclick="editarInsumo('${i._id}')">✏️</button>
-        <button onclick="excluirInsumo('${i._id}')">🗑️</button>
-      </td>`;
+        <button onclick="editInsumo('${i._id}')">✏️</button>
+        <button onclick="deleteInsumo('${i._id}')">🗑️</button>
+      </td>
+    `;
     tbody.appendChild(tr);
   });
 }
 
-function editarInsumo(id){
-  const i = insumos.find(x=>x._id===id);
-  editarInsumoId=id;
-  document.getElementById('insumo-nome').value=i.nome;
-  document.getElementById('insumo-quantidade').value=i.quantidade;
-  document.getElementById('insumo-unidade').value=i.unidade;
-  document.getElementById('insumo-preco').value=i.precoUnitario;
-  abrirModalInsumo();
-}
-
-async function salvarInsumo(){
-  const nome = document.getElementById('insumo-nome').value;
-  const quantidade = parseFloat(document.getElementById('insumo-quantidade').value);
-  const unidade = document.getElementById('insumo-unidade').value;
-  const precoUnitario = parseFloat(document.getElementById('insumo-preco').value);
-  const body={nome,quantidade,unidade,precoUnitario};
-  if(editarInsumoId) await fetch('/api/insumos/'+editarInsumoId,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
-  else await fetch('/api/insumos',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
-  fecharModalInsumo();
-  carregarInsumos();
-}
-
-async function excluirInsumo(id){
-  await fetch('/api/insumos/'+id,{method:'DELETE'});
-  carregarInsumos();
-}
-
-// --- Pedidos ---
-async function carregarPedidos() {
-  const res = await fetch('/api/pedidos');
-  pedidos = await res.json();
-  const tbody = document.querySelector('#tabela-pedidos tbody');
-  tbody.innerHTML='';
-  pedidos.forEach(p=>{
-    const tr=document.createElement('tr');
-    tr.innerHTML=`<td>${p.cliente.nome}</td><td>${p.total.toFixed(2)}</td><td>${p.pagamento}</td>
-      <td><button onclick="imprimirPedido('${p._id}')">🖨️ Imprimir</button></td>`;
+// Renderizar pedidos
+async function loadPedidos() {
+  const pedidos = await api.getPedidos();
+  const tbody = document.querySelector("#pedidosTable tbody");
+  tbody.innerHTML = "";
+  pedidos.forEach(p => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${p.cliente.nome}</td>
+      <td>${p.produtos.map(prod => `${prod.produtoId} x${prod.quantidade}`).join(", ")}</td>
+      <td>R$ ${p.total.toFixed(2)}</td>
+      <td>${p.pagamento}</td>
+      <td>${p.obs || ""}</td>
+      <td>${new Date(p.data).toLocaleString()}</td>
+      <td><button onclick="printPedido('${p._id}')">🖨️ Imprimir</button></td>
+    `;
     tbody.appendChild(tr);
   });
 }
 
-async function imprimirPedido(id){
-  const pedido = pedidos.find(p=>p._id===id);
-  let texto=`Artesanal Blend\nPedido do Cliente: ${pedido.cliente.nome}\nItens:\n`;
-  pedido.itens.forEach(i=>texto+=`- ${i.produto.nome} x ${i.quantidade}\n`);
-  texto+=`Total: R$ ${pedido.total.toFixed(2)}\nPagamento: ${pedido.pagamento}`;
-  const w = window.open('','PRINT');
-  w.document.write('<pre>'+texto+'</pre>');
-  w.print();
-  w.close();
+// Renderizar financeiro
+async function loadFinanceiro() {
+  const data = await api.getFinanceiro();
+  document.getElementById("receitaTotal").textContent = data.receitaTotal.toFixed(2);
+  document.getElementById("custoTotal").textContent = data.custoTotal.toFixed(2);
+  document.getElementById("lucroTotal").textContent = data.lucro.toFixed(2);
+  document.getElementById("totalPedidos").textContent = data.totalPedidos;
 }
 
-// --- Financeiro ---
-async function carregarFinanceiro() {
-  const res = await fetch('/api/financeiro');
-  const f = await res.json();
-  document.getElementById('total-vendas').textContent=f.totalVendas.toFixed(2);
-  document.getElementById('total-custo').textContent=f.totalCusto.toFixed(2);
-  document.getElementById('lucro').textContent=f.lucro.toFixed(2);
-
-  const ctx = document.getElementById('grafico-vendas').getContext('2d');
-  new Chart(ctx,{
-    type:'bar',
-    data:{
-      labels:['Vendas','Custo','Lucro'],
-      datasets:[{label:'R$',data:[f.totalVendas,f.totalCusto,f.lucro],backgroundColor:['#4CAF50','#f44336','#2196F3']}]
-    }
-  });
+// Inicializar
+async function initDashboard() {
+  await loadProdutos();
+  await loadInsumos();
+  await loadPedidos();
+  await loadFinanceiro();
 }
 
-// Carregar produtos e insumos ao abrir dashboard
-mostrarSecao('produtos');
-fetch('/api/insumos').then(res=>res.json()).then(data=>insumos=data);
+initDashboard();
 
+// Aqui você pode criar funções como addProduto, editProduto, deleteProduto, addInsumo, etc.
+// E também printPedido para enviar para impressora via JavaScript
