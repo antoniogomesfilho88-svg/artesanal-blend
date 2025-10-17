@@ -1,98 +1,111 @@
-// SUBSTITUA esta rota:
+// ==============================
+//  Artesanal Blend - Backend SIMPLES
+// ==============================
+
+import express from 'express';
+import mongoose from 'mongoose';
+import cors from 'cors';
+
+const app = express();
+
+// Middlewares
+app.use(cors());
+app.use(express.json());
+
+// Conectar ao MongoDB
+mongoose.connect('mongodb+srv://antoniogomesfilho88_db_user:Regiane2020@cluster0.nkg5z7v.mongodb.net/artesanal-blend?retryWrites=true&w=majority')
+.then(() => console.log('✅ MongoDB conectado'))
+.catch(err => console.log('⚠️ MongoDB offline:', err.message));
+
+// Schema do Produto
+const produtoSchema = new mongoose.Schema({
+  id: Number,
+  name: String,
+  desc: String,
+  price: Number,
+  cat: String,
+  imgUrl: String
+});
+
+const Produto = mongoose.model('Produto', produtoSchema);
+
+// Dados locais de fallback
+const menuLocal = [
+  {
+    id: 1,
+    name: "Hambúrguer Artesanal",
+    desc: "Pão brioche, blend 180g, queijo, alface, tomate",
+    price: 28.90,
+    cat: "Hambúrgueres",
+    imgUrl: ""
+  },
+  {
+    id: 2,
+    name: "Cheese Bacon",
+    desc: "Blend 180g, queijo cheddar, bacon crocante",
+    price: 32.90,
+    cat: "Hambúrgueres", 
+    imgUrl: ""
+  }
+];
+
+// ========== ROTAS PRINCIPAIS ==========
+
+// Rota 1: Página inicial SIMPLES
 app.get('/', (req, res) => {
-  res.json({ 
-    message: '🍔 Artesanal Blend API Online!',
-    status: 'Operacional',
-    database: mongoose.connection.readyState === 1 ? 'Conectado ao MongoDB' : 'Modo offline',
-    endpoints: {
-      menu: '/api/menu',
-      health: '/health',
-      dashboard: '/dashboard'
+  res.send(`
+    <html>
+      <head><title>Artesanal Blend</title></head>
+      <body>
+        <h1>🍔 Artesanal Blend - API</h1>
+        <p><a href="/dashboard">Dashboard Admin</a></p>
+        <p><a href="/api/menu">Ver Cardápio (JSON)</a></p>
+        <p><a href="/health">Status do Sistema</a></p>
+      </body>
+    </html>
+  `);
+});
+
+// Rota 2: API do Cardápio
+app.get('/api/menu', async (req, res) => {
+  try {
+    if (mongoose.connection.readyState === 1) {
+      const produtos = await Produto.find();
+      res.json(produtos);
+    } else {
+      res.json(menuLocal);
     }
+  } catch (err) {
+    res.json(menuLocal);
+  }
+});
+
+// Rota 3: Health Check
+app.get('/health', (req, res) => {
+  res.json({ 
+    status: 'OK',
+    database: mongoose.connection.readyState === 1 ? 'Conectado' : 'Offline'
   });
 });
 
-// POR ESTA:
-app.get('/', (req, res) => {
+// Rota 4: Dashboard SIMPLES
+app.get('/dashboard', (req, res) => {
   res.send(`
-    <!DOCTYPE html>
     <html>
-    <head>
-      <title>Artesanal Blend - API</title>
-      <meta charset="UTF-8">
-      <style>
-        body { 
-          font-family: Arial, sans-serif; 
-          padding: 40px; 
-          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-          min-height: 100vh;
-          margin: 0;
-          color: white;
-        }
-        .container { 
-          max-width: 800px; 
-          margin: 0 auto; 
-          background: rgba(255,255,255,0.1);
-          padding: 40px; 
-          border-radius: 20px;
-          backdrop-filter: blur(10px);
-          text-align: center;
-        }
-        h1 { 
-          font-size: 3em; 
-          margin-bottom: 20px;
-        }
-        .links { 
-          margin: 30px 0; 
-        }
-        .link-btn { 
-          display: inline-block; 
-          background: white; 
-          color: #667eea; 
-          padding: 15px 30px; 
-          margin: 10px; 
-          border-radius: 50px; 
-          text-decoration: none; 
-          font-weight: bold;
-          transition: transform 0.3s;
-        }
-        .link-btn:hover { 
-          transform: translateY(-5px); 
-        }
-        .status { 
-          background: rgba(255,255,255,0.2); 
-          padding: 15px; 
-          border-radius: 10px; 
-          margin: 20px 0;
-        }
-      </style>
-    </head>
-    <body>
-      <div class="container">
-        <h1>🍔 Artesanal Blend</h1>
-        <p style="font-size: 1.2em;">Sistema de Cardápio Online</p>
-        
-        <div class="status">
-          <strong>Status:</strong> ✅ Online &nbsp; | &nbsp;
-          <strong>Banco:</strong> ${mongoose.connection.readyState === 1 ? '✅ Conectado' : '⚠️ Offline'}
-        </div>
-
-        <div class="links">
-          <a href="/dashboard" class="link-btn">📊 Dashboard Admin</a>
-          <a href="/api/menu" class="link-btn">📋 Ver Cardápio (API)</a>
-          <a href="/health" class="link-btn">❤️ Status do Sistema</a>
-        </div>
-
-        <div style="margin-top: 40px; padding: 20px; background: rgba(255,255,255,0.1); border-radius: 10px;">
-          <h3>🚀 Links Rápidos</h3>
-          <p>
-            <a href="/dashboard" style="color: white;">/dashboard</a> - Área administrativa<br>
-            <a href="/api/menu" style="color: white;">/api/menu</a> - API do cardápio<br>
-            <a href="/health" style="color: white;">/health</a> - Status do serviço
-          </p>
-        </div>
-      </div>
-    </body>
+      <head><title>Dashboard</title></head>
+      <body>
+        <h1>📊 Dashboard Artesanal Blend</h1>
+        <p>Status: ${mongoose.connection.readyState === 1 ? '✅ Conectado' : '⚠️ Offline'}</p>
+        <p><a href="/api/menu" target="_blank">Ver Cardápio</a></p>
+        <p><a href="/">Voltar</a></p>
+      </body>
     </html>
   `);
+});
+
+// ========== INICIAR SERVIDOR ==========
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`🚀 Servidor rodando na porta ${PORT}`);
 });
