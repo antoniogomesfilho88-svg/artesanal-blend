@@ -3,112 +3,152 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Artesanal Blend - Dashboard</title>
+  <title>Dashboard - Artesanal Blend</title>
   <link rel="stylesheet" href="dashboard.css" />
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
   <!-- Cabeçalho -->
-  <header class="header">
-    <img src="logo.jpg" alt="Logo" class="logo">
-    <h1>Dashboard Artesanal Blend</h1>
+  <header class="dashboard-header">
+    <div class="header-content">
+      <img src="logo.jpg" alt="Logo" class="logo" />
+      <h1>Dashboard Artesanal Blend</h1>
+      <button id="visualizarCardapio" class="btn primary">👀 Ver Cardápio Online</button>
+    </div>
   </header>
 
-  <!-- Navegação por tabs -->
+  <!-- Navegação -->
   <div class="tabs">
-    <button class="tab-button active" data-tab="produtosTab">Produtos</button>
-    <button class="tab-button" data-tab="insumosTab">Insumos</button>
-    <button class="tab-button" data-tab="pedidosTab">Pedidos</button>
-    <button class="tab-button" data-tab="financeiroTab">Financeiro</button>
+    <button class="tab-button active" data-tab="produtosTab">🍔 Produtos</button>
+    <button class="tab-button" data-tab="pedidosTab">📋 Pedidos</button>
+    <button class="tab-button" data-tab="insumosTab">📦 Insumos</button>
+    <button class="tab-button" data-tab="financeiroTab">💰 Financeiro</button>
   </div>
 
-  <!-- Conteúdo Tabs -->
-  <div class="tab-content active" id="produtosTab">
-    <h2>📦 Produtos</h2>
-    <form id="produtoForm">
-      <input type="text" placeholder="Nome" id="produtoNome" required />
-      <input type="number" placeholder="Preço (R$)" id="produtoPreco" required />
-      <input type="text" placeholder="Imagem URL" id="produtoImagem" required />
-      <input type="text" placeholder="Descrição" id="produtoDescricao" required />
-      <button type="submit">Adicionar Produto</button>
-    </form>
-    <div id="produtosContainer"></div>
-  </div>
+  <!-- Conteúdo -->
+  <div class="dashboard-content">
+    <!-- ABA PRODUTOS -->
+    <div class="tab-content active" id="produtosTab">
+      <div class="section-header">
+        <h2>Gerenciar Produtos do Cardápio</h2>
+        <button class="btn primary" onclick="dashboard.abrirModalProduto()">➕ Novo Produto</button>
+      </div>
 
-  <div class="tab-content" id="insumosTab">
-    <h2>🥫 Insumos</h2>
-    <form id="insumoForm">
-      <input type="text" placeholder="Nome do insumo" id="insumoNome" required />
-      <input type="number" placeholder="Quantidade disponível" id="insumoQtd" required />
-      <input type="text" placeholder="Unidade (g, ml, un)" id="insumoUnidade" required />
-      <input type="number" placeholder="Custo unitário (R$)" id="insumoCusto" required />
-      <button type="submit">Adicionar Insumo</button>
-    </form>
-    <div id="insumosContainer"></div>
-  </div>
+      <!-- Filtros -->
+      <div class="filters">
+        <select id="filtroCategoria" onchange="dashboard.filtrarProdutos()">
+          <option value="">Todas as categorias</option>
+          <option value="Hambúrgueres">🍔 Hambúrgueres</option>
+          <option value="Combos">🥡 Combos</option>
+          <option value="Acompanhamentos">🍟 Acompanhamentos</option>
+          <option value="Adicionais">➕ Adicionais</option>
+          <option value="Bebidas">🥤 Bebidas</option>
+        </select>
+        
+        <select id="filtroStatus" onchange="dashboard.filtrarProdutos()">
+          <option value="">Todos os status</option>
+          <option value="disponivel">✅ Disponíveis</option>
+          <option value="indisponivel">⏸️ Indisponíveis</option>
+        </select>
+      </div>
 
-  <div class="tab-content" id="pedidosTab">
-    <h2>📝 Pedidos</h2>
-    <div id="pedidosContainer"></div>
-    <button id="imprimirPedidos" class="btn">🖨 Imprimir Todos</button>
-  </div>
-
-  <div class="tab-content" id="financeiroTab">
-    <h2>💰 Financeiro</h2>
-    <div id="relatorioFinanceiro">
-      <p>Total Vendas: R$ <span id="totalVendas">0,00</span></p>
-      <p>Total Custos: R$ <span id="totalCustos">0,00</span></p>
-      <p>Lucro: R$ <span id="lucro">0,00</span></p>
+      <!-- Lista de Produtos -->
+      <div id="produtosContainer" class="produtos-grid"></div>
     </div>
-    <canvas id="graficoVendas" height="150"></canvas>
-    <canvas id="graficoLucro" height="150"></canvas>
+
+    <!-- ABA PEDIDOS -->
+    <div class="tab-content" id="pedidosTab">
+      <div class="section-header">
+        <h2>Pedidos Recebidos</h2>
+        <button class="btn secondary" onclick="dashboard.atualizarPedidos()">🔄 Atualizar</button>
+      </div>
+      <div id="pedidosContainer"></div>
+    </div>
+
+    <!-- ABA INSUMOS -->
+    <div class="tab-content" id="insumosTab">
+      <div class="section-header">
+        <h2>Gerenciar Insumos</h2>
+        <button class="btn primary" onclick="dashboard.abrirModalInsumo()">➕ Novo Insumo</button>
+      </div>
+      <div id="insumosContainer"></div>
+    </div>
+
+    <!-- ABA FINANCEIRO -->
+    <div class="tab-content" id="financeiroTab">
+      <div class="section-header">
+        <h2>Relatório Financeiro</h2>
+      </div>
+      <div class="financeiro-cards">
+        <div class="finance-card">
+          <h3>💰 Total Vendas</h3>
+          <p id="totalVendas">R$ 0,00</p>
+        </div>
+        <div class="finance-card">
+          <h3>📦 Total Custos</h3>
+          <p id="totalCustos">R$ 0,00</p>
+        </div>
+        <div class="finance-card">
+          <h3>💵 Lucro</h3>
+          <p id="lucro">R$ 0,00</p>
+        </div>
+      </div>
+    </div>
   </div>
 
-  <!-- Scripts -->
+  <!-- Modal Produto -->
+  <div id="modalProduto" class="modal" style="display: none;">
+    <div class="modal-content">
+      <h3 id="modalProdutoTitulo">Novo Produto</h3>
+      <form id="formProduto">
+        <input type="hidden" id="produtoId">
+        
+        <div class="form-group">
+          <label>Nome do Produto</label>
+          <input type="text" id="produtoNome" required>
+        </div>
+
+        <div class="form-group">
+          <label>Categoria</label>
+          <select id="produtoCategoria" required>
+            <option value="">Selecione...</option>
+            <option value="Hambúrgueres">🍔 Hambúrgueres</option>
+            <option value="Combos">🥡 Combos</option>
+            <option value="Acompanhamentos">🍟 Acompanhamentos</option>
+            <option value="Adicionais">➕ Adicionais</option>
+            <option value="Bebidas">🥤 Bebidas</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Preço (R$)</label>
+          <input type="number" id="produtoPreco" step="0.01" required>
+        </div>
+
+        <div class="form-group">
+          <label>Descrição</label>
+          <textarea id="produtoDescricao" rows="3"></textarea>
+        </div>
+
+        <div class="form-group">
+          <label>URL da Imagem</label>
+          <input type="text" id="produtoImagem">
+        </div>
+
+        <div class="form-group">
+          <label>
+            <input type="checkbox" id="produtoDisponivel" checked>
+            Disponível no cardápio
+          </label>
+        </div>
+
+        <div class="modal-actions">
+          <button type="submit" class="btn primary">💾 Salvar</button>
+          <button type="button" class="btn secondary" onclick="dashboard.fecharModal()">❌ Cancelar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <script src="dashboard.js"></script>
-  <script>
-    // Controle de Tabs
-    const tabButtons = document.querySelectorAll('.tab-button');
-    const tabContents = document.querySelectorAll('.tab-content');
-    tabButtons.forEach(btn => {
-      btn.addEventListener('click', () => {
-        tabButtons.forEach(b => b.classList.remove('active'));
-        tabContents.forEach(tc => tc.classList.remove('active'));
-        btn.classList.add('active');
-        document.getElementById(btn.dataset.tab).classList.add('active');
-      });
-    });
-
-    // Placeholder gráficos
-    const ctxVendas = document.getElementById('graficoVendas').getContext('2d');
-    const graficoVendas = new Chart(ctxVendas, {
-      type: 'bar',
-      data: {
-        labels: ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'],
-        datasets: [{
-          label: 'Vendas (R$)',
-          data: [120, 190, 300, 250, 400, 500, 450],
-          backgroundColor: '#3498db'
-        }]
-      },
-      options: { responsive: true }
-    });
-
-    const ctxLucro = document.getElementById('graficoLucro').getContext('2d');
-    const graficoLucro = new Chart(ctxLucro, {
-      type: 'line',
-      data: {
-        labels: ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'],
-        datasets: [{
-          label: 'Lucro (R$)',
-          data: [50, 120, 150, 90, 200, 220, 180],
-          borderColor: '#2ecc71',
-          fill: false,
-          tension: 0.4
-        }]
-      },
-      options: { responsive: true }
-    });
-  </script>
 </body>
 </html>
