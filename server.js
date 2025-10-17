@@ -1,377 +1,265 @@
+// server.js
+
 import express from 'express';
 import mongoose from 'mongoose';
 import cors from 'cors';
-import dotenv from 'dotenv';
+import bodyParser from 'body-parser';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
-// Carregar variáveis de ambiente
-dotenv.config();
+// Configuração para compatibilidade de módulos ES
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 10000;
 
-// Middlewares
+// ===== Middleware =====
 app.use(cors());
-app.use(express.json());
+app.use(bodyParser.json());
+// Servir arquivos estáticos (index.html, dashboard.html, JS, CSS)
+app.use(express.static(__dirname));
 
-// Conexão com MongoDB
-const connectDB = async () => {
-  try {
-    const conn = await mongoose.connect(
-      process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/artesanal-blend'
-    );
-    console.log(`✅ MongoDB Connected: ${conn.connection.host}`);
-  } catch (error) {
-    console.error('❌ MongoDB connection error:', error);
-    process.exit(1);
-  }
-};
+// ===== MongoDB Connection (Simplificada e Dependente da Variável de Ambiente) =====
+// O fallback para 'localhost' foi removido.
+const MONGO_URI = process.env.MONGO_URI; 
 
-// Modelos
-const ProductSchema = new mongoose.Schema({
-  name: {
-    type: String,
-    required: true,
-    trim: true
-  },
-  description: {
-    type: String,
-    default: ''
-  },
-  price: {
-    type: Number,
-    required: true,
-    min: 0
-  },
-  category: {
-    type: String,
-    default: 'Geral'
-  },
-  ingredients: [{
-    type: String
-  }],
-  available: {
-    type: Boolean,
-    default: true
-  },
-  image: {
-    type: String,
-    default: ''
-  }
-}, {
-  timestamps: true
+if (MONGO_URI) {
+    mongoose.connect(MONGO_URI)
+        .then(() => console.log('✅ MongoDB conectado'))
+        .catch(err => console.error('⚠️ Erro ao conectar MongoDB:', err.message));
+} else {
+    // Se a MONGO_URI não estiver definida, o servidor não tentará conectar, 
+    // mas também não terá persistência de dados.
+    console.error('❌ ERRO: Variável MONGO_URI não está definida. A persistência de dados não funcionará.');
+}
+
+
+// ===== Schemas (Adaptado do seu último código) =====
+const ProdutoSchema = new mongoose.Schema({
+    nome: String,
+    preco: Number,
+    descricao: String,
+    imagem: String,
+    // Campos adicionais dos modelos anteriores (para segurança):
+    categoria: String, 
+    disponivel: { type: Boolean, default: true },
+    ingredientes: [String],
+    tempoPreparo: Number
+}, { timestamps: true });
+
+const InsumoSchema = new mongoose.Schema({
+    nome: String,
+    quantidade: Number,
+    unidade: String,
+    preco: Number,
+    minimo: Number, // Adaptado do seu último código (uso foi substituído por minimo)
+}, { timestamps: true });
+
+const PedidoSchema = new mongoose.Schema({
+    cliente: String,
+    telefone: String,
+    endereco: String,
+    regiao: String,
+    taxaEntrega: Number,
+    itens: [{ nome: String, quantidade: Number, preco: Number, categoria: String }], // Adaptado para 'quantidade'
+    total: Number,
+    formaPagamento: String,
+    troco: Number,
+    observacao: String,
+    status: { type: String, default: 'pending' },
+    criadoEm: { type: Date, default: Date.now }
+}, { timestamps: true });
+
+const Produto = mongoose.model('Produto', ProdutoSchema);
+const Insumo = mongoose.model('Insumo', InsumoSchema);
+const Pedido = mongoose.model('Pedido', PedidoSchema);
+
+
+// ===== Rotas do Cardápio Público =====
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'index.html'));
 });
 
-const OrderSchema = new mongoose.Schema({
-  customerName: {
-    type: String,
-    required: true
-  },
-  items: [{
-    product: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'Product',
-      required: true
-    },
-    quantity: {
-      type: Number,
-      required: true,
-      min: 1
-    },
-    price: {
-      type: Number,
-      required: true
+// API para o cardápio (Formatação por categoria)
+app.get('/api/cardapio', async (req, res) => {
+    try {
+        const produtos = await Produto.find({ disponivel: true });
+        
+        const cardapioFormatado = {
+            "Hambúrgueres": produtos.filter(p => p.categoria === 'Hambúrgueres'),
+            "Combos": produtos.filter(p => p.categoria === 'Combos'),
+            "Acompanhamentos": produtos.filter(p => p.categoria === 'Acompanhamentos'),
+            "Adicionais": produtos.filter(p => p.categoria === 'Adicionais'),
+            "Bebidas": produtos.filter(p => p.categoria === 'Bebidas')
+        };
+        res.json(cardapioFormatado);
+    } catch (error) {
+        console.error('Erro ao carregar cardápio:', error);
+        res.status(500).json({ error: 'Erro ao carregar cardápio.' });
     }
-  }],
-  total: {
-    type: Number,
-    required: true
-  },
-  status: {
-    type: String,
-    enum: ['pending', 'preparing', 'ready', 'delivered', 'cancelled'],
-    default: 'pending'
-  },
-  notes: {
-    type: String,
-    default: ''
-  }
-}, {
-  timestamps: true
 });
 
-const SupplySchema = new mongoose.Schema({
-  name: {
-    type: String,
-    required: true
-  },
-  unit: {
-    type: String,
-    required: true
-  },
-  quantity: {
-    type: Number,
-    default: 0
-  },
-  minQuantity: {
-    type: Number,
-    default: 0
-  },
-  cost: {
-    type: Number,
-    default: 0
-  }
-}, {
-  timestamps: true
+
+// ===== Rotas do Dashboard (UNIFICADAS: Português -> Inglês) =====
+
+app.get('/dashboard', (req, res) => {
+    res.sendFile(path.join(__dirname, 'dashboard.html'));
 });
 
-const Product = mongoose.model('Product', ProductSchema);
-const Order = mongoose.model('Order', OrderSchema);
-const Supply = mongoose.model('Supply', SupplySchema);
-
-// Rotas da API
-
-// 🟢 PRODUTOS
-app.get('/api/products', async (req, res) => {
-  try {
-    console.log('📦 Carregando produtos...');
-    const products = await Product.find().sort({ createdAt: -1 });
-    console.log(`✅ ${products.length} produtos carregados`);
-    
-    res.json({
-      success: true,
-      data: products,
-      count: products.length
-    });
-  } catch (error) {
-    console.error('❌ Erro ao carregar produtos:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Erro ao carregar produtos'
-    });
-  }
-});
-
-app.post('/api/products', async (req, res) => {
-  try {
-    console.log('🆕 Criando novo produto:', req.body);
-    
-    const product = new Product(req.body);
-    await product.save();
-    
-    console.log('✅ Produto criado com sucesso:', product._id);
-    
-    res.status(201).json({
-      success: true,
-      message: 'Produto salvo com sucesso!',
-      data: product
-    });
-  } catch (error) {
-    console.error('❌ Erro ao criar produto:', error);
-    res.status(400).json({
-      success: false,
-      message: 'Erro ao salvar produto: ' + error.message
-    });
-  }
-});
-
-app.put('/api/products/:id', async (req, res) => {
-  try {
-    const product = await Product.findByIdAndUpdate(
-      req.params.id,
-      req.body,
-      { new: true, runValidators: true }
-    );
-    
-    if (!product) {
-      return res.status(404).json({
-        success: false,
-        message: 'Produto não encontrado'
-      });
+// GET /api/menu (Lista todos os produtos para o Dashboard)
+app.get('/api/menu', async (req, res) => {
+    try {
+        const produtos = await Produto.find().sort({ categoria: 1, nome: 1 });
+        // Mapeia _id para id para compatibilidade com o frontend
+        const produtosFormatados = produtos.map(p => ({
+            ...p._doc,
+            id: p._id
+        }));
+        res.json(produtosFormatados);
+    } catch (error) {
+        res.status(500).json({ error: 'Erro ao listar menu.' });
     }
-    
-    res.json({
-      success: true,
-      message: 'Produto atualizado com sucesso!',
-      data: product
-    });
-  } catch (error) {
-    console.error('❌ Erro ao atualizar produto:', error);
-    res.status(400).json({
-      success: false,
-      message: 'Erro ao atualizar produto'
-    });
-  }
 });
 
-app.delete('/api/products/:id', async (req, res) => {
-  try {
-    const product = await Product.findByIdAndDelete(req.params.id);
-    
-    if (!product) {
-      return res.status(404).json({
-        success: false,
-        message: 'Produto não encontrado'
-      });
+// POST /api/menu/item (Criar Produto - ROTA CORRETA DO DASHBOARD)
+app.post('/api/menu/item', async (req, res) => {
+    try {
+        const produto = new Produto(req.body);
+        const produtoSalvo = await produto.save();
+        res.status(201).json({ 
+            success: true, 
+            produto: { ...produtoSalvo._doc, id: produtoSalvo._id } 
+        });
+    } catch (error) {
+        console.error('Erro ao criar item do menu:', error.message);
+        res.status(500).json({ error: 'Erro ao criar produto.' });
     }
-    
-    res.json({
-      success: true,
-      message: 'Produto deletado com sucesso!'
-    });
-  } catch (error) {
-    console.error('❌ Erro ao deletar produto:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Erro ao deletar produto'
-    });
-  }
 });
 
-// 🟢 PEDIDOS
-app.get('/api/orders', async (req, res) => {
-  try {
-    const orders = await Order.find()
-      .populate('items.product')
-      .sort({ createdAt: -1 });
-    
-    res.json({
-      success: true,
-      data: orders,
-      count: orders.length
-    });
-  } catch (error) {
-    console.error('❌ Erro ao carregar pedidos:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Erro ao carregar pedidos'
-    });
-  }
-});
-
-app.post('/api/orders', async (req, res) => {
-  try {
-    const order = new Order(req.body);
-    await order.save();
-    await order.populate('items.product');
-    
-    res.status(201).json({
-      success: true,
-      message: 'Pedido criado com sucesso!',
-      data: order
-    });
-  } catch (error) {
-    console.error('❌ Erro ao criar pedido:', error);
-    res.status(400).json({
-      success: false,
-      message: 'Erro ao criar pedido'
-    });
-  }
-});
-
-// 🟢 INSUMOS
-app.get('/api/supplies', async (req, res) => {
-  try {
-    const supplies = await Supply.find().sort({ name: 1 });
-    
-    res.json({
-      success: true,
-      data: supplies,
-      count: supplies.length
-    });
-  } catch (error) {
-    console.error('❌ Erro ao carregar insumos:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Erro ao carregar insumos'
-    });
-  }
-});
-
-app.post('/api/supplies', async (req, res) => {
-  try {
-    const supply = new Supply(req.body);
-    await supply.save();
-    
-    res.status(201).json({
-      success: true,
-      message: 'Insumo salvo com sucesso!',
-      data: supply
-    });
-  } catch (error) {
-    console.error('❌ Erro ao criar insumo:', error);
-    res.status(400).json({
-      success: false,
-      message: 'Erro ao salvar insumo'
-    });
-  }
-});
-
-// Rota de saúde da API
-app.get('/api/health', (req, res) => {
-  res.json({
-    success: true,
-    message: 'API Artesanal Blend está funcionando!',
-    timestamp: new Date().toISOString(),
-    database: mongoose.connection.readyState === 1 ? 'Conectado' : 'Desconectado'
-  });
-});
-
-// Dados iniciais
-const initializeData = async () => {
-  try {
-    // Verificar se já existem produtos
-    const productCount = await Product.countDocuments();
-    const supplyCount = await Supply.countDocuments();
-    
-    if (productCount === 0) {
-      console.log('📝 Criando produtos iniciais...');
-      await Product.create([
-        {
-          name: "Café Especial Artesanal",
-          description: "Blend exclusivo da casa",
-          price: 8.50,
-          category: "Bebidas Quentes"
-        },
-        {
-          name: "Capuccino Cremoso",
-          description: "Com chocolate e canela",
-          price: 12.00,
-          category: "Bebidas Quentes"
-        },
-        {
-          name: "Croissant de Manteiga",
-          description: "Folhado e dourado",
-          price: 6.50,
-          category: "Salgados"
-        }
-      ]);
-      console.log('✅ Produtos iniciais criados');
+// PUT /api/menu/item/:id (Editar Produto - ROTA CORRETA DO DASHBOARD)
+app.put('/api/menu/item/:id', async (req, res) => {
+    try {
+        const id = req.params.id;
+        const produto = await Produto.findByIdAndUpdate(id, req.body, { new: true });
+        if (!produto) return res.status(404).json({ error: 'Produto não encontrado.' });
+        res.json({ success: true, produto: { ...produto._doc, id: produto._id } });
+    } catch (error) {
+        res.status(500).json({ error: 'Erro ao atualizar produto.' });
     }
-    
-    if (supplyCount === 0) {
-      console.log('📝 Criando insumos iniciais...');
-      await Supply.create([
-        { name: "Grão de Café", unit: "kg", quantity: 10, minQuantity: 2, cost: 45.00 },
-        { name: "Leite", unit: "L", quantity: 20, minQuantity: 5, cost: 8.50 },
-        { name: "Açúcar", unit: "kg", quantity: 5, minQuantity: 1, cost: 12.00 }
-      ]);
-      console.log('✅ Insumos iniciais criados');
+});
+
+// DELETE /api/menu/item/:id (Excluir Produto - ROTA CORRETA DO DASHBOARD)
+app.delete('/api/menu/item/:id', async (req, res) => {
+    try {
+        const result = await Produto.findByIdAndDelete(req.params.id);
+        if (!result) return res.status(404).json({ error: 'Produto não encontrado.' });
+        res.json({ success: true });
+    } catch (error) {
+        res.status(500).json({ error: 'Erro ao excluir produto.' });
     }
-  } catch (error) {
-    console.error('❌ Erro ao criar dados iniciais:', error);
-  }
-};
+});
 
-// Inicializar servidor
-const startServer = async () => {
-  await connectDB();
-  await initializeData();
-  
-  app.listen(PORT, () => {
-    console.log(`🚀 Servidor Artesanal Blend rodando na porta ${PORT}`);
-    console.log(`📊 MongoDB: ${mongoose.connection.readyState === 1 ? '✅ Conectado' : '❌ Desconectado'}`);
-    console.log(`🌐 Health check: http://localhost:${PORT}/api/health`);
-  });
-};
 
-startServer();
+// ===== Insumos (Supplies) Routes (Mantido em Português) =====
+app.get('/api/insumos', async (req, res) => {
+    try {
+        const insumos = await Insumo.find();
+        res.json(insumos);
+    } catch (error) {
+        res.status(500).json({ error: 'Erro ao listar insumos.' });
+    }
+});
+
+app.post('/api/insumos', async (req, res) => {
+    try {
+        const insumo = new Insumo(req.body);
+        await insumo.save();
+        res.status(201).json({ success: true });
+    } catch (error) {
+        res.status(500).json({ error: 'Erro ao criar insumo.' });
+    }
+});
+
+app.put('/api/insumos/:id', async (req, res) => {
+    try {
+        await Insumo.findByIdAndUpdate(req.params.id, req.body);
+        res.json({ success: true });
+    } catch (error) {
+        res.status(500).json({ error: 'Erro ao atualizar insumo.' });
+    }
+});
+
+app.delete('/api/insumos/:id', async (req, res) => {
+    try {
+        await Insumo.findByIdAndDelete(req.params.id);
+        res.json({ success: true });
+    } catch (error) {
+        res.status(500).json({ error: 'Erro ao excluir insumo.' });
+    }
+});
+
+
+// ===== Pedidos (Orders) Routes - UNIFICADAS com o Dashboard =====
+app.get('/api/orders', async (req, res) => { // Renomeada de /api/pedidos
+    try {
+        const pedidos = await Pedido.find().sort({ criadoEm: -1 });
+        res.json(pedidos);
+    } catch (error) {
+        res.status(500).json({ error: 'Erro ao listar pedidos (orders).' });
+    }
+});
+
+app.post('/api/orders', async (req, res) => { // Renomeada de /api/pedidos
+    try {
+        const pedido = new Pedido(req.body);
+        await pedido.save();
+        res.status(201).json({ success: true });
+    } catch (error) {
+        res.status(500).json({ error: 'Erro ao criar pedido (order).' });
+    }
+});
+
+app.put('/api/orders/:id', async (req, res) => { // Renomeada de /api/pedidos/:id
+    try {
+        await Pedido.findByIdAndUpdate(req.params.id, req.body);
+        res.json({ success: true });
+    } catch (error) {
+        res.status(500).json({ error: 'Erro ao atualizar pedido (order).' });
+    }
+});
+
+app.delete('/api/orders/:id', async (req, res) => { // Renomeada de /api/pedidos/:id
+    try {
+        await Pedido.findByIdAndDelete(req.params.id);
+        res.json({ success: true });
+    } catch (error) {
+        res.status(500).json({ error: 'Erro ao excluir pedido (order).' });
+    }
+});
+
+// ===== Financeiro (Stats) Route - UNIFICADA com o Dashboard =====
+app.get('/api/stats', async (req, res) => { // Renomeada de /api/financeiro
+    try {
+        const pedidos = await Pedido.find();
+        const insumos = await Insumo.find();
+
+        const vendas = pedidos.reduce((acc, p) => acc + (p.total || 0), 0);
+        // Assumindo que o gasto é o custo total dos insumos atuais (preco * quantidade)
+        const gastos = insumos.reduce((acc, i) => acc + (i.preco * i.quantidade), 0); 
+        const lucro = vendas - gastos;
+
+        res.json({ vendas, gastos, lucro });
+    } catch (error) {
+        res.status(500).json({ error: 'Erro ao calcular financeiro/stats.' });
+    }
+});
+
+
+// ===== Servidor =====
+app.listen(PORT, () => {
+    console.log(`🚀 Servidor rodando na porta ${PORT}`);
+    // Log dos URLs para facilitar o debug no Render
+    console.log(`📱 Cardápio: https://artesanal-blend.onrender.com`);
+    console.log(`📊 Dashboard: https://artesanal-blend.onrender.com/dashboard`);
+});
