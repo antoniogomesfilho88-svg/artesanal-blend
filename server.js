@@ -1,147 +1,150 @@
-// server.js
-import express from "express";
-import mongoose from "mongoose";
-import cors from "cors";
-import bodyParser from "body-parser";
-import path from "path";
+const express = require("express");
+const mongoose = require("mongoose");
+const cors = require("cors");
+const bodyParser = require("body-parser");
+const path = require("path");
 
 const app = express();
 const PORT = process.env.PORT || 10000;
 
-// Middlewares
+// ======= MIDDLEWARES =======
 app.use(cors());
 app.use(bodyParser.json());
-app.use(express.static("public"));
+app.use(express.static(path.join(__dirname, "/"))); // Servir arquivos na raiz
 
-// MongoDB
-const MONGO_URI = process.env.MONGO_URI || "mongodb://localhost:27017/artesanal_blend";
+// ======= MONGODB =======
+const MONGO_URI = process.env.MONGO_URI || "mongodb+srv://<usuario>:<senha>@cluster.mongodb.net/artesanalBlend?retryWrites=true&w=majority";
 
 mongoose.connect(MONGO_URI)
   .then(() => console.log("✅ MongoDB conectado"))
-  .catch(err => console.error("❌ Erro MongoDB:", err));
+  .catch(err => console.error("⚠️ MongoDB offline:", err));
 
-// Schemas
-const InsumoSchema = new mongoose.Schema({
+// ======= MODELOS =======
+const insumoSchema = new mongoose.Schema({
   nome: String,
   quantidade: Number,
   unidade: String,
-  custoUnitario: Number
+  custo: Number
 });
 
-const ProdutoSchema = new mongoose.Schema({
+const produtoSchema = new mongoose.Schema({
   nome: String,
+  descricao: String,
   preco: Number,
   imagem: String,
-  descricao: String,
-  insumos: [InsumoSchema]
+  insumos: [{ nome: String, quantidade: Number }] // referência ao insumo e quantidade usada
 });
 
-const PedidoSchema = new mongoose.Schema({
-  produtos: [{ produtoId: mongoose.Schema.Types.ObjectId, quantidade: Number }],
-  total: Number,
-  cliente: {
-    nome: String,
-    telefone: String,
-    endereco: String,
-    regiao: String
-  },
-  pagamento: String,
-  troco: Number,
-  obs: String,
-  data: { type: Date, default: Date.now }
+const pedidoSchema = new mongoose.Schema({
+  cliente: String,
+  produto: String,
+  quantidade: Number,
+  preco: Number,
+  criadoEm: { type: Date, default: Date.now }
 });
 
-const Produto = mongoose.model("Produto", ProdutoSchema);
-const Pedido = mongoose.model("Pedido", PedidoSchema);
-const Insumo = mongoose.model("Insumo", InsumoSchema);
+const Insumo = mongoose.model("Insumo", insumoSchema);
+const Produto = mongoose.model("Produto", produtoSchema);
+const Pedido = mongoose.model("Pedido", pedidoSchema);
 
-// Rotas de Produtos
-app.get("/produtos", async (req, res) => {
+// ======= ROTAS =======
+
+// Produtos
+app.get("/api/produtos", async (req, res) => {
   const produtos = await Produto.find();
   res.json(produtos);
 });
 
-app.post("/produtos", async (req, res) => {
-  const produto = new Produto(req.body);
-  await produto.save();
-  res.json(produto);
+app.post("/api/produtos", async (req, res) => {
+  const novoProduto = new Produto(req.body);
+  await novoProduto.save();
+  res.json(novoProduto);
 });
 
-app.put("/produtos/:id", async (req, res) => {
+app.put("/api/produtos/:id", async (req, res) => {
   const produto = await Produto.findByIdAndUpdate(req.params.id, req.body, { new: true });
   res.json(produto);
 });
 
-app.delete("/produtos/:id", async (req, res) => {
+app.delete("/api/produtos/:id", async (req, res) => {
   await Produto.findByIdAndDelete(req.params.id);
-  res.json({ message: "Produto removido" });
+  res.json({ message: "Produto deletado" });
 });
 
-// Rotas de Insumos
-app.get("/insumos", async (req, res) => {
+// Insumos
+app.get("/api/insumos", async (req, res) => {
   const insumos = await Insumo.find();
   res.json(insumos);
 });
 
-app.post("/insumos", async (req, res) => {
-  const insumo = new Insumo(req.body);
-  await insumo.save();
-  res.json(insumo);
+app.post("/api/insumos", async (req, res) => {
+  const novoInsumo = new Insumo(req.body);
+  await novoInsumo.save();
+  res.json(novoInsumo);
 });
 
-app.put("/insumos/:id", async (req, res) => {
+app.put("/api/insumos/:id", async (req, res) => {
   const insumo = await Insumo.findByIdAndUpdate(req.params.id, req.body, { new: true });
   res.json(insumo);
 });
 
-app.delete("/insumos/:id", async (req, res) => {
+app.delete("/api/insumos/:id", async (req, res) => {
   await Insumo.findByIdAndDelete(req.params.id);
-  res.json({ message: "Insumo removido" });
+  res.json({ message: "Insumo deletado" });
 });
 
-// Rotas de Pedidos
-app.get("/pedidos", async (req, res) => {
-  const pedidos = await Pedido.find().sort({ data: -1 });
+// Pedidos
+app.get("/api/pedidos", async (req, res) => {
+  const pedidos = await Pedido.find().sort({ criadoEm: -1 });
   res.json(pedidos);
 });
 
-app.post("/pedidos", async (req, res) => {
-  const pedido = new Pedido(req.body);
-  await pedido.save();
-  res.json(pedido);
+app.post("/api/pedidos", async (req, res) => {
+  const novoPedido = new Pedido(req.body);
+  await novoPedido.save();
+  res.json(novoPedido);
 });
 
-// Relatório Financeiro
-app.get("/financeiro", async (req, res) => {
+app.delete("/api/pedidos/:id", async (req, res) => {
+  await Pedido.findByIdAndDelete(req.params.id);
+  res.json({ message: "Pedido deletado" });
+});
+
+// Relatório financeiro
+app.get("/api/financeiro", async (req, res) => {
   const pedidos = await Pedido.find();
   const produtos = await Produto.find();
+  const insumos = await Insumo.find();
 
-  let receitaTotal = 0;
-  let custoTotal = 0;
+  let totalVendas = 0;
+  let totalCustos = 0;
 
-  pedidos.forEach(pedido => {
-    receitaTotal += pedido.total;
-    pedido.produtos.forEach(item => {
-      const produto = produtos.find(p => p._id.equals(item.produtoId));
-      if (produto) {
-        let custoProduto = 0;
-        produto.insumos.forEach(insumo => {
-          custoProduto += insumo.custoUnitario * (insumo.quantidade / 1); // ajusta unidade se necessário
-        });
-        custoTotal += custoProduto * item.quantidade;
-      }
-    });
+  pedidos.forEach(p => {
+    const produto = produtos.find(prod => prod.nome === p.produto);
+    let custoProduto = 0;
+    if (produto && produto.insumos.length) {
+      produto.insumos.forEach(insumoUso => {
+        const i = insumos.find(ins => ins.nome === insumoUso.nome);
+        if (i) {
+          const custoUnit = i.custo / i.quantidade;
+          custoProduto += custoUnit * insumoUso.quantidade;
+        }
+      });
+    }
+    totalVendas += p.preco * p.quantidade;
+    totalCustos += custoProduto * p.quantidade;
   });
 
-  res.json({
-    receitaTotal,
-    custoTotal,
-    lucro: receitaTotal - custoTotal,
-    totalPedidos: pedidos.length
-  });
+  const lucro = totalVendas - totalCustos;
+  res.json({ totalVendas, totalCustos, lucro });
 });
 
-// Inicializa servidor
+// Servir dashboard
+app.get("/dashboard", (req, res) => {
+  res.sendFile(path.join(__dirname, "dashboard.html"));
+});
+
+// ======= START SERVER =======
 app.listen(PORT, () => {
   console.log(`🚀 Servidor rodando na porta ${PORT}`);
 });
