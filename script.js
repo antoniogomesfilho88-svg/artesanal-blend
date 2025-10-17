@@ -154,10 +154,11 @@ function renderMenu(menu) {
       // CORREÇÃO AQUI: Link correto do placeholder
       const imagemUrl = item.imgUrl && item.imgUrl.trim() !== '' 
         ? item.imgUrl 
-        : 'https://via.placeholder.com/300x200/FF6B6B/ffffff?text=Artesanal+Blend';
+       : 'https://placehold.co/300x200/FF6B6B/ffffff?text=Artesanal+Blend';
       
       card.innerHTML = `
-        <img src="${imagemUrl}" alt="${item.name}" onerror="this.src='https://via.placeholder.com/300x200/FF6B6B/ffffff?text=Artesanal+Blend'">
+        <img src="${imagemUrl}" alt="${item.name}" 
+     onerror="this.src='https://placehold.co/300x200/FF6B6B/ffffff?text=Artesanal+Blend'">
         <div class="item-info">
           <h4>${item.name}</h4>
           <p>${item.desc || 'Delicioso produto artesanal'}</p>
@@ -352,3 +353,4 @@ function mostrarTroco() {
 function atualizarTaxa() {
   updateCart();
 }
+
