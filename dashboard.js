@@ -1,207 +1,119 @@
-// Dados simulados (substituir por chamadas API/DB)
-let produtos = [];
-let insumos = [];
-let pedidos = [];
+// Controle de abas
+document.querySelectorAll(".tab-button").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".tab-button").forEach(b => b.classList.remove("active"));
+    document.querySelectorAll(".tab-content").forEach(tab => tab.classList.remove("active"));
+    btn.classList.add("active");
+    document.getElementById(btn.dataset.tab).classList.add("active");
+  });
+});
 
-// ======= PRODUTOS =======
-const produtosList = document.getElementById("produtosList");
-const addProdutoBtn = document.getElementById("addProdutoBtn");
+// Funções para produtos
+const produtoForm = document.getElementById("produtoForm");
+produtoForm.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const produto = {
+    nome: document.getElementById("nomeProduto").value,
+    preco: parseFloat(document.getElementById("precoProduto").value),
+    descricao: document.getElementById("descricaoProduto").value,
+    imagem: document.getElementById("imagemProduto").value
+  };
+  await fetch("/api/produtos", {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify(produto)
+  });
+  produtoForm.reset();
+  carregarProdutos();
+});
 
-function renderProdutos() {
-  produtosList.innerHTML = "";
-  produtos.forEach((p, index) => {
-    const div = document.createElement("div");
-    div.classList.add("item");
-    div.innerHTML = `
-      <img src="${p.imagem}" alt="${p.nome}" class="thumb" />
+async function carregarProdutos() {
+  const res = await fetch("/api/produtos");
+  const produtos = await res.json();
+  const lista = document.getElementById("listaProdutos");
+  lista.innerHTML = produtos.map(p => `
+    <div class="produto-card">
+      <img src="${p.imagem}" alt="${p.nome}">
       <h3>${p.nome}</h3>
       <p>${p.descricao}</p>
       <p>R$ ${p.preco.toFixed(2)}</p>
-      <button class="btn edit" onclick="editarProduto(${index})">✏️ Editar</button>
-      <button class="btn delete" onclick="deletarProduto(${index})">🗑 Deletar</button>
-    `;
-    produtosList.appendChild(div);
-  });
+    </div>
+  `).join("");
 }
 
-addProdutoBtn.addEventListener("click", () => {
-  const nome = prompt("Nome do produto:");
-  const descricao = prompt("Descrição:");
-  const preco = parseFloat(prompt("Preço:"));
-  const imagem = prompt("URL da imagem:");
-  if (!nome || !descricao || isNaN(preco) || !imagem) return alert("Dados inválidos");
-  produtos.push({ nome, descricao, preco, imagem, insumos: [] });
-  renderProdutos();
+// Funções para insumos
+const insumoForm = document.getElementById("insumoForm");
+insumoForm.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const insumo = {
+    nome: document.getElementById("nomeInsumo").value,
+    quantidade: parseFloat(document.getElementById("quantidadeInsumo").value),
+    unidade: document.getElementById("unidadeInsumo").value,
+    preco: parseFloat(document.getElementById("precoInsumo").value)
+  };
+  await fetch("/api/insumos", {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify(insumo)
+  });
+  insumoForm.reset();
+  carregarInsumos();
 });
 
-function editarProduto(index) {
-  const p = produtos[index];
-  const nome = prompt("Nome do produto:", p.nome);
-  const descricao = prompt("Descrição:", p.descricao);
-  const preco = parseFloat(prompt("Preço:", p.preco));
-  const imagem = prompt("URL da imagem:", p.imagem);
-  if (!nome || !descricao || isNaN(preco) || !imagem) return alert("Dados inválidos");
-  produtos[index] = { ...p, nome, descricao, preco, imagem };
-  renderProdutos();
-}
-
-function deletarProduto(index) {
-  if (confirm("Deseja deletar este produto?")) {
-    produtos.splice(index, 1);
-    renderProdutos();
-  }
-}
-
-// ======= INSUMOS =======
-const insumosList = document.getElementById("insumosList");
-const addInsumoBtn = document.getElementById("addInsumoBtn");
-
-function renderInsumos() {
-  insumosList.innerHTML = "";
-  insumos.forEach((i, index) => {
-    const div = document.createElement("div");
-    div.classList.add("item");
-    div.innerHTML = `
+async function carregarInsumos() {
+  const res = await fetch("/api/insumos");
+  const insumos = await res.json();
+  const lista = document.getElementById("listaInsumos");
+  lista.innerHTML = insumos.map(i => `
+    <div class="insumo-card">
       <h3>${i.nome}</h3>
       <p>Quantidade: ${i.quantidade} ${i.unidade}</p>
-      <p>Custo unitário: R$ ${i.custo.toFixed(2)}</p>
-      <button class="btn edit" onclick="editarInsumo(${index})">✏️ Editar</button>
-      <button class="btn delete" onclick="deletarInsumo(${index})">🗑 Deletar</button>
-    `;
-    insumosList.appendChild(div);
-  });
+      <p>Preço: R$ ${i.preco.toFixed(2)}</p>
+    </div>
+  `).join("");
 }
 
-addInsumoBtn.addEventListener("click", () => {
-  const nome = prompt("Nome do insumo:");
-  const quantidade = parseFloat(prompt("Quantidade disponível:"));
-  const unidade = prompt("Unidade (g, ml, und):");
-  const custo = parseFloat(prompt("Custo total do insumo:"));
-  if (!nome || isNaN(quantidade) || !unidade || isNaN(custo)) return alert("Dados inválidos");
-  insumos.push({ nome, quantidade, unidade, custo });
-  renderInsumos();
-});
-
-function editarInsumo(index) {
-  const i = insumos[index];
-  const nome = prompt("Nome do insumo:", i.nome);
-  const quantidade = parseFloat(prompt("Quantidade disponível:", i.quantidade));
-  const unidade = prompt("Unidade:", i.unidade);
-  const custo = parseFloat(prompt("Custo total:", i.custo));
-  if (!nome || isNaN(quantidade) || !unidade || isNaN(custo)) return alert("Dados inválidos");
-  insumos[index] = { nome, quantidade, unidade, custo };
-  renderInsumos();
+// Funções para pedidos
+async function carregarPedidos() {
+  const res = await fetch("/api/pedidos");
+  const pedidos = await res.json();
+  const lista = document.getElementById("listaPedidos");
+  lista.innerHTML = pedidos.map(p => `
+    <div class="pedido-card">
+      <p><strong>Cliente:</strong> ${p.cliente}</p>
+      <p><strong>Total:</strong> R$ ${p.total.toFixed(2)}</p>
+      <p><strong>Itens:</strong> ${p.itens.map(i => i.nome).join(", ")}</p>
+      <button onclick="imprimirPedido('${p._id}')">Imprimir</button>
+    </div>
+  `).join("");
 }
 
-function deletarInsumo(index) {
-  if (confirm("Deseja deletar este insumo?")) {
-    insumos.splice(index, 1);
-    renderInsumos();
-  }
+// Imprimir pedido
+function imprimirPedido(id) {
+  fetch(`/api/pedidos/${id}`)
+    .then(res => res.json())
+    .then(p => {
+      const printWindow = window.open("", "PRINT", "height=600,width=400");
+      printWindow.document.write(`<h1>Cupom Não Fiscal</h1>`);
+      printWindow.document.write(`<p>Cliente: ${p.cliente}</p>`);
+      printWindow.document.write(`<p>Total: R$ ${p.total.toFixed(2)}</p>`);
+      printWindow.document.write(`<p>Itens: ${p.itens.map(i => i.nome).join(", ")}</p>`);
+      printWindow.document.close();
+      printWindow.print();
+    });
 }
 
-// ======= PEDIDOS =======
-const pedidosList = document.getElementById("pedidosList");
-const addPedidoBtn = document.getElementById("addPedidoBtn");
-const printPedidosBtn = document.getElementById("printPedidosBtn");
-
-function renderPedidos() {
-  pedidosList.innerHTML = "";
-  pedidos.forEach((p, index) => {
-    const div = document.createElement("div");
-    div.classList.add("item");
-    div.innerHTML = `
-      <h3>Pedido #${index + 1}</h3>
-      <p>Cliente: ${p.cliente}</p>
-      <p>Produto: ${p.produto}</p>
-      <p>Quantidade: ${p.quantidade}</p>
-      <p>Total: R$ ${(p.preco * p.quantidade).toFixed(2)}</p>
-      <button class="btn delete" onclick="deletarPedido(${index})">🗑 Deletar</button>
-    `;
-    pedidosList.appendChild(div);
-  });
+// Financeiro
+async function carregarFinanceiro() {
+  const res = await fetch("/api/financeiro");
+  const data = await res.json();
+  document.getElementById("totalVendas").textContent = data.vendas.toFixed(2);
+  document.getElementById("totalCustos").textContent = data.custos.toFixed(2);
+  document.getElementById("lucro").textContent = data.lucro.toFixed(2);
 }
 
-addPedidoBtn.addEventListener("click", () => {
-  const cliente = prompt("Nome do cliente:");
-  const produto = prompt("Produto:");
-  const quantidade = parseInt(prompt("Quantidade:"));
-  const preco = parseFloat(prompt("Preço unitário:"));
-  if (!cliente || !produto || isNaN(quantidade) || isNaN(preco)) return alert("Dados inválidos");
-  pedidos.push({ cliente, produto, quantidade, preco });
-  atualizarFinanceiro();
-  renderPedidos();
-});
-
-function deletarPedido(index) {
-  if (confirm("Deseja deletar este pedido?")) {
-    pedidos.splice(index, 1);
-    atualizarFinanceiro();
-    renderPedidos();
-  }
-}
-
-printPedidosBtn.addEventListener("click", () => {
-  let conteudo = "";
-  pedidos.forEach((p, i) => {
-    conteudo += `Pedido #${i + 1}\nCliente: ${p.cliente}\nProduto: ${p.produto}\nQuantidade: ${p.quantidade}\nTotal: R$ ${(p.preco * p.quantidade).toFixed(2)}\n\n`;
-  });
-  const printWindow = window.open('', '', 'width=600,height=600');
-  printWindow.document.write('<pre>' + conteudo + '</pre>');
-  printWindow.print();
-});
-
-// ======= FINANCEIRO =======
-const totalVendasEl = document.getElementById("totalVendas");
-const totalCustosEl = document.getElementById("totalCustos");
-const lucroEl = document.getElementById("lucro");
-const financeTableBody = document.querySelector("#financeTable tbody");
-
-function atualizarFinanceiro() {
-  let totalVendas = 0;
-  let totalCustos = 0;
-
-  financeTableBody.innerHTML = "";
-  pedidos.forEach(p => {
-    const custoProduto = calcularCustoProduto(p.produto) * p.quantidade;
-    const lucro = (p.preco * p.quantidade) - custoProduto;
-    totalVendas += p.preco * p.quantidade;
-    totalCustos += custoProduto;
-
-    const tr = document.createElement("tr");
-    tr.innerHTML = `
-      <td>${new Date().toLocaleString()}</td>
-      <td>${p.produto}</td>
-      <td>${p.quantidade}</td>
-      <td>R$ ${p.preco.toFixed(2)}</td>
-      <td>R$ ${custoProduto.toFixed(2)}</td>
-      <td>R$ ${lucro.toFixed(2)}</td>
-    `;
-    financeTableBody.appendChild(tr);
-  });
-
-  totalVendasEl.textContent = totalVendas.toFixed(2);
-  totalCustosEl.textContent = totalCustos.toFixed(2);
-  lucroEl.textContent = (totalVendas - totalCustos).toFixed(2);
-}
-
-function calcularCustoProduto(nomeProduto) {
-  const produto = produtos.find(p => p.nome === nomeProduto);
-  if (!produto || !produto.insumos.length) return 0;
-
-  let custoTotal = 0;
-  produto.insumos.forEach(insumoUso => {
-    const i = insumos.find(ins => ins.nome === insumoUso.nome);
-    if (i) {
-      const custoUnit = i.custo / i.quantidade;
-      custoTotal += custoUnit * insumoUso.quantidade;
-    }
-  });
-  return custoTotal;
-}
-
-// ======= Inicialização =======
-renderProdutos();
-renderInsumos();
-renderPedidos();
-atualizarFinanceiro();
+// Inicializar
+carregarProdutos();
+carregarInsumos();
+carregarPedidos();
+carregarFinanceiro();
