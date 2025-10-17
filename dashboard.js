@@ -11,25 +11,32 @@ class Dashboard {
         await this.carregarDados();
         this.setupEventListeners();
         this.renderProdutos();
-        this.renderPedidos();
         this.renderInsumos();
+        this.renderPedidos();
         this.updateFinanceiro();
     }
 
     async carregarDados() {
         try {
+            console.log('📥 Carregando dados da API...');
+            
             const [produtosRes, pedidosRes, insumosRes] = await Promise.all([
-                fetch('/api/produtos'),
-                fetch('/api/pedidos'),
-                fetch('/api/insumos')
+                fetch('/api/produtos').then(r => r.ok ? r.json() : []),
+                fetch('/api/pedidos').then(r => r.ok ? r.json() : []),
+                fetch('/api/insumos').then(r => r.ok ? r.json() : [])
             ]);
 
-            if (produtosRes.ok) this.produtos = await produtosRes.json();
-            if (pedidosRes.ok) this.pedidos = await pedidosRes.json();
-            if (insumosRes.ok) this.insumos = await insumosRes.json();
+            this.produtos = produtosRes || [];
+            this.pedidos = pedidosRes || [];
+            this.insumos = insumosRes || [];
+
+            console.log(`✅ Dados carregados: ${this.produtos.length} produtos, ${this.pedidos.length} pedidos, ${this.insumos.length} insumos`);
 
         } catch (error) {
-            console.log('Erro ao carregar dados:', error);
+            console.log('⚠️ Erro ao carregar dados:', error);
+            this.produtos = [];
+            this.pedidos = [];
+            this.insumos = [];
         }
     }
 
@@ -46,43 +53,80 @@ class Dashboard {
         });
 
         // Formulário de produto
-        document.getElementById('formProduto').addEventListener('submit', (e) => {
+        document.getElementById('formProduto')?.addEventListener('submit', (e) => {
             e.preventDefault();
             this.salvarProduto();
         });
 
         // Botão ver cardápio
-        document.getElementById('visualizarCardapio').addEventListener('click', () => {
+        document.getElementById('visualizarCardapio')?.addEventListener('click', () => {
             window.open('/', '_blank');
         });
     }
 
     // ===== PRODUTOS =====
     abrirModalProduto(produto = null) {
-        const modal = document.getElementById('modalProduto');
-        const titulo = document.getElementById('modalProdutoTitulo');
-        const form = document.getElementById('formProduto');
-        
-        if (produto) {
-            titulo.textContent = 'Editar Produto';
-            document.getElementById('produtoId').value = produto._id;
-            document.getElementById('produtoNome').value = produto.nome;
-            document.getElementById('produtoCategoria').value = produto.categoria;
-            document.getElementById('produtoPreco').value = produto.preco;
-            document.getElementById('produtoDescricao').value = produto.descricao || '';
-            document.getElementById('produtoImagem').value = produto.imagem || '';
-            document.getElementById('produtoDisponivel').checked = produto.disponivel;
-        } else {
-            titulo.textContent = 'Novo Produto';
-            form.reset();
-            document.getElementById('produtoId').value = '';
-        }
-        
-        modal.style.display = 'flex';
-    }
+        const modalHTML = `
+            <div class="modal-overlay">
+                <div class="modal">
+                    <h3>${produto ? 'Editar' : 'Novo'} Produto</h3>
+                    <form id="formProduto">
+                        <input type="hidden" id="produtoId" value="${produto?._id || ''}">
+                        
+                        <div class="form-group">
+                            <label>Nome do Produto</label>
+                            <input type="text" id="produtoNome" value="${produto?.nome || ''}" required>
+                        </div>
 
-    fecharModal() {
-        document.getElementById('modalProduto').style.display = 'none';
+                        <div class="form-group">
+                            <label>Categoria</label>
+                            <select id="produtoCategoria" required>
+                                <option value="">Selecione...</option>
+                                <option value="Hambúrgueres" ${produto?.categoria === 'Hambúrgueres' ? 'selected' : ''}>🍔 Hambúrgueres</option>
+                                <option value="Combos" ${produto?.categoria === 'Combos' ? 'selected' : ''}>🥡 Combos</option>
+                                <option value="Acompanhamentos" ${produto?.categoria === 'Acompanhamentos' ? 'selected' : ''}>🍟 Acompanhamentos</option>
+                                <option value="Adicionais" ${produto?.categoria === 'Adicionais' ? 'selected' : ''}>➕ Adicionais</option>
+                                <option value="Bebidas" ${produto?.categoria === 'Bebidas' ? 'selected' : ''}>🥤 Bebidas</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Preço (R$)</label>
+                            <input type="number" id="produtoPreco" step="0.01" value="${produto?.preco || ''}" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Descrição</label>
+                            <textarea id="produtoDescricao" rows="3">${produto?.descricao || ''}</textarea>
+                        </div>
+
+                        <div class="form-group">
+                            <label>URL da Imagem</label>
+                            <input type="text" id="produtoImagem" value="${produto?.imagem || ''}">
+                        </div>
+
+                        <div class="form-checkbox">
+                            <label>
+                                <input type="checkbox" id="produtoDisponivel" ${produto?.disponivel !== false ? 'checked' : ''}>
+                                Disponível no cardápio
+                            </label>
+                        </div>
+
+                        <div class="modal-actions">
+                            <button type="submit" class="btn primary">💾 Salvar</button>
+                            <button type="button" class="btn secondary" onclick="dashboard.fecharModal()">❌ Cancelar</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        `;
+
+        document.body.insertAdjacentHTML('beforeend', modalHTML);
+        
+        document.getElementById('formProduto').addEventListener('submit', (e) => {
+            e.preventDefault();
+            this.salvarProduto();
+        });
     }
 
     async salvarProduto() {
@@ -119,8 +163,8 @@ class Dashboard {
 
     renderProdutos() {
         const container = document.getElementById('produtosContainer');
-        const filtroCategoria = document.getElementById('filtroCategoria').value;
-        const filtroStatus = document.getElementById('filtroStatus').value;
+        const filtroCategoria = document.getElementById('filtroCategoria')?.value || '';
+        const filtroStatus = document.getElementById('filtroStatus')?.value || '';
 
         let produtosFiltrados = this.produtos;
 
@@ -134,7 +178,7 @@ class Dashboard {
             produtosFiltrados = produtosFiltrados.filter(p => !p.disponivel);
         }
 
-        if (produtosFiltrados.length === 0) {
+        if (!produtosFiltrados || produtosFiltrados.length === 0) {
             container.innerHTML = '<div class="empty-state">Nenhum produto encontrado</div>';
             return;
         }
@@ -215,6 +259,144 @@ class Dashboard {
         }
     }
 
+    // ===== INSUMOS =====
+    abrirModalInsumo(insumo = null) {
+        const modalHTML = `
+            <div class="modal-overlay">
+                <div class="modal">
+                    <h3>${insumo ? 'Editar' : 'Novo'} Insumo</h3>
+                    <form id="formInsumo">
+                        <input type="hidden" id="insumoId" value="${insumo?._id || ''}">
+                        
+                        <div class="form-group">
+                            <label>Nome do Insumo</label>
+                            <input type="text" id="insumoNome" value="${insumo?.nome || ''}" required>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Quantidade</label>
+                                <input type="number" id="insumoQuantidade" value="${insumo?.quantidade || 0}" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label>Unidade</label>
+                                <select id="insumoUnidade" required>
+                                    <option value="g" ${insumo?.unidade === 'g' ? 'selected' : ''}>Gramas (g)</option>
+                                    <option value="ml" ${insumo?.unidade === 'ml' ? 'selected' : ''}>Mililitros (ml)</option>
+                                    <option value="un" ${insumo?.unidade === 'un' ? 'selected' : ''}>Unidades (un)</option>
+                                    <option value="kg" ${insumo?.unidade === 'kg' ? 'selected' : ''}>Quilogramas (kg)</option>
+                                    <option value="l" ${insumo?.unidade === 'l' ? 'selected' : ''}>Litros (l)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Preço Unitário (R$)</label>
+                            <input type="number" id="insumoPreco" step="0.01" value="${insumo?.preco || 0}" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Estoque Mínimo</label>
+                            <input type="number" id="insumoMinimo" value="${insumo?.minimo || 0}">
+                        </div>
+
+                        <div class="modal-actions">
+                            <button type="submit" class="btn primary">💾 Salvar</button>
+                            <button type="button" class="btn secondary" onclick="dashboard.fecharModal()">❌ Cancelar</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        `;
+        
+        document.body.insertAdjacentHTML('beforeend', modalHTML);
+        
+        document.getElementById('formInsumo').addEventListener('submit', (e) => {
+            e.preventDefault();
+            this.salvarInsumo();
+        });
+    }
+
+    async salvarInsumo() {
+        const formData = {
+            nome: document.getElementById('insumoNome').value,
+            quantidade: parseInt(document.getElementById('insumoQuantidade').value),
+            unidade: document.getElementById('insumoUnidade').value,
+            preco: parseFloat(document.getElementById('insumoPreco').value),
+            minimo: parseInt(document.getElementById('insumoMinimo').value) || 0
+        };
+
+        const insumoId = document.getElementById('insumoId').value;
+        const url = insumoId ? `/api/insumos/${insumoId}` : '/api/insumos';
+        const method = insumoId ? 'PUT' : 'POST';
+
+        try {
+            const response = await fetch(url, {
+                method: method,
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(formData)
+            });
+
+            if (response.ok) {
+                await this.carregarDados();
+                this.renderInsumos();
+                this.fecharModal();
+                this.mostrarMensagem('Insumo salvo com sucesso!');
+            }
+        } catch (error) {
+            this.mostrarMensagem('Erro ao salvar insumo', 'erro');
+        }
+    }
+
+    renderInsumos() {
+        const container = document.getElementById('insumosContainer');
+        
+        if (!this.insumos || this.insumos.length === 0) {
+            container.innerHTML = '<div class="empty-state">Nenhum insumo cadastrado</div>';
+            return;
+        }
+
+        container.innerHTML = this.insumos.map(insumo => `
+            <div class="produto-card ${insumo.quantidade <= (insumo.minimo || 0) ? 'estoque-baixo' : ''}">
+                <h3>${insumo.nome}</h3>
+                <div class="insumo-info">
+                    <div class="quantidade ${insumo.quantidade <= (insumo.minimo || 0) ? 'alerta' : ''}">
+                        ${insumo.quantidade} ${insumo.unidade}
+                        ${insumo.minimo ? `<small>(mín: ${insumo.minimo} ${insumo.unidade})</small>` : ''}
+                    </div>
+                    <div class="preco">R$ ${insumo.preco?.toFixed(2) || '0.00'}/${insumo.unidade}</div>
+                </div>
+                <div class="card-actions">
+                    <button class="btn-editar" onclick="dashboard.abrirModalInsumo(${JSON.stringify(insumo).replace(/"/g, '&quot;')})">
+                        ✏️ Editar
+                    </button>
+                    <button class="btn-excluir" onclick="dashboard.excluirInsumo('${insumo._id}')">
+                        🗑️ Excluir
+                    </button>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    async excluirInsumo(id) {
+        if (!confirm('Tem certeza que deseja excluir este insumo?')) return;
+
+        try {
+            const response = await fetch(`/api/insumos/${id}`, {
+                method: 'DELETE'
+            });
+
+            if (response.ok) {
+                this.insumos = this.insumos.filter(i => i._id !== id);
+                this.renderInsumos();
+                this.mostrarMensagem('Insumo excluído com sucesso!');
+            }
+        } catch (error) {
+            this.mostrarMensagem('Erro ao excluir insumo', 'erro');
+        }
+    }
+
     // ===== PEDIDOS =====
     async atualizarPedidos() {
         await this.carregarDados();
@@ -225,39 +407,39 @@ class Dashboard {
     renderPedidos() {
         const container = document.getElementById('pedidosContainer');
         
-        if (this.pedidos.length === 0) {
+        if (!this.pedidos || this.pedidos.length === 0) {
             container.innerHTML = '<div class="empty-state">Nenhum pedido recebido</div>';
             return;
         }
 
         container.innerHTML = this.pedidos.map(pedido => `
             <div class="produto-card">
-                <div style="display: flex; justify-content: between; align-items: start; margin-bottom: 1rem;">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem;">
                     <div>
                         <h3>Pedido #${pedido._id?.slice(-6) || 'N/A'}</h3>
                         <p><strong>Cliente:</strong> ${pedido.cliente}</p>
                         <p><strong>Telefone:</strong> ${pedido.telefone}</p>
                         <p><strong>Endereço:</strong> ${pedido.endereco}</p>
                     </div>
-                    <span class="status ${pedido.status}">
+                    <span class="status status-${pedido.status || 'pendente'}">
                         ${this.formatarStatus(pedido.status)}
                     </span>
                 </div>
                 
                 <div style="margin-bottom: 1rem;">
                     <strong>Itens:</strong>
-                    ${pedido.itens?.map(item => `
-                        <div style="display: flex; justify-content: between; margin: 0.25rem 0;">
-                            <span>${item.qtd}x ${item.nome}</span>
-                            <span>R$ ${(item.preco * item.qtd).toFixed(2)}</span>
+                    ${(pedido.itens || []).map(item => `
+                        <div style="display: flex; justify-content: space-between; margin: 0.25rem 0;">
+                            <span>${item.quantidade}x ${item.nome}</span>
+                            <span>R$ ${((item.preco || 0) * (item.quantidade || 1)).toFixed(2)}</span>
                         </div>
-                    `).join('') || ''}
+                    `).join('')}
                 </div>
                 
                 <div style="border-top: 1px solid var(--border); padding-top: 1rem;">
-                    <div style="display: flex; justify-content: between;">
+                    <div style="display: flex; justify-content: space-between;">
                         <strong>Total: R$ ${pedido.total?.toFixed(2) || '0.00'}</strong>
-                        <span>${new Date(pedido.criadoEm).toLocaleString()}</span>
+                        <span>${new Date(pedido.createdAt || pedido.criadoEm).toLocaleString()}</span>
                     </div>
                 </div>
             </div>
@@ -281,19 +463,37 @@ class Dashboard {
             const response = await fetch('/api/financeiro');
             if (response.ok) {
                 const financeiro = await response.json();
-                document.getElementById('totalVendas').textContent = `R$ ${financeiro.vendas.toFixed(2)}`;
-                document.getElementById('totalCustos').textContent = `R$ ${financeiro.gastos.toFixed(2)}`;
-                document.getElementById('lucro').textContent = `R$ ${financeiro.lucro.toFixed(2)}`;
+                this.atualizarUIFinanceiro(financeiro);
             }
         } catch (error) {
-            console.log('Erro ao carregar dados financeiros');
+            console.log('Erro ao carregar dados financeiros:', error);
         }
     }
 
-    // ===== MENSAGENS =====
+    atualizarUIFinanceiro({ vendas, gastos, lucro }) {
+        const totalVendas = document.getElementById('totalVendas');
+        const totalCustos = document.getElementById('totalCustos');
+        const lucroElement = document.getElementById('lucro');
+
+        if (totalVendas) totalVendas.textContent = `R$ ${vendas?.toFixed(2) || '0.00'}`;
+        if (totalCustos) totalCustos.textContent = `R$ ${gastos?.toFixed(2) || '0.00'}`;
+        if (lucroElement) lucroElement.textContent = `R$ ${lucro?.toFixed(2) || '0.00'}`;
+    }
+
+    // ===== UTILITÁRIOS =====
+    fecharModal() {
+        const modal = document.querySelector('.modal-overlay');
+        if (modal) modal.remove();
+    }
+
     mostrarMensagem(mensagem, tipo = 'sucesso') {
-        // Implementação simples de mensagens
-        alert(mensagem); // Você pode substituir por um sistema de notificações mais elaborado
+        // Implementação simples - pode ser melhorada com notificações
+        console.log(`${tipo.toUpperCase()}: ${mensagem}`);
+        alert(mensagem); // Substitua por um sistema de notificações mais elaborado
+    }
+
+    imprimirPedidos() {
+        window.print();
     }
 }
 
