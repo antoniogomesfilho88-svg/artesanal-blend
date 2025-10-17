@@ -1,19 +1,18 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Dashboard - Artesanal Blend</title>
-  <link rel="stylesheet" href="dashboard.css">
-  <script src="https://kit.fontawesome.com/a2d04d6c3f.js" crossorigin="anonymous"></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Artesanal Blend - Dashboard</title>
+  <link rel="stylesheet" href="dashboard.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
-  <header class="dashboard-header">
-    <img src="logo.jpg" alt="Logo" class="logo">
-    <h1>Dashboard Artesanal Blend</h1>
+  <header>
+    <h1>Artesanal Blend - Dashboard</h1>
   </header>
 
-  <nav class="dashboard-nav">
+  <nav>
     <button onclick="mostrarSecao('produtos')">Produtos</button>
     <button onclick="mostrarSecao('insumos')">Insumos</button>
     <button onclick="mostrarSecao('pedidos')">Pedidos</button>
@@ -21,56 +20,78 @@
   </nav>
 
   <main>
-    <!-- PRODUTOS -->
+    <!-- Produtos -->
     <section id="produtos" class="secao">
-      <h2>Gerenciar Produtos</h2>
-      <form id="formProduto">
-        <input type="text" id="produtoNome" placeholder="Nome do produto" required>
-        <input type="number" id="produtoPreco" placeholder="Preço" required step="0.01">
-        <input type="text" id="produtoImagem" placeholder="URL da Imagem">
-        <button type="submit">Adicionar Produto</button>
-      </form>
-      <table id="tabelaProdutos">
+      <h2>Produtos</h2>
+      <button onclick="abrirModalProduto()">➕ Adicionar Produto</button>
+      <table id="tabela-produtos">
         <thead>
-          <tr><th>Nome</th><th>Preço</th><th>Imagem</th><th>Ações</th></tr>
+          <tr><th>Nome</th><th>Preço</th><th>Descrição</th><th>Ações</th></tr>
         </thead>
         <tbody></tbody>
       </table>
     </section>
 
-    <!-- INSUMOS -->
-    <section id="insumos" class="secao">
-      <h2>Gerenciar Insumos</h2>
-      <form id="formInsumo">
-        <input type="text" id="insumoNome" placeholder="Nome do insumo" required>
-        <input type="number" id="insumoQuantidade" placeholder="Quantidade" required>
-        <button type="submit">Adicionar Insumo</button>
-      </form>
-      <table id="tabelaInsumos">
+    <!-- Insumos -->
+    <section id="insumos" class="secao" style="display:none">
+      <h2>Insumos</h2>
+      <button onclick="abrirModalInsumo()">➕ Adicionar Insumo</button>
+      <table id="tabela-insumos">
         <thead>
-          <tr><th>Nome</th><th>Quantidade</th><th>Ações</th></tr>
+          <tr><th>Nome</th><th>Qtd</th><th>Unidade</th><th>Preço Unit.</th><th>Ações</th></tr>
         </thead>
         <tbody></tbody>
       </table>
     </section>
 
-    <!-- PEDIDOS -->
-    <section id="pedidos" class="secao">
+    <!-- Pedidos -->
+    <section id="pedidos" class="secao" style="display:none">
       <h2>Pedidos</h2>
-      <table id="tabelaPedidos">
+      <table id="tabela-pedidos">
         <thead>
-          <tr><th>Cliente</th><th>Total</th><th>Status</th><th>Itens</th><th>Ações</th></tr>
+          <tr><th>Cliente</th><th>Total</th><th>Pagamento</th><th>Ações</th></tr>
         </thead>
         <tbody></tbody>
       </table>
     </section>
 
-    <!-- FINANCEIRO -->
-    <section id="financeiro" class="secao">
+    <!-- Financeiro -->
+    <section id="financeiro" class="secao" style="display:none">
       <h2>Financeiro</h2>
-      <p>Total acumulado: R$ <span id="totalFinanceiro">0.00</span></p>
+      <p>Total Vendas: R$ <span id="total-vendas">0.00</span></p>
+      <p>Total Custo: R$ <span id="total-custo">0.00</span></p>
+      <p>Lucro: R$ <span id="lucro">0.00</span></p>
+      <canvas id="grafico-vendas"></canvas>
     </section>
   </main>
+
+  <!-- Modal Produto -->
+  <div id="modal-produto" class="modal">
+    <div class="modal-conteudo">
+      <h3>Produto</h3>
+      <input type="text" id="produto-nome" placeholder="Nome">
+      <input type="number" id="produto-preco" placeholder="Preço">
+      <input type="text" id="produto-descricao" placeholder="Descrição">
+      <input type="text" id="produto-imagem" placeholder="URL da Imagem">
+      <label>Insumos:</label>
+      <div id="lista-insumos-produto"></div>
+      <button onclick="salvarProduto()">Salvar</button>
+      <button onclick="fecharModalProduto()">Fechar</button>
+    </div>
+  </div>
+
+  <!-- Modal Insumo -->
+  <div id="modal-insumo" class="modal">
+    <div class="modal-conteudo">
+      <h3>Insumo</h3>
+      <input type="text" id="insumo-nome" placeholder="Nome">
+      <input type="number" id="insumo-quantidade" placeholder="Quantidade">
+      <input type="text" id="insumo-unidade" placeholder="Unidade">
+      <input type="number" id="insumo-preco" placeholder="Preço Unitário">
+      <button onclick="salvarInsumo()">Salvar</button>
+      <button onclick="fecharModalInsumo()">Fechar</button>
+    </div>
+  </div>
 
   <script src="dashboard.js"></script>
 </body>
