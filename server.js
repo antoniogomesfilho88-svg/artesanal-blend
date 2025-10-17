@@ -1,145 +1,148 @@
-// ==============================
-//  Artesanal Blend - Backend API
-// ==============================
+// ========== DASHBOARD ADMIN ==========
 
-import express from 'express';
-import mongoose from 'mongoose';
-import cors from 'cors';
+// Servir página do dashboard
+app.get('/dashboard', (req, res) => {
+  res.send(`
+    <!DOCTYPE html>
+    <html lang="pt-BR">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Dashboard - Artesanal Blend</title>
+      <style>
+        body { font-family: Arial, sans-serif; margin: 0; padding: 20px; background: #f5f5f5; }
+        .container { max-width: 800px; margin: 0 auto; background: white; padding: 20px; border-radius: 10px; }
+        h1 { color: #333; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; }
+        input, select, textarea { width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 5px; }
+        button { background: #FF6B6B; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; }
+        button:hover { background: #e55a5a; }
+        .product-list { margin-top: 30px; }
+        .product-item { border: 1px solid #ddd; padding: 15px; margin-bottom: 10px; border-radius: 5px; }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <h1>🍔 Dashboard Artesanal Blend</h1>
+        
+        <div class="form-group">
+          <h3>Adicionar Novo Produto</h3>
+          <form id="productForm">
+            <label>Nome:</label>
+            <input type="text" id="name" required>
+            
+            <label>Descrição:</label>
+            <textarea id="desc" required></textarea>
+            
+            <label>Preço:</label>
+            <input type="number" id="price" step="0.01" required>
+            
+            <label>Categoria:</label>
+            <select id="cat" required>
+              <option value="">Selecione...</option>
+              <option value="Hambúrgueres">Hambúrgueres</option>
+              <option value="Combos">Combos</option>
+              <option value="Acompanhamentos">Acompanhamentos</option>
+              <option value="Adicionais">Adicionais</option>
+              <option value="Bebidas">Bebidas</option>
+            </select>
+            
+            <label>URL da Imagem (opcional):</label>
+            <input type="text" id="imgUrl" placeholder="https://exemplo.com/imagem.jpg">
+            
+            <button type="submit">Adicionar Produto</button>
+          </form>
+        </div>
 
-const app = express();
+        <div class="product-list">
+          <h3>Produtos Cadastrados</h3>
+          <button onclick="loadProducts()">🔄 Atualizar Lista</button>
+          <div id="productsContainer"></div>
+        </div>
+      </div>
 
-// Middlewares
-app.use(cors());
-app.use(express.json());
+      <script>
+        // Adicionar produto
+        document.getElementById('productForm').addEventListener('submit', async (e) => {
+          e.preventDefault();
+          
+          const productData = {
+            name: document.getElementById('name').value,
+            desc: document.getElementById('desc').value,
+            price: parseFloat(document.getElementById('price').value),
+            cat: document.getElementById('cat').value,
+            imgUrl: document.getElementById('imgUrl').value
+          };
 
-// Conectar ao MongoDB Atlas (URI DIRETA - SEM VARIÁVEIS DE AMBIENTE)
-mongoose.connect('mongodb+srv://antoniogomesfilho88_db_user:Regiane2020ac1@cluster0.nkg5z7v.mongodb.net/artesanal-blend?retryWrites=true&w=majority', {
-  useNewUrlParser: true,
-  useUnifiedTopology: true
-})
-.then(() => console.log('✅ MongoDB conectado'))
-.catch(err => console.error('❌ Erro MongoDB:', err));
+          try {
+            const response = await fetch('/api/produtos', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(productData)
+            });
 
-// Schema do Produto
-const produtoSchema = new mongoose.Schema({
-  id: Number,
-  name: String,
-  desc: String,
-  price: Number,
-  cat: String,
-  imgUrl: String
-});
+            if (response.ok) {
+              alert('Produto adicionado com sucesso!');
+              document.getElementById('productForm').reset();
+              loadProducts();
+            } else {
+              alert('Erro ao adicionar produto');
+            }
+          } catch (error) {
+            alert('Erro de conexão');
+          }
+        });
 
-const Produto = mongoose.model('Produto', produtoSchema);
+        // Carregar produtos
+        async function loadProducts() {
+          try {
+            const response = await fetch('/api/menu');
+            const products = await response.json();
+            
+            const container = document.getElementById('productsContainer');
+            container.innerHTML = '';
+            
+            products.forEach(product => {
+              const productDiv = document.createElement('div');
+              productDiv.className = 'product-item';
+              productDiv.innerHTML = \`
+                <strong>\${product.name}</strong> - R$ \${product.price.toFixed(2)}
+                <br><small>\${product.desc}</small>
+                <br><small>Categoria: \${product.cat}</small>
+                <button onclick="deleteProduct(\${product.id})" style="background: red; margin-left: 10px;">Deletar</button>
+              \`;
+              container.appendChild(productDiv);
+            });
+          } catch (error) {
+            console.error('Erro ao carregar produtos:', error);
+          }
+        }
 
-// ========== ROTAS DA API ==========
+        // Deletar produto
+        async function deleteProduct(id) {
+          if (confirm('Tem certeza que deseja deletar este produto?')) {
+            try {
+              const response = await fetch(\`/api/produtos/\${id}\`, {
+                method: 'DELETE'
+              });
 
-// GET - Listar todos os produtos
-app.get('/api/menu', async (req, res) => {
-  try {
-    const produtos = await Produto.find().sort({ id: 1 });
-    res.json(produtos);
-  } catch (err) {
-    console.error('Erro ao buscar produtos:', err);
-    res.status(500).json({ error: 'Erro interno do servidor' });
-  }
-});
+              if (response.ok) {
+                alert('Produto deletado com sucesso!');
+                loadProducts();
+              } else {
+                alert('Erro ao deletar produto');
+              }
+            } catch (error) {
+              alert('Erro de conexão');
+            }
+          }
+        }
 
-// POST - Criar produto
-app.post('/api/produtos', async (req, res) => {
-  try {
-    const { name, desc, price, cat, imgUrl } = req.body;
-    
-    // Encontrar o próximo ID disponível
-    const ultimoProduto = await Produto.findOne().sort({ id: -1 });
-    const nextId = ultimoProduto ? ultimoProduto.id + 1 : 1;
-    
-    const novoProduto = new Produto({
-      id: nextId,
-      name,
-      desc,
-      price: parseFloat(price),
-      cat,
-      imgUrl: imgUrl || ''
-    });
-    
-    await novoProduto.save();
-    res.status(201).json(novoProduto);
-  } catch (err) {
-    console.error('Erro ao criar produto:', err);
-    res.status(500).json({ error: 'Erro interno do servidor' });
-  }
-});
-
-// PUT - Atualizar produto
-app.put('/api/produtos/:id', async (req, res) => {
-  try {
-    const { name, desc, price, cat, imgUrl } = req.body;
-    
-    const produto = await Produto.findOneAndUpdate(
-      { id: parseInt(req.params.id) },
-      { name, desc, price: parseFloat(price), cat, imgUrl },
-      { new: true }
-    );
-    
-    if (!produto) {
-      return res.status(404).json({ error: 'Produto não encontrado' });
-    }
-    
-    res.json(produto);
-  } catch (err) {
-    console.error('Erro ao atualizar produto:', err);
-    res.status(500).json({ error: 'Erro interno do servidor' });
-  }
-});
-
-// DELETE - Deletar produto
-app.delete('/api/produtos/:id', async (req, res) => {
-  try {
-    const produto = await Produto.findOneAndDelete({ id: parseInt(req.params.id) });
-    
-    if (!produto) {
-      return res.status(404).json({ error: 'Produto não encontrado' });
-    }
-    
-    res.json({ message: 'Produto deletado com sucesso' });
-  } catch (err) {
-    console.error('Erro ao deletar produto:', err);
-    res.status(500).json({ error: 'Erro interno do servidor' });
-  }
-});
-
-// Health check
-app.get('/health', (req, res) => {
-  res.json({ 
-    status: 'OK', 
-    timestamp: new Date().toISOString(),
-    database: mongoose.connection.readyState === 1 ? 'Conectado' : 'Desconectado'
-  });
-});
-
-// Rota padrão
-app.get('/', (req, res) => {
-  res.json({ 
-    message: '🍔 Artesanal Blend API Online!',
-    endpoints: {
-      menu: '/api/menu',
-      produtos: '/api/produtos',
-      health: '/health'
-    }
-  });
-});
-
-// ========== INICIALIZAÇÃO ==========
-
-const PORT = process.env.PORT || 3000;
-
-app.listen(PORT, () => {
-  console.log(`🚀 Servidor rodando na porta ${PORT}`);
-  console.log(`🍔 API: http://localhost:${PORT}/api/menu`);
-});
-
-// Tratamento de erros
-process.on('unhandledRejection', (err) => {
-  console.error('❌ Erro não tratado:', err);
+        // Carregar produtos ao abrir a página
+        loadProducts();
+      </script>
+    </body>
+    </html>
+  `);
 });
