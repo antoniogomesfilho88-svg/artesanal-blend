@@ -1,90 +1,44 @@
-[
-  {
-    "id": 1,
-    "name": "CLASSIC BLEND",
-    "desc": "Pão brioche, blend 120g, queijo cheddar, picles e molho especial da casa.",
-    "price": 24.5,
-    "cat": "Hambúrgueres",
-    "imgUrl": "batata.jpg"
-  },
-  {
-    "id": 2,
-    "name": "BACON BLEND",
-    "desc": "Pão brioche, blend 180g, cheddar, bacon crocante e molho artesanal.",
-    "price": 29.5,
-    "cat": "Hambúrgueres",
-    "imgUrl": "logo.jpg"
-  },
-  {
-    "id": 3,
-    "name": "DUPLO CHEDDAR",
-    "desc": "Pão australiano, dois blends 150g, cheddar duplo e molho barbecue.",
-    "price": 34,
-    "cat": "Hambúrgueres",
-    "imgUrl": "logo.jpg"
-  },
-  {
-    "id": 4,
-    "name": "COMBO CLASSIC",
-    "desc": "Classic Blend + Batata frita + Refrigerante 350ml.",
-    "price": 38,
-    "cat": "Combos",
-    "imgUrl": "logo.jpg"
-  },
-  {
-    "id": 5,
-    "name": "COMBO BACON",
-    "desc": "Bacon Blend + Batata frita + Refrigerante 350ml.",
-    "price": 42,
-    "cat": "Combos",
-    "imgUrl": "logo.jpg"
-  },
-  {
-    "id": 6,
-    "name": "BATATA FRITA",
-    "desc": "Porção individual de batata frita crocante.",
-    "price": 12,
-    "cat": "Acompanhamentos",
-    "imgUrl": "logo.jpg"
-  },
-  {
-    "id": 7,
-    "name": "CHEDDAR EXTRA",
-    "desc": "Porção adicional de cheddar cremoso.",
-    "price": 5,
-    "cat": "Adicionais",
-    "imgUrl": "logo.jpg"
-  },
-  {
-    "id": 8,
-    "name": "REFRIGERANTE 350ml",
-    "desc": "Coca-Cola, Guaraná Antarctica ou Fanta.",
-    "price": 6,
-    "cat": "Bebidas",
-    "imgUrl": "logo.jpg"
-  },
-  {
-    "id": 9,
-    "name": "ÁGUA MINERAL",
-    "desc": "Garrafa 500ml sem gás ou com gás.",
-    "price": 4,
-    "cat": "Adicionais",
-    "imgUrl": "logo.jpg"
-  },
-  {
-    "id": 10,
-    "name": "3524534",
-    "desc": "4554543434365",
-    "price": 80,
-    "cat": "Hambúrgueres",
-    "imgUrl": "logo.jpg"
-  },
-  {
-    "id": 11,
-    "name": "eeeeee",
-    "price": 20,
-    "cat": "Hambúrgueres",
-    "desc": "",
-    "imgUrl": "logo.jpg"
-  }
-]
+{
+  "menu": [
+    {
+      "id": 1,
+      "name": "Hambúrguer Artesanal",
+      "desc": "Pão brioche, blend 180g, queijo, alface, tomate",
+      "price": 28.90,
+      "cat": "Hambúrgueres",
+      "imgUrl": "https://via.placeholder.com/300x200/FF6B6B/ffffff?text=Hambúrguer"
+    },
+    {
+      "id": 2,
+      "name": "Cheese Bacon",
+      "desc": "Blend 180g, queijo cheddar, bacon crocante",
+      "price": 32.90,
+      "cat": "Hambúrgueres",
+      "imgUrl": ""
+    },
+    {
+      "id": 3,
+      "name": "Combo Classic",
+      "desc": "Hambúrguer + Batata + Refri",
+      "price": 45.90,
+      "cat": "Combos",
+      "imgUrl": ""
+    },
+    {
+      "id": 4,
+      "name": "Batata Frita",
+      "desc": "Porção 200g",
+      "price": 15.90,
+      "cat": "Acompanhamentos",
+      "imgUrl": ""
+    },
+    {
+      "id": 5,
+      "name": "Refrigerante",
+      "desc": "Lata 350ml",
+      "price": 8.90,
+      "cat": "Bebidas",
+      "imgUrl": ""
+    }
+  ]
+}
