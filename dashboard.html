@@ -8,56 +8,42 @@
   <script src="https://kit.fontawesome.com/a2d04d6c3f.js" crossorigin="anonymous"></script>
 </head>
 <body>
-  <!-- Cabeçalho -->
-  <header class="dashboard-header">
-    <img src="logo.jpg" alt="Logo" class="logo" />
-    <h1>Dashboard - Artesanal Blend</h1>
+  <header class="header">
+    <div class="header-content">
+      <img src="logo.jpg" alt="Logo" class="logo" />
+      <h1>Dashboard Artesanal Blend</h1>
+    </div>
   </header>
 
-  <!-- Navegação do dashboard -->
-  <nav class="dashboard-nav">
-    <button class="tab-btn active" data-tab="produtos-tab">Produtos</button>
-    <button class="tab-btn" data-tab="insumos-tab">Insumos</button>
-    <button class="tab-btn" data-tab="pedidos-tab">Pedidos</button>
-    <button class="tab-btn" data-tab="financeiro-tab">Financeiro</button>
-  </nav>
+  <main class="dashboard-main">
+    <!-- Seção Produtos -->
+    <section class="dashboard-section">
+      <h2>Produtos <button id="btnAddProduto" class="btn">➕ Adicionar Produto</button></h2>
+      <div id="produtosContainer" class="dashboard-grid"></div>
+    </section>
 
-  <!-- Conteúdos das abas -->
-  <section id="produtos-tab" class="tab-content active">
-    <h2>Produtos</h2>
-    <button id="addProdutoBtn" class="btn primary">➕ Adicionar Produto</button>
-    <div id="produtos-list" class="table-container"></div>
-  </section>
+    <!-- Seção Insumos -->
+    <section class="dashboard-section">
+      <h2>Insumos <button id="btnAddInsumo" class="btn">➕ Adicionar Insumo</button></h2>
+      <div id="insumosContainer" class="dashboard-grid"></div>
+    </section>
 
-  <section id="insumos-tab" class="tab-content">
-    <h2>Insumos</h2>
-    <button id="addInsumoBtn" class="btn primary">➕ Adicionar Insumo</button>
-    <div id="insumos-list" class="table-container"></div>
-  </section>
+    <!-- Seção Pedidos -->
+    <section class="dashboard-section">
+      <h2>Pedidos Recebidos</h2>
+      <div id="pedidosContainer" class="dashboard-grid"></div>
+    </section>
 
-  <section id="pedidos-tab" class="tab-content">
-    <h2>Pedidos</h2>
-    <div id="pedidos-list" class="table-container"></div>
-  </section>
+    <!-- Seção Financeiro -->
+    <section class="dashboard-section">
+      <h2>Financeiro</h2>
+      <div id="financeiroContainer"></div>
+    </section>
+  </main>
 
-  <section id="financeiro-tab" class="tab-content">
-    <h2>Financeiro</h2>
-    <p>Total de pedidos: <strong id="totalPedidos">0</strong></p>
-    <p>Total em vendas: <strong id="totalVendas">R$ 0,00</strong></p>
-  </section>
-
-  <!-- Modal para adicionar/editar produtos e insumos -->
-  <div id="modal" class="modal">
-    <div class="modal-content">
-      <span class="close-modal">&times;</span>
-      <h3 id="modalTitle">Adicionar Item</h3>
-      <input type="text" id="itemNome" placeholder="Nome" />
-      <input type="text" id="itemCategoria" placeholder="Categoria (só produtos)" />
-      <input type="number" id="itemPreco" placeholder="Preço (só produtos)" />
-      <textarea id="itemDescricao" placeholder="Descrição"></textarea>
-      <button id="saveItemBtn" class="btn primary">💾 Salvar</button>
-    </div>
-  </div>
+  <footer>
+    <p>🍔 Artesanal Blend - Dashboard</p>
+  </footer>
 
   <script src="dashboard.js"></script>
 </body>
