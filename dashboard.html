@@ -65,20 +65,25 @@
     </section>
   </main>
 
-  <!-- Modal Produto -->
-  <div id="modal-produto" class="modal">
-    <div class="modal-conteudo">
-      <h3>Produto</h3>
-      <input type="text" id="produto-nome" placeholder="Nome">
-      <input type="number" id="produto-preco" placeholder="Preço">
-      <input type="text" id="produto-descricao" placeholder="Descrição">
-      <input type="text" id="produto-imagem" placeholder="URL da Imagem">
-      <label>Insumos:</label>
-      <div id="lista-insumos-produto"></div>
-      <button onclick="salvarProduto()">Salvar</button>
-      <button onclick="fecharModalProduto()">Fechar</button>
-    </div>
+  !-- Modal Produto -->
+<div id="modal-produto" class="modal">
+  <div class="modal-conteudo">
+    <h3>Produto</h3>
+    <input type="text" id="produto-nome" placeholder="Nome">
+    <input type="number" id="produto-preco" placeholder="Preço">
+    <input type="text" id="produto-descricao" placeholder="Descrição">
+    <input type="text" id="produto-imagem" placeholder="URL da Imagem">
+
+    <label>Insumos:</label>
+    <div id="lista-insumos-produto"></div>
+
+    <p>Custo Total do Produto: R$ <span id="custo-total-produto">0.00</span></p>
+    <p>Lucro Estimado: R$ <span id="lucro-produto">0.00</span></p>
+
+    <button onclick="salvarProduto()">Salvar</button>
+    <button onclick="fecharModalProduto()">Fechar</button>
   </div>
+</div>
 
   <!-- Modal Insumo -->
   <div id="modal-insumo" class="modal">
@@ -96,3 +101,4 @@
   <script src="dashboard.js"></script>
 </body>
 </html>
+
