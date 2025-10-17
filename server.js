@@ -1,90 +1,128 @@
-import express from 'express';
-import cors from 'cors';
-import mongoose from 'mongoose';
-import fs from 'fs';
-import path from 'path';
+const express = require('express');
+const mongoose = require('mongoose');
+const bodyParser = require('body-parser');
+const cors = require('cors');
 
 const app = express();
-const PORT = process.env.PORT || 10000;
-
 app.use(cors());
-app.use(express.json());
-app.use(express.static('.')); // Serve arquivos estáticos
+app.use(bodyParser.json());
+app.use(express.static('.'));
 
-const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/artesanal_blend';
-
-mongoose.connect(MONGO_URI)
+// --- Conexão MongoDB ---
+const mongoURI = 'SUA_URI_MONGODB_AQUI';
+mongoose.connect(mongoURI)
   .then(() => console.log('✅ MongoDB conectado'))
-  .catch(err => console.error('❌ MongoDB offline:', err.message));
+  .catch(err => console.error('⚠️ MongoDB offline', err));
 
-// SCHEMAS
-const produtoSchema = new mongoose.Schema({ nome: String, preco: Number, imagem: String });
-const insumoSchema = new mongoose.Schema({ nome: String, quantidade: Number });
-const pedidoSchema = new mongoose.Schema({
-  clienteNome: String,
-  clienteTelefone: String,
-  clienteEndereco: String,
-  clienteRegiao: String,
+// --- Schemas ---
+const InsumoSchema = new mongoose.Schema({
+  nome: String,
+  quantidade: Number,
+  unidade: String,
+  precoUnitario: Number
+});
+const Insumo = mongoose.model('Insumo', InsumoSchema);
+
+const ProdutoSchema = new mongoose.Schema({
+  nome: String,
+  preco: Number,
+  descricao: String,
+  imagem: String,
+  insumos: [{ insumo: { type: mongoose.Schema.Types.ObjectId, ref: 'Insumo' }, quantidade: Number }]
+});
+const Produto = mongoose.model('Produto', ProdutoSchema);
+
+const PedidoSchema = new mongoose.Schema({
+  cliente: {
+    nome: String,
+    telefone: String,
+    endereco: String,
+    regiao: String
+  },
+  itens: [{ produto: { type: mongoose.Schema.Types.ObjectId, ref: 'Produto' }, quantidade: Number }],
+  total: Number,
   pagamento: String,
   troco: Number,
-  obsCliente: String,
-  itens: Array,
-  total: Number,
-  status: { type: String, default: 'Pendente' },
+  obs: String,
   criadoEm: { type: Date, default: Date.now }
 });
+const Pedido = mongoose.model('Pedido', PedidoSchema);
 
-const Produto = mongoose.model('Produto', produtoSchema);
-const Insumo = mongoose.model('Insumo', insumoSchema);
-const Pedido = mongoose.model('Pedido', pedidoSchema);
+// --- Rotas API ---
 
-// ROTAS - PRODUTOS
-app.get('/api/produtos', async (req, res) => res.json(await Produto.find()));
-app.post('/api/produtos', async (req, res) => {
-  const novo = new Produto(req.body); await novo.save(); await atualizarMenuJSON(); res.json(novo);
+// Produtos
+app.get('/api/produtos', async (req, res) => {
+  const produtos = await Produto.find().populate('insumos.insumo');
+  res.json(produtos);
 });
+
+app.post('/api/produtos', async (req, res) => {
+  const produto = new Produto(req.body);
+  await produto.save();
+  res.json(produto);
+});
+
 app.put('/api/produtos/:id', async (req, res) => {
   const produto = await Produto.findByIdAndUpdate(req.params.id, req.body, { new: true });
-  await atualizarMenuJSON(); res.json(produto);
+  res.json(produto);
 });
+
 app.delete('/api/produtos/:id', async (req, res) => {
-  await Produto.findByIdAndDelete(req.params.id); await atualizarMenuJSON(); res.json({ ok: true });
+  await Produto.findByIdAndDelete(req.params.id);
+  res.json({ sucesso: true });
 });
 
-// ROTAS - INSUMOS
-app.get('/api/insumos', async (req, res) => res.json(await Insumo.find()));
-app.post('/api/insumos', async (req, res) => res.json(await new Insumo(req.body).save()));
-app.put('/api/insumos/:id', async (req, res) => res.json(await Insumo.findByIdAndUpdate(req.params.id, req.body, { new: true })));
-app.delete('/api/insumos/:id', async (req, res) => { await Insumo.findByIdAndDelete(req.params.id); res.json({ ok: true }); });
+// Insumos
+app.get('/api/insumos', async (req, res) => {
+  const insumos = await Insumo.find();
+  res.json(insumos);
+});
 
-// ROTAS - PEDIDOS
-app.get('/api/pedidos', async (req, res) => res.json(await Pedido.find().sort({ criadoEm: -1 })));
-app.post('/api/pedidos', async (req, res) => res.json(await new Pedido(req.body).save()));
+app.post('/api/insumos', async (req, res) => {
+  const insumo = new Insumo(req.body);
+  await insumo.save();
+  res.json(insumo);
+});
 
-// ROTAS - FINANCEIRO
+app.put('/api/insumos/:id', async (req, res) => {
+  const insumo = await Insumo.findByIdAndUpdate(req.params.id, req.body, { new: true });
+  res.json(insumo);
+});
+
+app.delete('/api/insumos/:id', async (req, res) => {
+  await Insumo.findByIdAndDelete(req.params.id);
+  res.json({ sucesso: true });
+});
+
+// Pedidos
+app.get('/api/pedidos', async (req, res) => {
+  const pedidos = await Pedido.find().populate('itens.produto');
+  res.json(pedidos);
+});
+
+app.post('/api/pedidos', async (req, res) => {
+  const pedido = new Pedido(req.body);
+  await pedido.save();
+  res.json(pedido);
+});
+
+// --- Dashboard financeiro
 app.get('/api/financeiro', async (req, res) => {
-  const pedidos = await Pedido.find();
-  const total = pedidos.reduce((acc, p) => acc + (p.total || 0), 0);
-  res.json(total);
+  const pedidos = await Pedido.find().populate('itens.produto');
+  let totalVendas = 0;
+  let totalCusto = 0;
+
+  pedidos.forEach(p => {
+    totalVendas += p.total;
+    p.itens.forEach(i => {
+      const custoItem = i.produto.insumos.reduce((acc, ins) => acc + (ins.insumo.precoUnitario * ins.quantidade), 0);
+      totalCusto += custoItem * i.quantidade;
+    });
+  });
+
+  res.json({ totalVendas, totalCusto, lucro: totalVendas - totalCusto });
 });
 
-// FUNÇÃO PARA ATUALIZAR MENU.JSON
-async function atualizarMenuJSON() {
-  const produtos = await Produto.find();
-  const menuJSON = {};
-  produtos.forEach(prod => {
-    let categoria = "Outros";
-    const n = prod.nome.toLowerCase();
-    if (n.includes('hamburguer')) categoria = 'Hambúrgueres';
-    else if (n.includes('combo')) categoria = 'Combos';
-    else if (n.includes('bebida')) categoria = 'Bebidas';
-    else if (n.includes('acompanhamento')) categoria = 'Acompanhamentos';
-    else if (n.includes('adicional')) categoria = 'Adicionais';
-    if (!menuJSON[categoria]) menuJSON[categoria] = [];
-    menuJSON[categoria].push(prod);
-  });
-  fs.writeFileSync(path.join('.', 'menu.json'), JSON.stringify(menuJSON, null, 2));
-  console.log('✅ menu.json atualizado');
-}
-
+// --- Start server
+const PORT = process.env.PORT || 10000;
 app.listen(PORT, () => console.log(`🚀 Servidor rodando na porta ${PORT}`));
