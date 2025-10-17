@@ -20,9 +20,10 @@ class Dashboard {
         try {
             console.log('📥 Carregando dados da API...');
             
+            // ROTAS CORRIGIDAS: /api/produtos -> /api/menu E /api/pedidos -> /api/orders
             const [produtosRes, pedidosRes, insumosRes] = await Promise.all([
-                fetch('/api/produtos').then(r => r.ok ? r.json() : []),
-                fetch('/api/pedidos').then(r => r.ok ? r.json() : []),
+                fetch('/api/menu').then(r => r.ok ? r.json() : []), 
+                fetch('/api/orders').then(r => r.ok ? r.json() : []),
                 fetch('/api/insumos').then(r => r.ok ? r.json() : [])
             ]);
 
@@ -52,7 +53,7 @@ class Dashboard {
             });
         });
 
-        // Formulário de produto
+        // Formulário de produto (Listener mantido no setup, mas a URL será corrigida em salvarProduto)
         document.getElementById('formProduto')?.addEventListener('submit', (e) => {
             e.preventDefault();
             this.salvarProduto();
@@ -140,7 +141,9 @@ class Dashboard {
         };
 
         const produtoId = document.getElementById('produtoId').value;
-        const url = produtoId ? `/api/produtos/${produtoId}` : '/api/produtos';
+        
+        // ROTAS CORRIGIDAS: /api/produtos/:id -> /api/menu/item/:id E /api/produtos -> /api/menu/item
+        const url = produtoId ? `/api/menu/item/${produtoId}` : '/api/menu/item'; 
         const method = produtoId ? 'PUT' : 'POST';
 
         try {
@@ -155,9 +158,12 @@ class Dashboard {
                 this.renderProdutos();
                 this.fecharModal();
                 this.mostrarMensagem('Produto salvo com sucesso!');
+            } else {
+                 const errorData = await response.json();
+                 this.mostrarMensagem(`Erro ao salvar produto: ${errorData.error || response.statusText}`, 'erro');
             }
         } catch (error) {
-            this.mostrarMensagem('Erro ao salvar produto', 'erro');
+            this.mostrarMensagem('Erro de rede ao salvar produto', 'erro');
         }
     }
 
@@ -205,7 +211,7 @@ class Dashboard {
                     <button class="btn-editar" onclick="dashboard.abrirModalProduto(${JSON.stringify(produto).replace(/"/g, '&quot;')})">
                         ✏️ Editar
                     </button>
-                    <button class="btn-toggle" onclick="dashboard.toggleDisponibilidade('${produto._id}')">
+                    <button class="btn-toggle" onclick="dashboard.toggleDisponibilidade('${produto._id}')"> 
                         ${produto.disponivel ? '⏸️' : '▶️'} ${produto.disponivel ? 'Pausar' : 'Ativar'}
                     </button>
                     <button class="btn-excluir" onclick="dashboard.excluirProduto('${produto._id}')">
@@ -225,7 +231,8 @@ class Dashboard {
         if (!produto) return;
 
         try {
-            const response = await fetch(`/api/produtos/${id}`, {
+            // ROTA CORRIGIDA: /api/produtos/:id -> /api/menu/item/:id
+            const response = await fetch(`/api/menu/item/${id}`, { 
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ disponivel: !produto.disponivel })
@@ -235,9 +242,11 @@ class Dashboard {
                 produto.disponivel = !produto.disponivel;
                 this.renderProdutos();
                 this.mostrarMensagem(`Produto ${produto.disponivel ? 'ativado' : 'pausado'} no cardápio!`);
+            } else {
+                 this.mostrarMensagem('Erro ao atualizar produto', 'erro');
             }
         } catch (error) {
-            this.mostrarMensagem('Erro ao atualizar produto', 'erro');
+            this.mostrarMensagem('Erro de rede ao atualizar produto', 'erro');
         }
     }
 
@@ -245,7 +254,8 @@ class Dashboard {
         if (!confirm('Tem certeza que deseja excluir este produto?')) return;
 
         try {
-            const response = await fetch(`/api/produtos/${id}`, {
+            // ROTA CORRIGIDA: /api/produtos/:id -> /api/menu/item/:id
+            const response = await fetch(`/api/menu/item/${id}`, { 
                 method: 'DELETE'
             });
 
@@ -253,13 +263,15 @@ class Dashboard {
                 this.produtos = this.produtos.filter(p => p._id !== id);
                 this.renderProdutos();
                 this.mostrarMensagem('Produto excluído com sucesso!');
+            } else {
+                 this.mostrarMensagem('Erro ao excluir produto', 'erro');
             }
         } catch (error) {
-            this.mostrarMensagem('Erro ao excluir produto', 'erro');
+            this.mostrarMensagem('Erro de rede ao excluir produto', 'erro');
         }
     }
 
-    // ===== INSUMOS =====
+    // ===== INSUMOS (Rotas mantidas em português: /api/insumos) =====
     abrirModalInsumo(insumo = null) {
         const modalHTML = `
             <div class="modal-overlay">
@@ -343,9 +355,11 @@ class Dashboard {
                 this.renderInsumos();
                 this.fecharModal();
                 this.mostrarMensagem('Insumo salvo com sucesso!');
+            } else {
+                 this.mostrarMensagem('Erro ao salvar insumo', 'erro');
             }
         } catch (error) {
-            this.mostrarMensagem('Erro ao salvar insumo', 'erro');
+            this.mostrarMensagem('Erro de rede ao salvar insumo', 'erro');
         }
     }
 
@@ -391,13 +405,15 @@ class Dashboard {
                 this.insumos = this.insumos.filter(i => i._id !== id);
                 this.renderInsumos();
                 this.mostrarMensagem('Insumo excluído com sucesso!');
+            } else {
+                this.mostrarMensagem('Erro ao excluir insumo', 'erro');
             }
         } catch (error) {
-            this.mostrarMensagem('Erro ao excluir insumo', 'erro');
+            this.mostrarMensagem('Erro de rede ao excluir insumo', 'erro');
         }
     }
 
-    // ===== PEDIDOS =====
+    // ===== PEDIDOS (Rotas corrigidas para /api/orders) =====
     async atualizarPedidos() {
         await this.carregarDados();
         this.renderPedidos();
@@ -457,16 +473,19 @@ class Dashboard {
         return statusMap[status] || status;
     }
 
-    // ===== FINANCEIRO =====
+    // ===== FINANCEIRO (Rota corrigida para /api/stats) =====
     async updateFinanceiro() {
         try {
-            const response = await fetch('/api/financeiro');
+            // ROTA CORRIGIDA: /api/financeiro -> /api/stats
+            const response = await fetch('/api/stats'); 
             if (response.ok) {
                 const financeiro = await response.json();
                 this.atualizarUIFinanceiro(financeiro);
+            } else {
+                console.log('Erro ao carregar dados financeiros: Status', response.status);
             }
         } catch (error) {
-            console.log('Erro ao carregar dados financeiros:', error);
+            console.log('Erro de rede ao carregar dados financeiros:', error);
         }
     }
 
