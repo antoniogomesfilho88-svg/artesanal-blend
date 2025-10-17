@@ -12,7 +12,11 @@
     "mongoose": "^8.0.0",
     "cors": "^2.8.5"
   },
-  "keywords": ["hamburgueria", "cardapio", "api"],
+  "keywords": [
+    "hamburgueria",
+    "cardapio",
+    "api"
+  ],
   "author": "Artesanal Blend",
   "license": "MIT"
 }
