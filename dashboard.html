@@ -1,94 +1,67 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Artesanal Blend - Dashboard</title>
-  <link rel="stylesheet" href="dashboard.css" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard - Artesanal Blend</title>
+  <link rel="stylesheet" href="dashboard.css">
   <script src="https://kit.fontawesome.com/a2d04d6c3f.js" crossorigin="anonymous"></script>
 </head>
 <body>
   <header class="header">
     <div class="header-content">
-      <img src="logo.jpg" alt="Logo" class="logo" />
-      <h1>Artesanal Blend - Dashboard</h1>
+      <img src="logo.jpg" alt="Logo" class="logo">
+      <h1>Dashboard - Artesanal Blend</h1>
     </div>
   </header>
 
-  <nav class="dashboard-nav">
-    <button class="tab-btn active" data-tab="produtos">Produtos</button>
-    <button class="tab-btn" data-tab="insumos">Insumos</button>
-    <button class="tab-btn" data-tab="pedidos">Pedidos</button>
-    <button class="tab-btn" data-tab="financeiro">Financeiro</button>
-  </nav>
+  <main>
+    <section class="tabs">
+      <button class="tab-button active" data-tab="produtos">Produtos</button>
+      <button class="tab-button" data-tab="insumos">Insumos</button>
+      <button class="tab-button" data-tab="pedidos">Pedidos</button>
+      <button class="tab-button" data-tab="financeiro">Financeiro</button>
+    </section>
 
-  <main class="dashboard-main">
-    <!-- PRODUTOS -->
     <section id="produtos" class="tab-content active">
       <h2>Gerenciar Produtos</h2>
-      <button id="addProdutoBtn" class="btn primary">➕ Adicionar Produto</button>
-      <div id="produtosList" class="list-container"></div>
+      <form id="produtoForm">
+        <input type="text" id="nomeProduto" placeholder="Nome" required>
+        <input type="number" id="precoProduto" placeholder="Preço" required>
+        <input type="text" id="descricaoProduto" placeholder="Descrição" required>
+        <input type="text" id="imagemProduto" placeholder="URL da Imagem">
+        <button type="submit">Adicionar Produto</button>
+      </form>
+      <div id="listaProdutos"></div>
     </section>
 
-    <!-- INSUMOS -->
     <section id="insumos" class="tab-content">
       <h2>Gerenciar Insumos</h2>
-      <button id="addInsumoBtn" class="btn primary">➕ Adicionar Insumo</button>
-      <div id="insumosList" class="list-container"></div>
+      <form id="insumoForm">
+        <input type="text" id="nomeInsumo" placeholder="Nome" required>
+        <input type="number" id="quantidadeInsumo" placeholder="Quantidade em estoque (g ou und)" required>
+        <input type="text" id="unidadeInsumo" placeholder="Unidade (g, ml, und)" required>
+        <input type="number" id="precoInsumo" placeholder="Preço" required>
+        <button type="submit">Adicionar Insumo</button>
+      </form>
+      <div id="listaInsumos"></div>
     </section>
 
-    <!-- PEDIDOS -->
     <section id="pedidos" class="tab-content">
       <h2>Pedidos</h2>
-      <button id="addPedidoBtn" class="btn primary">➕ Adicionar Pedido Manual</button>
-      <div id="pedidosList" class="list-container"></div>
-      <button id="printPedidosBtn" class="btn secondary">🖨 Imprimir Cupons</button>
+      <div id="listaPedidos"></div>
     </section>
 
-    <!-- FINANCEIRO -->
     <section id="financeiro" class="tab-content">
       <h2>Financeiro</h2>
       <div id="relatorioFinanceiro">
-        <p>Total de Vendas: R$ <span id="totalVendas">0,00</span></p>
-        <p>Total de Custos: R$ <span id="totalCustos">0,00</span></p>
-        <p>Lucro: R$ <span id="lucro">0,00</span></p>
+        <p>Total Vendas: R$ <span id="totalVendas">0.00</span></p>
+        <p>Total Custos: R$ <span id="totalCustos">0.00</span></p>
+        <p>Lucro: R$ <span id="lucro">0.00</span></p>
       </div>
-      <table id="financeTable">
-        <thead>
-          <tr>
-            <th>Data</th>
-            <th>Produto</th>
-            <th>Quantidade</th>
-            <th>Preço Unitário</th>
-            <th>Custo</th>
-            <th>Lucro</th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-      </table>
     </section>
   </main>
 
-  <footer>
-    <p>🍔 Artesanal Blend - Dashboard Profissional</p>
-  </footer>
-
   <script src="dashboard.js"></script>
-  <script>
-    // Controle das abas
-    const tabs = document.querySelectorAll(".tab-btn");
-    const contents = document.querySelectorAll(".tab-content");
-
-    tabs.forEach(tab => {
-      tab.addEventListener("click", () => {
-        tabs.forEach(t => t.classList.remove("active"));
-        tab.classList.add("active");
-
-        const target = tab.dataset.tab;
-        contents.forEach(c => c.classList.remove("active"));
-        document.getElementById(target).classList.add("active");
-      });
-    });
-  </script>
 </body>
 </html>
