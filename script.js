@@ -43,13 +43,22 @@ async function carregarCardapio() {
                     const nomeEscapado = escaparStringHTML(produto.nome); 
 
                     return `
-                        <div class="menu-item" onclick="adicionarAoCarrinho('${categoria}', '${nomeEscapado}', ${precoNumerico})">
-                            ${imagemUrl ? `<img src="${imagemUrl}" alt="${produto.nome}" />` : ''}
-                            <h3>${produto.nome}</h3>
-                            <p>${produto.descricao || ''}</p>
-                            <span class="price">R$ ${precoFormatado}</span>
-                        </div>
-                    `;
+                        <div class="menu-item"> 
+        ${imagemUrl ? `<img src="${imagemUrl}" alt="${produto.nome}" />` : ''}
+        <h3>${produto.nome}</h3>
+        <p>${produto.descricao || ''}</p>
+        
+        <div class="menu-item-footer">
+            <span class="price">R$ ${precoFormatado}</span>
+            
+            <button class="btn-adicionar" 
+                    onclick="adicionarAoCarrinho('${categoria}', '${nomeEscapado}', ${precoNumerico}); event.stopPropagation();"> 
+                ➕ Adicionar
+            </button> 
+        </div>
+        
+    </div>
+`;
                 }).join('');
             }
         });
@@ -317,3 +326,4 @@ window.alterarQuantidade = alterarQuantidade;
 window.atualizarTaxa = atualizarTaxa;
 window.mostrarTroco = mostrarTroco;
 window.finalizarPedido = finalizarPedido;
+
