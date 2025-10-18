@@ -1,140 +1,137 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Artesanal Blend - Cardápio</title>
-  <link rel="stylesheet" href="style.css" />
-  <script src="https://kit.fontawesome.com/a2d04d6c3f.js" crossorigin="anonymous"></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Artesanal Blend - Cardápio</title>
+  <link rel="stylesheet" href="style.css" />
+  <script src="https://kit.fontawesome.com/a2d04d6c3f.js" crossorigin="anonymous"></script>
 </head>
 
 <body>
-  <!-- Cabeçalho -->
-  <header class="header">
-    <div class="header-content">
-      <img src="logo.jpg" alt="Logo" class="logo" />
-      <div class="header-text-container">
-        <h1>Artesanal Blend</h1>
-        <p class="slogan">O seu hambúrguer artesanal no Jardim Canadá.</p> 
-      </div>
-    </div>
-  </header>
+    <header class="header">
+    <div class="header-content">
+      <img src="logo.jpg" alt="Logo" class="logo" />
+      <div class="header-text-container">
+        <h1>Artesanal Blend</h1>
+        <p class="slogan">O seu hambúrguer artesanal no Jardim Canadá.</p>
+      </div>
+    </div>
+  </header>
 
-  <!-- Seções do Cardápio -->
-  <main>
-    <section class="menu-section">
-      <h2>🍔 Hambúrgueres</h2>
-      <div id="cat-Hambúrgueres" class="menu-grid"></div>
+    <main>
+    <section class="menu-section">
+      <h2>🍔 Hambúrgueres</h2>
+      <div id="cat-Hambúrgueres" class="menu-grid"></div>
 
-      <h2>🥡 Combos</h2>
-      <div id="cat-Combos" class="menu-grid"></div>
+      <h2>🥡 Combos</h2>
+      <div id="cat-Combos" class="menu-grid"></div>
 
-      <h2>🍟 Acompanhamentos</h2>
-      <div id="cat-Acompanhamentos" class="menu-grid"></div>
+      <h2>🍟 Acompanhamentos</h2>
+      <div id="cat-Acompanhamentos" class="menu-grid"></div>
 
-      <h2>➕ Adicionais</h2>
-      <div id="cat-Adicionais" class="menu-grid"></div>
+      <h2>➕ Adicionais</h2>
+      <div id="cat-Adicionais" class="menu-grid"></div>
 
-      <h2>🥤 Bebidas</h2>
-      <div id="cat-Bebidas" class="menu-grid"></div>
-    </section>
-  </main>
+      <h2>🥤 Bebidas</h2>
+      <div id="cat-Bebidas" class="menu-grid"></div>
+    </section>
+  </main>
 
-  <!-- Botão flutuante do carrinho -->
-  <button id="openCartBtn" class="btn cart-toggle">
-    🛒 <span id="cartCount" class="cart-count">0</span>
-  </button>
+    <button id="openCartBtn" class="btn cart-toggle">
+    🛒 <span id="cartCount" class="cart-count">0</span>
+  </button>
 
-  <!-- Carrinho com animação -->
-  <section id="cart" class="cart">
-    <div class="cart-header">
-      <h3>🛒 Seu Pedido</h3>
-      <button id="closeCartBtn" class="btn close-cart">✖ Fechar</button>
-    </div>
+    <section id="cart" class="cart">
+    <div class="cart-header">
+      <h3>🛒 Seu Pedido</h3>
+      <button id="closeCartBtn" class="btn close-cart">✖ Fechar</button>
+    </div>
 
-    <div id="cart-items" class="cart-items"></div>
+        <div id="cart-items" class="cart-items">
+          </div>
 
-    <p id="cart-total">Total: R$ 0,00</p>
+        <div class="cart-total-container">
+      Total: <span id="cart-total">R$ 0,00</span>
+    </div>
 
-    <!-- Informações do Cliente -->
-    <div class="cliente-info">
-      <h4>🧾 Informações do Cliente</h4>
+        <div class="cliente-info">
+      <h4>🧾 Informações do Cliente</h4>
 
-      <!-- IDs corrigidos -->
-      <input type="text" id="customerName" placeholder="Nome completo" />
-      <input type="text" id="customerPhone" placeholder="Telefone (WhatsApp)" />
-      <input type="text" id="customerAddress" placeholder="Endereço para entrega" />
+      <input type="text" id="customerName" placeholder="Nome completo" />
+      <input type="text" id="customerPhone" placeholder="Telefone (WhatsApp)" />
+      <input type="text" id="customerAddress" placeholder="Endereço para entrega" />
 
-      <select id="region" onchange="atualizarTaxa()">
-        <option value="">Selecione sua região</option>
-        <option data-fee="5.00" value="Jardim Canadá">Jardim Canadá - R$ 5,00</option>
-        <option data-fee="10.00" value="Vila da Serra">Vila da Serra - R$ 10,00</option>
-        <option data-fee="15.00" value="Outras Regiões">Outras Regiões - R$ 15,00</option>
-      </select>
+      <select id="region" onchange="atualizarTaxa()">
+        <option value="">Selecione sua região</option>
+        <option data-fee="5.00" value="Jardim Canadá">Jardim Canadá - R$ 5,00</option>
+        <option data-fee="10.00" value="Vila da Serra">Vila da Serra - R$ 10,00</option>
+        <option data-fee="15.00" value="Outras Regiões">Outras Regiões - R$ 15,00</option>
+      </select>
 
-      <label for="customerPayment">💳 Forma de Pagamento:</label>
-      <select id="customerPayment" onchange="mostrarTroco()">
-        <option value="">Selecione</option>
-        <option value="Pix">Pix</option>
-        <option value="Cartão de Crédito">Cartão de Crédito</option>
-        <option value="Cartão de Débito">Cartão de Débito</option>
-        <option value="Dinheiro">Dinheiro</option>
-      </select>
+      <label for="customerPayment">💳 Forma de Pagamento:</label>
+      <select id="customerPayment" onchange="mostrarTroco()">
+        <option value="">Selecione</option>
+        <option value="Pix">Pix</option>
+        <option value="Cartão de Crédito">Cartão de Crédito</option>
+        <option value="Cartão de Débito">Cartão de Débito</option>
+        <option value="Dinheiro">Dinheiro</option>
+      </select>
 
-      <div id="campoTroco" style="display: none">
-        <input type="number" id="troco" placeholder="Troco para quanto?" />
-      </div>
+      <div id="campoTroco" style="display: none">
+        <input type="number" id="troco" placeholder="Troco para quanto?" />
+      </div>
 
-      <textarea id="customerObs" rows="2" placeholder="Observações (ex: tirar cebola, ponto da carne...)"></textarea>
-    </div>
+      <textarea id="customerObs" rows="2" placeholder="Observações (ex: tirar cebola, ponto da carne...)"></textarea>
+    </div>
 
-    <button id="checkoutBtn" class="btn primary" disabled>📩 Enviar pedido pelo WhatsApp</button>
-    <small class="muted">O pedido será enviado para: <strong>(31) 99212-8891</strong></small>
-  </section>
+    <button id="checkoutBtn" class="btn primary" disabled>📩 Enviar pedido pelo WhatsApp</button>
+    <small class="muted">O pedido será enviado para: <strong>(31) 99212-8891</strong></small>
+  </section>
 
-  <!-- Rodapé -->
-  <footer>
-    <p>🍔 Artesanal Blend - Todos os direitos reservados</p>
-  </footer>
+    <footer>
+    <p>🍔 Artesanal Blend - Todos os direitos reservados</p>
+  </footer>
 
-  <!-- Scripts -->
-  <script src="script.js"></script>
+    <script src="script.js"></script>
 
-  <script>
-    // Controle suave de abrir/fechar carrinho
-    document.addEventListener("DOMContentLoaded", () => {
-      const openCartBtn = document.getElementById("openCartBtn");
-      const closeCartBtn = document.getElementById("closeCartBtn");
-      const cart = document.getElementById("cart");
-      const cartCount = document.getElementById("cartCount");
+  <script>
+    // Controle suave de abrir/fechar carrinho
+    document.addEventListener("DOMContentLoaded", () => {
+      const openCartBtn = document.getElementById("openCartBtn");
+      const closeCartBtn = document.getElementById("closeCartBtn");
+      const cart = document.getElementById("cart");
+      const cartCount = document.getElementById("cartCount");
 
-      if (openCartBtn && cart) {
-        openCartBtn.addEventListener("click", () => {
-          cart.classList.add("show");
-        });
-      }
+      if (openCartBtn && cart) {
+        openCartBtn.addEventListener("click", () => {
+          cart.classList.add("show");
+        });
+      }
 
-      if (closeCartBtn && cart) {
-        closeCartBtn.addEventListener("click", () => {
-          cart.classList.remove("show");
-        });
-      }
+      if (closeCartBtn && cart) {
+        closeCartBtn.addEventListener("click", () => {
+          cart.classList.remove("show");
+        });
+      }
 
-      // Atualizar contador do carrinho
-      function atualizarContador() {
-        const totalItens = carrinho?.reduce((acc, item) => acc + item.qtd, 0) || 0;
-        cartCount.textContent = totalItens;
-      }
+      // Atualizar contador do carrinho
+      // Nota: O array 'carrinho' e a função 'renderCarrinho' devem estar definidos em 'script.js'
+      function atualizarContador() {
+        // Usa o array global 'carrinho' do script.js
+        const totalItens = typeof carrinho !== 'undefined' ? carrinho.reduce((acc, item) => acc + item.qtd, 0) : 0;
+        cartCount.textContent = totalItens;
+      }
 
-      // Se o renderCarrinho existir, sobrescreve para atualizar o contador
-      if (typeof renderCarrinho === "function") {
-        const oldRender = renderCarrinho;
-        renderCarrinho = function () {
-          oldRender();
-          atualizarContador();
-        };
-      }
-    });
-  </script>
+      // Se o renderCarrinho existir, sobrescreve para atualizar o contador
+      if (typeof renderCarrinho === "function") {
+        const oldRender = renderCarrinho;
+        renderCarrinho = function () {
+          oldRender();
+          atualizarContador();
+        };
+      }
+    });
+  </script>
 </body>
 </html>
