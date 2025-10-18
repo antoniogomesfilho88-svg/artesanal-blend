@@ -118,7 +118,8 @@ function adicionarAoCarrinho(categoria, nome, preco) {
     
     // Apenas dá um aviso, mas permite adicionar
     if (!clienteNome) {
-       
+        alert('Por favor, preencha seu nome no carrinho antes de adicionar itens.');
+    }
     
     const itemExistente = carrinho.find(item => item.nome === nome);
     
