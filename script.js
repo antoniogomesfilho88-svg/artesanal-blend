@@ -39,7 +39,7 @@ async function carregarCardapio() {
 
                     // ESTRUTURA PARA GRADE DE 2/3 COLUNAS
                     return `
-                        <div class="menu-item">
+                        <div class="menu-item" onclick="openItemModal('${produto.nome}', '${produto.descricao}', ${precoNumerico})">
                             ${imagemUrl ? `<img src="${imagemUrl}" alt="${produto.nome}" />` : ''}
                             
                             <div class="menu-item-text">
@@ -65,6 +65,7 @@ async function carregarCardapio() {
         });
         
         renderCarrinho();
+        // AVISO: Se o problema persistir, verifique a definição de 'openItemModal'
     } catch (error) {
         console.log('⚠️ Erro ao carregar cardápio da API. Tentando fallback local.', error);
         carregarCardapioLocal(); 
@@ -92,7 +93,7 @@ function carregarCardapioLocal() {
 
                         // ESTRUTURA PARA GRADE DE 2/3 COLUNAS
                         return `
-                            <div class="menu-item">
+                            <div class="menu-item" onclick="openItemModal('${produto.nome}', '${produto.descricao}', ${precoNumerico})">
                                 ${imagemUrl ? `<img src="${imagemUrl}" alt="${produto.nome}" />` : ''}
                                 
                                 <div class="menu-item-text">
@@ -914,3 +915,4 @@ input, textarea, select {
     margin-top: 30px;
 }
 ```eof
+
