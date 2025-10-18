@@ -98,12 +98,21 @@ function carregarCardapioLocal() {
                         const nomeEscapado = escaparStringHTML(produto.nome); 
 
                         return `
-                            <div class="menu-item" onclick="adicionarAoCarrinho('${categoria}', '${nomeEscapado}', ${precoNumerico})">
-                                ${imagemUrl ? `<img src="${imagemUrl}" alt="${produto.nome}" />` : ''}
-                                <h3>${produto.nome}</h3>
-                                <p>${produto.descricao || ''}</p>
-                                <span class="price">R$ ${precoFormatado}</span>
-                            </div>
+                            <div class="menu-item">
+    <img ... />
+    
+    <div class="menu-item-text">
+        <div class="menu-item-header">
+            <h3>Nome</h3>
+            <span class="price">Preço</span>
+        </div>
+        <p>Descrição</p>
+    </div>
+    
+    <div class="menu-item-footer">
+        <button class="btn-adicionar">Adicionar</button>
+    </div>
+</div>
                         `;
                     }).join('');
                 }
@@ -331,5 +340,6 @@ window.alterarQuantidade = alterarQuantidade;
 window.atualizarTaxa = atualizarTaxa;
 window.mostrarTroco = mostrarTroco;
 window.finalizarPedido = finalizarPedido;
+
 
 
