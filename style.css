@@ -54,8 +54,8 @@ header {
 }
 
 .header-content img.logo {
-  width: 100px; /* Logo maior e mais presente */
-  height: 100px;
+  width: 150px; /* Logo maior e mais presente */
+  height: 150px;
   border-radius: 50%;
   border: 5px solid var(--red-light); /* Borda em vermelho claro para destaque */
   object-fit: cover;
@@ -491,6 +491,7 @@ iframe {
         gap: 4px; /* Reduz o espaço entre o ícone e o texto */
     }
 }
+
 
 
 
