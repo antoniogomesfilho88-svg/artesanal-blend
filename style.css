@@ -109,24 +109,6 @@ header {
   }
 }
 
-/* Responsivo para celular */
-@media (max-width: 480px) {
-  .header-content {
-    flex-direction: column;
-    text-align: center;
-    gap: 6px;
-  }
-
-  .header-content img.logo {
-    width: 75px;
-    height: 75px;
-  }
-
-  .header-content h1 {
-    font-size: 1.3rem;
-  }
-}
-
 /* ===========================
    SEÇÕES DO CARDÁPIO
 =========================== */
@@ -469,6 +451,23 @@ footer {
     transform: translateY(0);
   }
 }
+/* ===========================
+    CORREÇÃO FINAL DE OVERFLOW/RESPONSIVIDADE (ANTI-ROLO HORIZONTAL)
+=========================== */
+
+/* Essencial: Garante que o elemento raiz (HTML) também esconda qualquer conteúdo que exceda a tela */
+html {
+    overflow-x: hidden;
+}
+
+/* Garante que imagens e outras mídias nunca sejam maiores que 100% do container */
+img,
+video,
+iframe {
+    max-width: 100%;
+    height: auto;
+}
+
 
 
 
