@@ -33,33 +33,80 @@ body {
    CABEÇALHO MODERNO
 =========================== */
 header {
-  background: #111;
-  border-bottom: 2px solid var(--red);
-  padding: 15px 10px;
+  /* Usa a cor do card para dar profundidade e contraste */
+  background: var(--card); /* #2a2a2a */ 
+  border-bottom: 5px solid var(--red); /* Borda mais grossa para impacto */
+  padding: 20px 15px; /* Mais espaço vertical */
   display: flex;
   justify-content: center;
   align-items: center;
+  /* Sombra suave para levantar o cabeçalho, efeito "flutuante" */
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.7); 
+  position: sticky; /* Opcional: mantém o cabeçalho visível ao rolar */
+  top: 0;
+  z-index: 100;
 }
 
 .header-content {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 15px; /* Mais espaço entre logo e texto */
 }
 
 .header-content img.logo {
-  width: 90px;
-  height: 90px;
+  width: 100px; /* Logo maior e mais presente */
+  height: 100px;
   border-radius: 50%;
-  border: 2px solid var(--red);
+  border: 5px solid var(--red-light); /* Borda em vermelho claro para destaque */
   object-fit: cover;
+  /* Sombra na imagem para dar um toque 3D */
+  box-shadow: 0 0 10px var(--red); 
+}
+
+/* NOVO: Container para empilhar o h1 e o slogan */
+.header-text-container {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.1; 
 }
 
 .header-content h1 {
-  font-size: 1.8rem;
-  color: var(--red);
-  font-weight: 600;
-  letter-spacing: 1px;
+  font-size: 2.2rem; /* Título maior e impactante */
+  color: var(--text); /* Branco/Claro para contraste máximo */
+  font-weight: 800; /* Extra-Negrito */
+  letter-spacing: 1.5px;
+  /* Efeito de destaque (sombra) na cor de acento */
+  text-shadow: 2px 2px 0 var(--red); 
+}
+
+/* NOVO: Estilo para o Slogan/Subtítulo */
+.header-content .slogan {
+  font-size: 0.95rem;
+  color: var(--gray);
+  margin-top: 2px;
+  font-weight: 300;
+  font-style: italic;
+  letter-spacing: 0.5px;
+}
+
+/* Responsivo para celular: Ajusta o tamanho no mobile */
+@media (max-width: 480px) {
+  .header-content {
+    flex-direction: column;
+    text-align: center;
+    gap: 8px;
+  }
+
+  .header-content img.logo {
+    width: 80px;
+    height: 80px;
+    border-width: 3px;
+  }
+
+  .header-content h1 {
+    font-size: 1.5rem;
+    text-shadow: 1px 1px 0 var(--red);
+  }
 }
 
 /* Responsivo para celular */
@@ -422,6 +469,7 @@ footer {
     transform: translateY(0);
   }
 }
+
 
 
 
