@@ -468,6 +468,29 @@ iframe {
     height: auto;
 }
 
+/* ===========================
+    AJUSTE DE LAYOUT CELULAR (EVITA SOBREPOSIÇÃO DE PREÇO/BOTÃO)
+=========================== */
+@media (max-width: 400px) { /* Usamos 400px para telas realmente pequenas */
+    
+    .menu-item-footer {
+        padding: 0 4px; /* Adiciona um pequeno padding interno para dar respiro */
+    }
+
+    /* Reduz um pouco o tamanho do preço no celular para dar mais espaço ao botão */
+    .menu-item-footer .price {
+        font-size: 1em; /* Era 1.1rem, agora é 1em (um pouco menor) */
+        /* Garante que o texto do preço não quebre */
+        white-space: nowrap;
+    }
+    
+    /* Reduz um pouco o padding do botão para que ele caiba melhor */
+    .btn-adicionar {
+        padding: 5px 10px; /* Era 6px 12px, agora é 5px 10px (mais compacto) */
+        font-size: 0.75rem; /* Era 0.8rem */
+        gap: 4px; /* Reduz o espaço entre o ícone e o texto */
+    }
+}
 
 
 
