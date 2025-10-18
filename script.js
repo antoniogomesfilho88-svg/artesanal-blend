@@ -157,8 +157,10 @@ function renderCarrinho() {
     const cartCount = document.getElementById('cartCount');
     const checkoutBtn = document.getElementById('checkoutBtn');
     
-    if (!cartItems) return;
-    
+    if (!cartItems) return;cartItems.
+
+     cartItems.setAttribute('data-item-count', carrinho.length);
+        
     const totalItens = carrinho.reduce((acc, item) => acc + item.qtd, 0);
     if (cartCount) cartCount.textContent = totalItens;
     
@@ -357,3 +359,4 @@ window.atualizarTaxa = atualizarTaxa;
 window.finalizarPedido = finalizarPedido;
 window.toggleCart = toggleCart;
 window.mostrarTroco = mostrarTroco;
+
