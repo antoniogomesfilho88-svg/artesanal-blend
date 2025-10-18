@@ -685,26 +685,26 @@ footer {
 }
 
 /* ===========================
-   FAIXAS FIXAS COM DIV SEPARADA
+   FAIXAS NOS TÍTULOS DAS CATEGORIAS
+   (igual na imagem - fundo escuro com borda)
 =========================== */
-.categoria-header {
-  position: sticky;
-  top: 80px;
-  background: var(--card);
-  z-index: 80;
-  border-bottom: 2px solid var(--red);
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+.menu-section h2 {
+  background: #2a2a2a; /* Fundo escuro */
+  color: #e14b4b; /* Cor vermelha */
+  padding: 15px 20px; /* Espaçamento interno */
+  margin: 25px 0 15px 0; /* Espaçamento externo */
+  font-size: 1.4rem; /* Tamanho da fonte */
+  font-weight: 800; /* Negrito */
+  text-transform: uppercase; /* Tudo maiúsculo */
+  border-left: 5px solid #e14b4b; /* Borda lateral vermelha */
+  border-radius: 0 8px 8px 0; /* Cantos arredondados à direita */
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.4); /* Sombra */
+  letter-spacing: 1px; /* Espaçamento entre letras */
 }
 
-.categoria-header h2 {
-  margin: 0;
-  padding: 15px 10px;
-  font-size: 1.3rem;
-  color: var(--red);
-}
-
-.menu-grid {
-  padding: 20px 10px;
+/* Ajuste no espaçamento das seções */
+.menu-section {
+  padding: 10px 0;
 }
 
 
