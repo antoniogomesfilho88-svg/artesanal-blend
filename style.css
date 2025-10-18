@@ -130,9 +130,10 @@ header {
 =========================== */
 .menu-grid {
     display: grid;
-    grid-template-columns: 1fr; /* Apenas 1 coluna no celular */
-    gap: 15px; /* Espaço entre os cards */
-    padding: 0 10px; /* Respiro nas laterais */
+    /* 2 COLUNAS para a maioria dos celulares (até 767px) */
+    grid-template-columns: 1fr 1fr; 
+    gap: 15px;
+    padding: 0 5px; /* Ajusta o padding interno do container */
 }
 
 .menu-item {
@@ -140,72 +141,129 @@ header {
     border-radius: var(--radius);
     padding: 0; 
     display: flex;
-    flex-direction: column; /* Organiza a Imagem, Texto e Botão em coluna */
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2); 
+    flex-direction: column; /* Imagem, Texto e Botão em coluna */
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    height: 100%; /* Garante altura uniforme nas linhas */
+    text-align: left;
 }
 
-/* Imagem Compacta no Topo */
+/* 1. Imagem: Ocupa 100% da largura estreita do card */
 .menu-item img {
     width: 100%;
-    height: 120px; /* Altura controlada, mais compacta */
+    height: 100px; /* Altura controlada, bem compacta */
     object-fit: cover;
     border-radius: var(--radius) var(--radius) 0 0; 
 }
 
-/* Container do Texto (Nome, Preço, Descrição) */
+/* 2. Container do Texto (Nome, Preço, Descrição) */
 .menu-item-text {
-    padding: 10px 12px; 
-    flex-grow: 1; /* Importante para empurrar o rodapé para baixo */
+    padding: 8px; /* Padding reduzido para caber no card estreito */
+    flex-grow: 1; /* Empurra o rodapé para baixo */
 }
 
-/* Título e Preço Lado a Lado (Topo do Texto) */
+/* Título e Preço Lado a Lado */
 .menu-item-header {
     display: flex;
-    justify-content: space-between; /* Separa Título (esquerda) e Preço (direita) */
-    align-items: center;
-    margin-bottom: 4px;
+    justify-content: space-between; 
+    align-items: flex-start;
+    margin-bottom: 2px;
 }
 
 .menu-item h3 {
-    font-size: 1rem;
+    font-size: 0.85rem; /* Título menor para caber */
     margin: 0;
+    line-height: 1.2;
+    /* Garante que o título se ajuste sem quebrar o layout */
+    white-space: normal; 
+    max-height: 2.4em; /* Limita a 2 linhas */
+    overflow: hidden;
+    text-overflow: ellipsis;
     flex-grow: 1;
 }
 
 .menu-item-header .price {
     color: var(--red);
     font-weight: 800;
-    font-size: 1.1rem;
-    margin-left: 8px;
+    font-size: 0.9rem; /* Preço menor */
+    margin-left: 6px;
     flex-shrink: 0;
 }
 
-/* Descrição */
+/* Descrição: Limita a 2 linhas e garante altura mínima */
 .menu-item p {
-    font-size: 0.8rem;
+    font-size: 0.7rem;
     color: var(--gray);
-    margin: 4px 0 8px 0;
-    line-height: 1.3;
+    margin: 4px 0 6px 0;
+    line-height: 1.2;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    min-height: 2.4em; 
 }
 
-/* Rodapé: Contém APENAS o botão (separação total do preço) */
+/* 3. Rodapé: Contém APENAS o botão (largura total) */
 .menu-item-footer {
     display: flex;
     width: 100%;
-    padding: 8px 12px 12px; 
+    padding: 8px; 
     justify-content: center;
     border-radius: 0 0 var(--radius) var(--radius);
+    border-top: 1px solid var(--dark-gray); 
 }
 
 .btn-adicionar {
     width: 100%;
-    max-width: 250px; /* Para não ficar muito grande em tablets */
-    display: flex; 
+    font-size: 0.75rem; /* Botão menor */
+    padding: 6px 0; 
+    line-height: 1;
+    display: flex;
     justify-content: center;
-    font-size: 0.9rem;
-    padding: 8px 0;
+    align-items: center;
 }
 
+/* ===========================
+    AJUSTE PARA DESKTOP/TABLET (3 Colunas)
+=========================== */
+@media (min-width: 768px) {
+    .menu-grid {
+        grid-template-columns: 1fr 1fr 1fr; /* 3 COLUNAS no desktop */
+        gap: 20px;
+        padding: 0; /* Volta o padding para zero, o container já tem */
+    }
+    
+    .menu-item img {
+        height: 140px; /* Imagem um pouco maior */
+    }
+    
+    .menu-item-text {
+        padding: 12px;
+    }
+    
+    .menu-item h3 {
+        font-size: 1rem; 
+        max-height: none; 
+    }
+    
+    .menu-item-header .price {
+        font-size: 1.2rem; 
+    }
+    
+    .menu-item p {
+        font-size: 0.8rem;
+        -webkit-line-clamp: 3; /* Permite 3 linhas no desktop */
+        min-height: 3.6em; 
+    }
+    
+    .menu-item-footer {
+        padding: 12px;
+    }
+    
+    .btn-adicionar {
+        font-size: 0.9rem;
+        padding: 8px 0;
+    }
+}
 /* ===========================
     AJUSTE PARA DESKTOP/TABLET (Voltar para 3 colunas)
 =========================== */
@@ -477,6 +535,7 @@ iframe {
         gap: 4px; /* Reduz o espaço entre o ícone e o texto */
     }
 }
+
 
 
 
