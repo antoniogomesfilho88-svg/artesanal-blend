@@ -671,30 +671,36 @@ footer {
   border: 1px solid #e74c3c;
 }
 /* ===========================
-   FAIXAS DE FUNDO PARA TODAS AS SEÇÕES
+   FAIXAS DE FUNDO PARA OS TÍTULOS DAS SEÇÕES
 =========================== */
 
-/* Aplica a todas as seções do cardápio */
-#cat-Hambúrgueres,
-#cat-Combos, 
-#cat-Acompanhamentos,
-#cat-Adicionais,
-#cat-Bebidas {
+/* Container dos títulos com faixa de fundo */
+.menu-section h2 {
   background: linear-gradient(135deg, #2a1a0f, #3d2515);
-  padding: 20px 15px;
-  margin: 20px -10px;
-  border-radius: 15px;
+  color: #ffd700;
+  padding: 15px 20px;
+  margin: 25px -10px 20px -10px;
+  border-radius: 10px;
   border: 2px solid #d4a017;
   position: relative;
-  box-shadow: 0 5px 20px rgba(212, 160, 23, 0.3);
+  box-shadow: 0 4px 15px rgba(212, 160, 23, 0.3);
+  text-align: center;
+  font-size: 1.3rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
 }
 
-/* Efeito de brilho na borda de todas as seções */
-#cat-Hambúrgueres::before,
-#cat-Combos::before,
-#cat-Acompanhamentos::before,
-#cat-Adicionais::before,
-#cat-Bebidas::before {
+/* Remove o estilo anterior dos títulos */
+.menu-section h2 {
+  border-left: none;
+  padding-left: 20px;
+  -webkit-text-fill-color: #ffd700; /* Corrige o gradiente */
+  text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+}
+
+/* Efeito de brilho nos títulos */
+.menu-section h2::before {
   content: '';
   position: absolute;
   top: -2px;
@@ -702,81 +708,29 @@ footer {
   right: -2px;
   bottom: -2px;
   background: linear-gradient(45deg, #d4a017, #ffd700, #d4a017);
-  border-radius: 16px;
+  border-radius: 12px;
   z-index: -1;
-  opacity: 0.7;
+  opacity: 0.6;
 }
 
-/* Ajusta todos os títulos das seções */
-.menu-section h2 {
-  background: linear-gradient(45deg, #ffd700, #d4a017);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  border-left: 3px solid #d4a017;
-  padding-left: 15px;
-  margin: 25px 0 20px 0;
-  font-size: 1.4rem;
-  text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+/* Mantém os grids sem fundo (como estavam) */
+#cat-Hambúrgueres,
+#cat-Combos, 
+#cat-Acompanhamentos,
+#cat-Adicionais,
+#cat-Bebidas {
+  background: transparent;
+  padding: 0;
+  margin: 0;
+  border: none;
+  box-shadow: none;
 }
 
-/* Ajuste dos cards dentro de todas as faixas */
-#cat-Hambúrgueres .menu-grid > div,
-#cat-Combos .menu-grid > div,
-#cat-Acompanhamentos .menu-grid > div,
-#cat-Adicionais .menu-grid > div,
-#cat-Bebidas .menu-grid > div {
-  background: rgba(255, 255, 255, 0.95);
-  color: #333;
-  border: 1px solid #d4a017;
-  box-shadow: 0 3px 10px rgba(212, 160, 23, 0.2);
+/* Remove os efeitos anteriores dos grids */
+#cat-Hambúrgueres::before,
+#cat-Combos::before,
+#cat-Acompanhamentos::before,
+#cat-Adicionais::before,
+#cat-Bebidas::before {
+  display: none;
 }
-
-#cat-Hambúrgueres .menu-grid > div:hover,
-#cat-Combos .menu-grid > div:hover,
-#cat-Acompanhamentos .menu-grid > div:hover,
-#cat-Adicionais .menu-grid > div:hover,
-#cat-Bebidas .menu-grid > div:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 5px 15px rgba(212, 160, 23, 0.4);
-}
-
-/* Preços em destaque em todas as seções */
-#cat-Hambúrgueres .menu-grid > div > div > span,
-#cat-Combos .menu-grid > div > div > span,
-#cat-Acompanhamentos .menu-grid > div > div > span,
-#cat-Adicionais .menu-grid > div > div > span,
-#cat-Bebidas .menu-grid > div > div > span {
-  color: #c52d2d;
-  font-weight: 800;
-}
-
-/* Botões com cor temática em todas as seções */
-#cat-Hambúrgueres .menu-grid > div > div button,
-#cat-Hambúrgueres .menu-grid > div > div a,
-#cat-Combos .menu-grid > div > div button,
-#cat-Combos .menu-grid > div > div a,
-#cat-Acompanhamentos .menu-grid > div > div button,
-#cat-Acompanhamentos .menu-grid > div > div a,
-#cat-Adicionais .menu-grid > div > div button,
-#cat-Adicionais .menu-grid > div > div a,
-#cat-Bebidas .menu-grid > div > div button,
-#cat-Bebidas .menu-grid > div > div a {
-  background: linear-gradient(45deg, #d4a017, #ffa500);
-  color: #2a1a0f;
-  font-weight: 700;
-}
-
-#cat-Hambúrgueres .menu-grid > div > div button:hover,
-#cat-Hambúrgueres .menu-grid > div > div a:hover,
-#cat-Combos .menu-grid > div > div button:hover,
-#cat-Combos .menu-grid > div > div a:hover,
-#cat-Acompanhamentos .menu-grid > div > div button:hover,
-#cat-Acompanhamentos .menu-grid > div > div a:hover,
-#cat-Adicionais .menu-grid > div > div button:hover,
-#cat-Adicionais .menu-grid > div > div a:hover,
-#cat-Bebidas .menu-grid > div > div button:hover,
-#cat-Bebidas .menu-grid > div > div a:hover {
-  background: linear-gradient(45deg, #ffa500, #ffd700);
-}
-
