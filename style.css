@@ -804,6 +804,80 @@ footer {
   padding: 10px;
 }
 
+/* ===========================
+   VERSÃO OTIMIZADA PARA CELULAR
+=========================== */
+@media (max-width: 600px) {
+
+  /* Carrinho ocupa quase toda a tela */
+  .cart {
+    height: 100vh;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    border-radius: 15px 15px 0 0;
+    padding-bottom: 80px; /* espaço pro botão fixo */
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Itens ocupam o espaço principal */
+  .cart-items {
+    flex: 1;
+    overflow-y: auto;
+    min-height: 250px;
+    margin-bottom: 10px;
+    scroll-behavior: smooth;
+  }
+
+  /* Área do cliente fica abaixo dos itens */
+  .cliente-info {
+    background: #1f1f1f;
+    border-radius: 10px;
+    padding: 12px;
+    margin-top: 10px;
+  }
+
+  /* Botão de envio fixo na parte inferior */
+  #checkoutBtn {
+    position: fixed;
+    bottom: 15px;
+    left: 10px;
+    right: 10px;
+    width: calc(100% - 20px);
+    z-index: 500;
+    border-radius: 12px;
+    padding: 15px;
+    font-size: 1rem;
+    background: var(--red);
+    color: white;
+    font-weight: 700;
+    text-transform: uppercase;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+  }
+
+  #checkoutBtn:hover {
+    background: var(--red-light);
+  }
+
+  /* Reduz a altura do cabeçalho e título dentro do carrinho */
+  .cart-header h3 {
+    font-size: 1.1rem;
+  }
+
+  .cart-header {
+    padding-bottom: 5px;
+    margin-bottom: 10px;
+  }
+
+  /* Ajuste geral de espaçamento interno */
+  .cart-total-container {
+    margin-bottom: 5px;
+  }
+
+}
+
+
 
 
 
