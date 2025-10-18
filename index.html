@@ -45,25 +45,43 @@
   <section id="cart" class="cart">
     <div class="cart-header">
       <h3>🛒 Seu Pedido</h3>
-      <button id="closeCartBtn" class="btn close-cart">✖ Fechar</button>
+      <button id="closeCartBtn" class="btn close-cart">✖</button>
     </div>
 
     <div id="cart-items" class="cart-items">
       </div>
 
-    <div id="cart-total" class="cart-total-container">
-      Total: <span id="cart-total-value">R$ 0,00</span>
+    <div class="pedido-resumo">
+        <p>Sub-total:</p>
+        <span id="subTotalDisplay">R$ 0,00</span>
+        
+        <p>Taxa de entrega:</p>
+        <span id="taxaEntregaDisplay">R$ 0,00</span>
+        
+        <p class="total-linha">Total:</p>
+        <span id="cart-total" class="total-linha total-value">R$ 0,00</span>
     </div>
 
     <div class="cliente-info">
-      <h4>🧾 Informações do Cliente</h4>
+      
+      <textarea id="obsCliente" rows="2" placeholder="Observações do pedido (Opcional)"></textarea>
 
-      <input type="text" id="clienteNome" placeholder="Nome completo" />
-      <input type="text" id="clienteTelefone" placeholder="Telefone (WhatsApp)" />
-      <input type="text" id="clienteEndereco" placeholder="Endereço para entrega" />
+      <input type="text" id="clienteNome" placeholder="Seu nome completo (Obrigatório)" />
+      
+      <input type="text" id="clienteTelefone" placeholder="Seu Telefone (WhatsApp - Obrigatório)" />
+      
+      <input type="text" id="clienteEndereco" placeholder="Seu endereço completo (Obrigatório para Entrega)" />
 
+      <select id="pagamento" onchange="mostrarTroco()">
+        <option value="">Método de Pagamento (Pix, Cartão, Dinheiro...)</option>
+        <option value="Pix">Pix</option>
+        <option value="Cartão de Crédito">Cartão de Crédito</option>
+        <option value="Cartão de Débito">Cartão de Débito</option>
+        <option value="Dinheiro">Dinheiro</option>
+      </select>
+      
       <select id="clienteRegiao" onchange="atualizarTaxa()">
-        <option value="">Selecione sua região</option>
+        <option value="">Selecione sua região (Para calcular a taxa de entrega)</option>
         <option value="Jardim Canadá">Jardim Canadá - R$ 6,00</option>
         <option value="Retiro das Pedras">Retiro das Pedras - R$ 10,00</option>
         <option value="Serra do Manacás">Serra do Manacás - R$ 10,00</option>
@@ -71,26 +89,16 @@
         <option value="Alphaville">Alphaville - R$ 15,00</option>
       </select>
 
-      <label for="pagamento">💳 Forma de Pagamento:</label>
-      <select id="pagamento" onchange="mostrarTroco()">
-        <option value="">Selecione</option>
-        <option value="Pix">Pix</option>
-        <option value="Cartão de Crédito">Cartão de Crédito</option>
-        <option value="Cartão de Débito">Cartão de Débito</option>
-        <option value="Dinheiro">Dinheiro</option>
-      </select>
-
       <div id="campoTroco" style="display: none">
         <input type="number" id="troco" placeholder="Troco para quanto?" />
       </div>
-
-      <textarea id="obsCliente" rows="2" placeholder="Observações (ex: tirar cebola, ponto da carne...)"></textarea>
     </div>
 
-    <button id="checkoutBtn" class="btn primary" disabled>📩 Enviar pedido pelo WhatsApp</button>
+    <button id="checkoutBtn" class="btn primary" disabled>
+        <i class="fa-brands fa-whatsapp"></i> Enviar pedido pelo WhatsApp
+    </button>
     <small class="muted">O pedido será enviado para: <strong>(31) 99212-8891</strong></small>
   </section>
-
   <footer>
     <p>🍔 Artesanal Blend - Todos os direitos reservados</p>
   </footer>
@@ -136,3 +144,4 @@
   </script>
 </body>
 </html>
+
