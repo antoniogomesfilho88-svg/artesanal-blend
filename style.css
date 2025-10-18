@@ -677,13 +677,13 @@ footer {
 /* Container dos títulos com faixa de fundo */
 .menu-section h2 {
   background: linear-gradient(135deg, #2a1a0f, #3d2515);
-  color: #ffd700;
+  color: #ffffff; /* NOME BRANCO */
   padding: 15px 20px;
   margin: 25px -10px 20px -10px;
   border-radius: 10px;
-  border: 2px solid #d4a017;
+  border: 2px solid #e14b4b; /* BORDA VERMELHA SUAVE */
   position: relative;
-  box-shadow: 0 4px 15px rgba(212, 160, 23, 0.3);
+  box-shadow: 0 4px 15px rgba(225, 75, 75, 0.3); /* Sombra vermelha suave */
   text-align: center;
   font-size: 1.3rem;
   font-weight: 700;
@@ -695,11 +695,11 @@ footer {
 .menu-section h2 {
   border-left: none;
   padding-left: 20px;
-  -webkit-text-fill-color: #ffd700; /* Corrige o gradiente */
+  -webkit-text-fill-color: #ffffff; /* Garante texto branco */
   text-shadow: 0 2px 4px rgba(0,0,0,0.5);
 }
 
-/* Efeito de brilho nos títulos */
+/* Efeito de brilho nos títulos com vermelho */
 .menu-section h2::before {
   content: '';
   position: absolute;
@@ -707,10 +707,10 @@ footer {
   left: -2px;
   right: -2px;
   bottom: -2px;
-  background: linear-gradient(45deg, #d4a017, #ffd700, #d4a017);
+  background: linear-gradient(45deg, #e14b4b, #ff6d6d, #e14b4b); /* Gradiente vermelho */
   border-radius: 12px;
   z-index: -1;
-  opacity: 0.6;
+  opacity: 0.4; /* Mais suave */
 }
 
 /* Mantém os grids sem fundo (como estavam) */
