@@ -721,4 +721,119 @@ footer {
     color: #e74c3c;
     border: 1px solid #e74c3c;
 }
+/* ==================================================
+    AJUSTES PARA O MODELO VISUAL - RESUMO E FORMULÁRIO
+================================================== */
+
+/* --- 1. Resumo do Pedido (Sub-total, Taxa, Total) --- */
+.pedido-resumo {
+    display: grid;
+    grid-template-columns: 1fr auto; /* Texto à esquerda, valor à direita */
+    gap: 8px 15px; /* Espaçamento entre linhas e colunas */
+    padding: 10px 15px;
+    margin-bottom: 15px;
+    border-bottom: 1px solid #3d3d3d; /* Linha divisória */
+    font-size: 1rem;
+    color: var(--gray);
+}
+
+.pedido-resumo p {
+    text-align: left;
+    margin: 0;
+    font-weight: 500;
+}
+
+.pedido-resumo span {
+    text-align: right;
+    font-weight: 600;
+    color: var(--text);
+}
+
+/* Estilo para a Linha Total */
+.pedido-resumo .total-linha {
+    font-weight: 800;
+    color: var(--red); /* Cor do total diferente */
+    font-size: 1.2rem;
+    padding-top: 5px;
+    border-top: 1px dashed #3d3d3d;
+}
+
+.pedido-resumo .total-value {
+    font-size: 1.2rem;
+    color: var(--red);
+    font-weight: 900;
+}
+
+/* --- 2. Formulário do Cliente (Limpeza de Fundo e Borda) --- */
+.cliente-info {
+    background: transparent; /* Fundo transparente (como no modelo) */
+    padding: 0 15px; /* Ajusta o padding para alinhamento */
+    border-radius: 0; /* Remove a borda arredondada */
+    margin-top: 0;
+}
+
+.cliente-info h4 {
+    display: none; /* Remove o título "Informações do Cliente" para o visual limpo */
+}
+
+.cliente-info input,
+.cliente-info select,
+.cliente-info textarea {
+    /* Estilos para parecerem "Embutidos" no fundo escuro */
+    background: #444444; /* Fundo mais escuro para os campos */
+    border: none;
+    border-radius: 5px;
+    padding: 12px; /* Aumenta o padding para serem mais visíveis */
+    margin: 10px 0;
+    font-size: 0.95rem;
+    color: var(--text);
+}
+
+.cliente-info textarea {
+    height: 50px; /* Mais baixo para caber no visual */
+    margin-bottom: 15px;
+}
+
+.cliente-info select {
+    /* Garante que o placeholder da seleção seja mais escuro antes de selecionar */
+    color: var(--gray);
+}
+
+.cliente-info select option:not(:first-child) {
+    color: var(--text);
+}
+
+
+/* --- 3. Botão de Checkout (Enfatizado) --- */
+#checkoutBtn {
+    background: #e14b4b; /* Cor primária */
+    color: white;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
+}
+
+#checkoutBtn:hover {
+    background: var(--red-light);
+}
+
+#checkoutBtn i {
+    margin-right: 8px; /* Espaçamento do ícone */
+}
+
+/* --- 4. Ajustes Finais no Carrinho --- */
+.cart-header {
+    border-bottom: none; /* Remove a linha do cabeçalho */
+    padding-bottom: 0;
+}
+
+.close-cart {
+    font-size: 1.2rem !important;
+    padding: 0 5px !important;
+}
+
+/* Ajuste na Linha do Cliente (Se seu JS gera essa linha) */
+.muted {
+    text-align: center;
+    display: block;
+    padding-top: 5px;
+}
 
