@@ -130,107 +130,93 @@ header {
 =========================== */
 .menu-grid {
     display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 8px;
+    grid-template-columns: 1fr; /* Apenas 1 coluna no celular */
+    gap: 15px; /* Espaço entre os cards */
+    padding: 0 10px; /* Respiro nas laterais */
 }
 
 .menu-item {
     background: var(--card);
     border-radius: var(--radius);
-    padding: 8px;
+    padding: 0; 
     display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    transition: transform 0.2s;
-    /* Remove a necessidade de cursor: pointer aqui, já que só o botão será clicável */
+    flex-direction: column; /* Organiza a Imagem, Texto e Botão em coluna */
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2); 
 }
 
-.menu-item:hover {
-    transform: scale(1.02);
-}
-
+/* Imagem Compacta no Topo */
 .menu-item img {
     width: 100%;
-    height: 100px;
+    height: 120px; /* Altura controlada, mais compacta */
     object-fit: cover;
-    border-radius: var(--radius);
+    border-radius: var(--radius) var(--radius) 0 0; 
+}
+
+/* Container do Texto (Nome, Preço, Descrição) */
+.menu-item-text {
+    padding: 10px 12px; 
+    flex-grow: 1; /* Importante para empurrar o rodapé para baixo */
+}
+
+/* Título e Preço Lado a Lado (Topo do Texto) */
+.menu-item-header {
+    display: flex;
+    justify-content: space-between; /* Separa Título (esquerda) e Preço (direita) */
+    align-items: center;
+    margin-bottom: 4px;
 }
 
 .menu-item h3 {
-    font-size: 0.9rem;
-    margin-top: 6px;
-    font-weight: 600;
+    font-size: 1rem;
+    margin: 0;
+    flex-grow: 1;
 }
 
+.menu-item-header .price {
+    color: var(--red);
+    font-weight: 800;
+    font-size: 1.1rem;
+    margin-left: 8px;
+    flex-shrink: 0;
+}
+
+/* Descrição */
 .menu-item p {
-    font-size: 0.75rem;
+    font-size: 0.8rem;
     color: var(--gray);
-    margin: 4px 0;
-    flex-grow: 1; /* Garante que todos os itens tenham altura uniforme */
+    margin: 4px 0 8px 0;
+    line-height: 1.3;
 }
 
-/* NOVO: ESTRUTURA PARA ALINHAR PREÇO E BOTÃO */
+/* Rodapé: Contém APENAS o botão (separação total do preço) */
 .menu-item-footer {
     display: flex;
-    justify-content: space-between;
-    align-items: center;
     width: 100%;
-    margin-top: 12px;
+    padding: 8px 12px 12px; 
+    justify-content: center;
+    border-radius: 0 0 var(--radius) var(--radius);
 }
 
-/* NOVO: PREÇO COM MAIS DESTAQUE */
-.menu-item-footer .price {
-    color: var(--red); /* Usa o vermelho do tema */
-    font-weight: 800;
-    font-size: 1.1rem; /* Maior e mais visível */
-}
-
-/* NOVO: ESTILO DO BOTÃO "ADICIONAR" */
 .btn-adicionar {
-    /* Cores e Fundo */
-    background-color: var(--red); 
-    color: var(--text);
-    
-    /* Layout */
-    display: inline-flex;
-    align-items: center;
-    gap: 6px; /* Espaço entre o ícone e o texto */
-    
-    /* Tipografia e Formato */
-    font-size: 0.8rem;
-    font-weight: 700; 
-    text-transform: uppercase;
-    padding: 6px 12px;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    
-    /* Efeitos Visuais */
-    box-shadow: 0 3px 5px rgba(0, 0, 0, 0.4); /* Sombra para profundidade */
-    transition: background-color 0.2s ease, transform 0.1s ease, box-shadow 0.2s ease;
+    width: 100%;
+    max-width: 250px; /* Para não ficar muito grande em tablets */
+    display: flex; 
+    justify-content: center;
+    font-size: 0.9rem;
+    padding: 8px 0;
 }
 
-/* Efeito ao Passar o Mouse (Hover) */
-.btn-adicionar:hover {
-    background-color: var(--red-light);
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.5); 
-}
-
-/* Efeito ao Clicar (Active) */
-.btn-adicionar:active {
-    background-color: #c0392b; /* Vermelho um pouco mais escuro */
-    transform: translateY(1px); 
-    box-shadow: 0 2px 3px rgba(0, 0, 0, 0.3);
-}
-
+/* ===========================
+    AJUSTE PARA DESKTOP/TABLET (Voltar para 3 colunas)
+=========================== */
 @media (min-width: 768px) {
-    /* ... outros estilos de mídia aqui ... */
-    .menu-item-footer {
-        margin-top: 15px;
+    .menu-grid {
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 20px;
+        padding: 0 20px;
     }
-    .btn-adicionar {
-        font-size: 0.9rem;
-        padding: 8px 15px;
+    .menu-item img {
+        height: 140px; /* Imagem um pouco maior */
     }
 }
 /* ===========================
@@ -491,6 +477,7 @@ iframe {
         gap: 4px; /* Reduz o espaço entre o ícone e o texto */
     }
 }
+
 
 
 
