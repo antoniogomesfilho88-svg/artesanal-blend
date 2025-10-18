@@ -57,16 +57,16 @@ async function carregarCardapio() {
             }
         });
         
-       function renderCarrinho() {
+      function renderCarrinho() {
     const cartItems = document.getElementById('cart-items');
-    const totalDisplay = document.getElementById('cart-total'); // Corrigido para o ID real
-    const cartCount = document.getElementById('cartCount'); // Corrigido para o ID real
+    const totalDisplay = document.getElementById('cart-total');
+    const cartCount = document.getElementById('cartCount');
     const checkoutBtn = document.getElementById('checkoutBtn');
     
     if (!cartItems) return;
     
     const totalItens = carrinho.reduce((acc, item) => acc + item.qtd, 0);
-    if (cartCount) cartCount.textContent = totalItens; // Corrigido para textContent
+    if (cartCount) cartCount.textContent = totalItens;
     
     cartItems.innerHTML = carrinho.map((item, index) => {
         const totalItem = ((item.preco || 0) * item.qtd).toFixed(2);
@@ -74,7 +74,7 @@ async function carregarCardapio() {
         return `
             <div class="cart-item">
                 <div class="cart-item-info">
-                    <div class="cart-item-nome">${item.nome}</div>
+                    <div class="cart-item-nome">${item.qtd}x ${item.nome}</div>
                     <div class="cart-item-preco">R$ ${totalItem}</div>
                 </div>
                 <div class="cart-item-controles">
@@ -392,5 +392,6 @@ window.alterarQuantidade = alterarQuantidade;
 window.atualizarTaxa = atualizarTaxa;
 window.finalizarPedido = finalizarPedido;
 window.toggleCart = toggleCart;
+
 
 
