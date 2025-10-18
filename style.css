@@ -100,70 +100,110 @@ header {
    ITENS DO CARDÁPIO
 =========================== */
 .menu-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
 }
 
 .menu-item {
-  background: var(--card);
-  border-radius: var(--radius);
-  padding: 8px;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  transition: transform 0.2s;
+    background: var(--card);
+    border-radius: var(--radius);
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    transition: transform 0.2s;
+    /* Remove a necessidade de cursor: pointer aqui, já que só o botão será clicável */
 }
 
 .menu-item:hover {
-  transform: scale(1.02);
+    transform: scale(1.02);
 }
 
 .menu-item img {
-  width: 100%;
-  height: 100px;
-  object-fit: cover;
-  border-radius: var(--radius);
+    width: 100%;
+    height: 100px;
+    object-fit: cover;
+    border-radius: var(--radius);
 }
 
 .menu-item h3 {
-  font-size: 0.9rem;
-  margin-top: 6px;
+    font-size: 0.9rem;
+    margin-top: 6px;
+    font-weight: 600;
 }
 
 .menu-item p {
-  font-size: 0.75rem;
-  color: var(--gray);
-  margin: 4px 0;
+    font-size: 0.75rem;
+    color: var(--gray);
+    margin: 4px 0;
+    flex-grow: 1; /* Garante que todos os itens tenham altura uniforme */
 }
 
-.price-line {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+/* NOVO: ESTRUTURA PARA ALINHAR PREÇO E BOTÃO */
+.menu-item-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    margin-top: 12px;
 }
 
-.price {
-  color: var(--red);
-  font-weight: bold;
-  font-size: 0.85rem;
+/* NOVO: PREÇO COM MAIS DESTAQUE */
+.menu-item-footer .price {
+    color: var(--red); /* Usa o vermelho do tema */
+    font-weight: 800;
+    font-size: 1.1rem; /* Maior e mais visível */
 }
 
-.add-btn {
-  background: var(--red);
-  border: none;
-  border-radius: 6px;
-  color: #fff;
-  font-size: 0.9rem;
-  width: 28px;
-  height: 28px;
-  cursor: pointer;
+/* NOVO: ESTILO DO BOTÃO "ADICIONAR" */
+.btn-adicionar {
+    /* Cores e Fundo */
+    background-color: var(--red); 
+    color: var(--text);
+    
+    /* Layout */
+    display: inline-flex;
+    align-items: center;
+    gap: 6px; /* Espaço entre o ícone e o texto */
+    
+    /* Tipografia e Formato */
+    font-size: 0.8rem;
+    font-weight: 700; 
+    text-transform: uppercase;
+    padding: 6px 12px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    
+    /* Efeitos Visuais */
+    box-shadow: 0 3px 5px rgba(0, 0, 0, 0.4); /* Sombra para profundidade */
+    transition: background-color 0.2s ease, transform 0.1s ease, box-shadow 0.2s ease;
 }
 
-.add-btn:hover {
-  background: var(--red-light);
+/* Efeito ao Passar o Mouse (Hover) */
+.btn-adicionar:hover {
+    background-color: var(--red-light);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.5); 
 }
 
+/* Efeito ao Clicar (Active) */
+.btn-adicionar:active {
+    background-color: #c0392b; /* Vermelho um pouco mais escuro */
+    transform: translateY(1px); 
+    box-shadow: 0 2px 3px rgba(0, 0, 0, 0.3);
+}
+
+@media (min-width: 768px) {
+    /* ... outros estilos de mídia aqui ... */
+    .menu-item-footer {
+        margin-top: 15px;
+    }
+    .btn-adicionar {
+        font-size: 0.9rem;
+        padding: 8px 15px;
+    }
+}
 /* ===========================
    CARRINHO (MOBILE FIRST + ANIMAÇÃO)
 =========================== */
@@ -382,6 +422,7 @@ footer {
     transform: translateY(0);
   }
 }
+
 
 
 
