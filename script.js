@@ -57,67 +57,13 @@ async function carregarCardapio() {
             }
         });
         
-      function renderCarrinho() {
-    const cartItems = document.getElementById('cart-items');
-    const totalDisplay = document.getElementById('cart-total');
-    const cartCount = document.getElementById('cartCount');
-    const checkoutBtn = document.getElementById('checkoutBtn');
-    
-    if (!cartItems) return;
-    
-    const totalItens = carrinho.reduce((acc, item) => acc + item.qtd, 0);
-    if (cartCount) cartCount.textContent = totalItens;
-    
-    cartItems.innerHTML = carrinho.map((item, index) => {
-        const totalItem = ((item.preco || 0) * item.qtd).toFixed(2);
-
-        return `
-            <div class="cart-item">
-                <div class="cart-item-info">
-                    <div class="cart-item-nome">${item.qtd}x ${item.nome}</div>
-                    <div class="cart-item-preco">R$ ${totalItem}</div>
-                </div>
-                <div class="cart-item-controles">
-                    <button onclick="alterarQuantidade(${index}, -1)">−</button>
-                    <span class="cart-item-quantidade">${item.qtd}</span>
-                    <button onclick="alterarQuantidade(${index}, 1)">+</button>
-                    <button onclick="removerDoCarrinho(${index})">🗑️</button>
-                </div>
-            </div>
-        `;
-    }).join('');
-
-    if (carrinho.length === 0) {
-        cartItems.innerHTML = '<div class="muted" style="text-align: center;">Carrinho vazio</div>';
-    }
-    
-    const subtotal = carrinho.reduce((acc, item) => acc + ((item.preco || 0) * item.qtd), 0);
-    
-    const regionSelect = document.getElementById('clienteRegiao');
-    const selectedOption = regionSelect ? regionSelect.options[regionSelect.selectedIndex] : null;
-    
-    // Calcula a taxa baseada no valor do option
-    let taxa = 0;
-    if (selectedOption) {
-        const optionText = selectedOption.text;
-        if (optionText.includes('R$')) {
-            const match = optionText.match(/R\$\s*(\d+[,.]?\d*)/);
-            if (match) {
-                taxa = parseFloat(match[1].replace(',', '.')) || 0;
-            }
-        }
-    }
-    
-    const totalComTaxa = subtotal + taxa;
-    
-    if (totalDisplay) {
-        totalDisplay.textContent = `Total: R$ ${totalComTaxa.toFixed(2).replace('.', ',')}`;
-    }
-
-    if (checkoutBtn) {
-        checkoutBtn.disabled = carrinho.length === 0;
+        renderCarrinho();
+    } catch (error) {
+        console.log('⚠️ Erro ao carregar cardápio da API. Tentando fallback local.', error);
+        carregarCardapioLocal(); 
     }
 }
+
 // Fallback para o menu.json local
 function carregarCardapioLocal() {
     fetch('menu.json')
@@ -168,6 +114,12 @@ function carregarCardapioLocal() {
 
 // ===== FUNÇÕES DO CARRINHO =====
 function adicionarAoCarrinho(categoria, nome, preco) {
+    const clienteNome = document.getElementById('customerName')?.value;
+    
+    // Apenas dá um aviso, mas permite adicionar
+    if (!clienteNome) {
+       
+    
     const itemExistente = carrinho.find(item => item.nome === nome);
     
     if (itemExistente) {
@@ -392,6 +344,3 @@ window.alterarQuantidade = alterarQuantidade;
 window.atualizarTaxa = atualizarTaxa;
 window.finalizarPedido = finalizarPedido;
 window.toggleCart = toggleCart;
-
-
-
