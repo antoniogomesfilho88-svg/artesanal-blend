@@ -32,6 +32,7 @@ async function carregarCardapio() {
                     const imagemUrl = produto.imagem || '';
                     const nomeEscapado = escaparStringHTML(produto.nome); 
 
+                    // ESTRUTURA PARA GRADE DE 2/3 COLUNAS (ONDE O BOTÃO É O ÚNICO INTERAGÍVEL)
                     return `
                         <div class="menu-item">
                             ${imagemUrl ? `<img src="${imagemUrl}" alt="${produto.nome}" />` : ''}
@@ -82,6 +83,7 @@ function carregarCardapioLocal() {
                         const imagemUrl = produto.imagem || '';
                         const nomeEscapado = escaparStringHTML(produto.nome); 
 
+                        // ESTRUTURA PARA GRADE DE 2/3 COLUNAS
                         return `
                             <div class="menu-item">
                                 ${imagemUrl ? `<img src="${imagemUrl}" alt="${produto.nome}" />` : ''}
@@ -112,6 +114,13 @@ function carregarCardapioLocal() {
 
 // ===== FUNÇÕES DO CARRINHO =====
 function adicionarAoCarrinho(categoria, nome, preco) {
+    const clienteNome = document.getElementById('customerName')?.value;
+    
+    // Apenas dá um aviso, mas permite adicionar
+    if (!clienteNome) {
+        alert('Por favor, preencha seu nome no carrinho antes de adicionar itens.');
+    }
+    
     const itemExistente = carrinho.find(item => item.nome === nome);
     
     if (itemExistente) {
@@ -153,31 +162,30 @@ function salvarCarrinho() {
 
 function renderCarrinho() {
     const cartItems = document.getElementById('cart-items');
-    const totalDisplay = document.getElementById('cart-total');
-    const cartCount = document.getElementById('cartCount');
+    const subtotalDisplay = document.getElementById('subtotal');
+    const feeDisplay = document.getElementById('fee');
+    const totalDisplay = document.getElementById('total');
+    const cartCount = document.getElementById('cartToggle');
     const checkoutBtn = document.getElementById('checkoutBtn');
     
-    if (!cartItems) return;cartItems.
-
-     cartItems.setAttribute('data-item-count', carrinho.length);
-        
+    if (!cartItems) return;
+    
     const totalItens = carrinho.reduce((acc, item) => acc + item.qtd, 0);
-    if (cartCount) cartCount.textContent = totalItens;
+    if (cartCount) cartCount.setAttribute('data-count', totalItens);
     
     cartItems.innerHTML = carrinho.map((item, index) => {
         const totalItem = ((item.preco || 0) * item.qtd).toFixed(2);
 
         return `
             <div class="cart-item">
-                <div class="cart-item-info">
-                    <div class="cart-item-nome">${item.qtd}x ${item.nome}</div>
-                    <div class="cart-item-preco">R$ ${totalItem}</div>
+                <div class="item-info">
+                    <strong>${item.qtd}x ${item.nome}</strong>
+                    <span>R$ ${totalItem}</span>
                 </div>
-                <div class="cart-item-controles">
+                <div class="item-controls">
                     <button onclick="alterarQuantidade(${index}, -1)">−</button>
-                    <span class="cart-item-quantidade">${item.qtd}</span>
                     <button onclick="alterarQuantidade(${index}, 1)">+</button>
-                    <button onclick="removerDoCarrinho(${index})">🗑️</button>
+                    <button onclick="removerDoCarrinho(${index})" class="remove">🗑️</button>
                 </div>
             </div>
         `;
@@ -189,25 +197,15 @@ function renderCarrinho() {
     
     const subtotal = carrinho.reduce((acc, item) => acc + ((item.preco || 0) * item.qtd), 0);
     
-    const regionSelect = document.getElementById('clienteRegiao');
+    const regionSelect = document.getElementById('region');
     const selectedOption = regionSelect ? regionSelect.options[regionSelect.selectedIndex] : null;
-    
-    let taxa = 0;
-    if (selectedOption) {
-        const optionText = selectedOption.text;
-        if (optionText.includes('R$')) {
-            const match = optionText.match(/R\$\s*(\d+[,.]?\d*)/);
-            if (match) {
-                taxa = parseFloat(match[1].replace(',', '.')) || 0;
-            }
-        }
-    }
+    const taxa = selectedOption ? parseFloat(selectedOption.getAttribute('data-fee')) || 0 : 0;
     
     const totalComTaxa = subtotal + taxa;
     
-    if (totalDisplay) {
-        totalDisplay.textContent = `Total: R$ ${totalComTaxa.toFixed(2).replace('.', ',')}`;
-    }
+    if (subtotalDisplay) subtotalDisplay.textContent = `R$ ${subtotal.toFixed(2)}`;
+    if (feeDisplay) feeDisplay.textContent = `R$ ${taxa.toFixed(2)}`;
+    if (totalDisplay) totalDisplay.textContent = `R$ ${totalComTaxa.toFixed(2)}`;
 
     if (checkoutBtn) {
         checkoutBtn.disabled = carrinho.length === 0;
@@ -226,13 +224,13 @@ function toggleCart() {
 }
 
 function finalizarPedido() {
-    const clienteNome = document.getElementById('clienteNome').value;
-    const clienteTelefone = document.getElementById('clienteTelefone').value;
-    const clienteEndereco = document.getElementById('clienteEndereco').value;
-    const clienteRegiaoSelect = document.getElementById('clienteRegiao');
+    const clienteNome = document.getElementById('customerName').value;
+    const clienteTelefone = document.getElementById('customerPhone').value;
+    const clienteEndereco = document.getElementById('customerAddress').value;
+    const clienteRegiaoSelect = document.getElementById('region');
     const clienteRegiao = clienteRegiaoSelect.options[clienteRegiaoSelect.selectedIndex].text;
-    const pagamento = document.getElementById('pagamento').value;
-    const obsCliente = document.getElementById('obsCliente').value;
+    const pagamento = document.getElementById('customerPayment').value;
+    const obsCliente = document.getElementById('customerObs').value;
     
     const showMessage = (message, isError = true) => {
         const msgDiv = document.createElement('div');
@@ -310,11 +308,11 @@ function finalizarPedido() {
     renderCarrinho();
     toggleCart();
     
-    document.getElementById('clienteNome').value = '';
-    document.getElementById('clienteTelefone').value = '';
-    document.getElementById('clienteEndereco').value = '';
-    document.getElementById('pagamento').value = '';
-    document.getElementById('obsCliente').value = '';
+    document.getElementById('customerName').value = '';
+    document.getElementById('customerPhone').value = '';
+    document.getElementById('customerAddress').value = '';
+    document.getElementById('customerPayment').value = '';
+    document.getElementById('customerObs').value = '';
 }
 
 async function salvarPedidoNoBanco(pedidoData) {
@@ -329,27 +327,16 @@ async function salvarPedidoNoBanco(pedidoData) {
     }
 }
 
-function mostrarTroco() {
-    const pagamento = document.getElementById('pagamento').value;
-    const campoTroco = document.getElementById('campoTroco');
-    
-    if (pagamento === 'Dinheiro') {
-        campoTroco.style.display = 'block';
-    } else {
-        campoTroco.style.display = 'none';
-    }
-}
-
 // ===== INICIALIZAÇÃO E EVENT LISTENERS =====
 document.addEventListener('DOMContentLoaded', () => {
     carregarCardapio();
     renderCarrinho();
     
     document.getElementById('checkoutBtn')?.addEventListener('click', finalizarPedido);
-    document.getElementById('clienteRegiao')?.addEventListener('change', atualizarTaxa);
-    document.getElementById('pagamento')?.addEventListener('change', mostrarTroco);
-    document.getElementById('openCartBtn')?.addEventListener('click', toggleCart);
+    document.getElementById('region')?.addEventListener('change', atualizarTaxa);
+    document.getElementById('cartToggle')?.addEventListener('click', toggleCart);
     document.getElementById('closeCartBtn')?.addEventListener('click', toggleCart);
+    document.getElementById('overlay')?.addEventListener('click', toggleCart);
 });
 
 window.adicionarAoCarrinho = adicionarAoCarrinho;
@@ -358,5 +345,3 @@ window.alterarQuantidade = alterarQuantidade;
 window.atualizarTaxa = atualizarTaxa;
 window.finalizarPedido = finalizarPedido;
 window.toggleCart = toggleCart;
-window.mostrarTroco = mostrarTroco;
-
