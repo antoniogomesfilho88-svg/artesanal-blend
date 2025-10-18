@@ -42,21 +42,26 @@ async function carregarCardapio() {
                     // CORREÇÃO: Escapa o nome do produto para evitar quebras no onclick
                     const nomeEscapado = escaparStringHTML(produto.nome); 
 
-                    return `
-                        <div class="menu-item"> 
+                   return `
+    <div class="menu-item">
         ${imagemUrl ? `<img src="${imagemUrl}" alt="${produto.nome}" />` : ''}
-        <h3>${produto.nome}</h3>
-        <p>${produto.descricao || ''}</p>
+        
+        <div class="menu-item-text">
+            
+            <div class="menu-item-header">
+                <h3>${produto.nome}</h3>
+                <span class="price">R$ ${precoFormatado}</span>
+            </div>
+            
+            <p>${produto.descricao || ''}</p>
+        </div>
         
         <div class="menu-item-footer">
-            <span class="price">R$ ${precoFormatado}</span>
-            
             <button class="btn-adicionar" 
                     onclick="adicionarAoCarrinho('${categoria}', '${nomeEscapado}', ${precoNumerico}); event.stopPropagation();"> 
                 ➕ Adicionar
             </button> 
         </div>
-        
     </div>
 `;
                 }).join('');
@@ -326,4 +331,5 @@ window.alterarQuantidade = alterarQuantidade;
 window.atualizarTaxa = atualizarTaxa;
 window.mostrarTroco = mostrarTroco;
 window.finalizarPedido = finalizarPedido;
+
 
