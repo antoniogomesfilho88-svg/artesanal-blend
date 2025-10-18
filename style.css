@@ -34,7 +34,7 @@ body {
   color: var(--text);
   overflow-x: hidden;
   line-height: 1.5;
-  padding-bottom: 70px;
+  padding-bottom: 70px; /* Espaço para o botão do carrinho */
 }
 
 /* ===========================
@@ -109,15 +109,16 @@ header {
 }
 
 /* ===========================
-   ITENS DO CARDÁPIO
+   ITENS DO CARDÁPIO - 2 COLUNAS NO MOBILE
 =========================== */
 .menu-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr 1fr; /* 2 colunas no mobile */
   gap: 12px;
   padding: 0 8px;
 }
 
+/* Estilo para os cards existentes */
 .menu-grid > div {
   background: var(--card);
   border-radius: var(--radius);
@@ -136,14 +137,16 @@ header {
   box-shadow: 0 5px 15px rgba(225, 75, 75, 0.2);
 }
 
+/* Imagens dos produtos - menor no mobile */
 .menu-grid > div img {
   width: 100%;
-  height: 100px;
+  height: 100px; /* Altura reduzida para caber 2 colunas */
   object-fit: cover;
   border-radius: var(--radius) var(--radius) 0 0;
   background: #333;
 }
 
+/* Conteúdo textual dos cards */
 .menu-grid > div > div {
   padding: 8px;
   flex-grow: 1;
@@ -151,6 +154,7 @@ header {
   flex-direction: column;
 }
 
+/* Nome do produto */
 .menu-grid > div > div strong {
   font-size: 0.85rem;
   line-height: 1.3;
@@ -159,6 +163,7 @@ header {
   min-height: 2.2em;
 }
 
+/* Preço */
 .menu-grid > div > div > span {
   color: var(--red);
   font-weight: 800;
@@ -167,6 +172,7 @@ header {
   display: block;
 }
 
+/* Descrição */
 .menu-grid > div > div > span:not(:first-child) {
   font-size: 0.7rem;
   color: var(--gray);
@@ -179,6 +185,7 @@ header {
   min-height: 1.8em;
 }
 
+/* Botões Adicionar */
 .menu-grid > div > div button,
 .menu-grid > div > div a {
   background: var(--red);
@@ -202,6 +209,68 @@ header {
 }
 
 /* ===========================
+   RESPONSIVIDADE - TABLET
+=========================== */
+@media (min-width: 768px) {
+  .menu-grid {
+    grid-template-columns: 1fr 1fr 1fr; /* 3 colunas no tablet/desktop */
+    gap: 20px;
+    padding: 0 15px;
+  }
+  
+  .menu-grid > div img {
+    height: 140px; /* Imagem maior em telas maiores */
+  }
+  
+  .menu-grid > div > div strong {
+    font-size: 1rem;
+  }
+  
+  .menu-grid > div > div > span {
+    font-size: 1.1rem;
+  }
+  
+  .menu-grid > div > div > span:not(:first-child) {
+    font-size: 0.8rem;
+  }
+  
+  .menu-grid > div > div button,
+  .menu-grid > div > div a {
+    font-size: 0.85rem;
+    padding: 8px 12px;
+  }
+}
+
+/* ===========================
+   AJUSTE PARA TELAS MUITO PEQUENAS
+=========================== */
+@media (max-width: 360px) {
+  .menu-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    padding: 0 5px;
+  }
+  
+  .menu-grid > div img {
+    height: 90px;
+  }
+  
+  .menu-grid > div > div {
+    padding: 6px;
+  }
+  
+  .menu-grid > div > div strong {
+    font-size: 0.8rem;
+  }
+  
+  .menu-grid > div > div button,
+  .menu-grid > div > div a {
+    font-size: 0.7rem;
+    padding: 5px 6px;
+  }
+}
+
+/* ===========================
    CARRINHO DE COMPRAS
 =========================== */
 .cart {
@@ -220,6 +289,8 @@ header {
   opacity: 0;
   transition: transform 0.35s ease, opacity 0.3s ease;
   overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
   border-top-left-radius: 15px;
   border-top-right-radius: 15px;
 }
@@ -292,6 +363,12 @@ header {
   display: flex;
   align-items: center;
   gap: 10px;
+}
+
+.cart-item-quantidade {
+  font-weight: 600;
+  min-width: 20px;
+  text-align: center;
 }
 
 .cart-item button {
@@ -445,7 +522,7 @@ footer {
 }
 
 /* ===========================
-   SCROLLBAR
+   SCROLLBAR ESTILIZADA
 =========================== */
 .cart::-webkit-scrollbar {
   width: 6px;
@@ -461,74 +538,271 @@ footer {
 }
 
 /* ===========================
-   AJUSTE MOBILE FINAL
+   RESPONSIVIDADE - TABLET
+=========================== */
+@media (min-width: 480px) {
+  .menu-grid {
+    grid-template-columns: 1fr 1fr; /* 2 colunas em tablet */
+    gap: 18px;
+    padding: 0 10px;
+  }
+  
+  .header-content img.logo {
+    width: 100px;
+    height: 100px;
+  }
+  
+  .header-content h1 {
+    font-size: 1.8rem;
+  }
+  
+  .header-content .slogan {
+    font-size: 0.9rem;
+  }
+}
+
+/* ===========================
+   RESPONSIVIDADE - DESKTOP
+=========================== */
+@media (min-width: 768px) {
+  .menu-grid {
+    grid-template-columns: 1fr 1fr 1fr; /* 3 colunas no desktop */
+    gap: 20px;
+    padding: 0 15px;
+  }
+  
+  .menu-item img {
+    height: 140px;
+  }
+  
+  .menu-item h3 {
+    font-size: 1.1rem;
+  }
+  
+  .menu-item-header .price {
+    font-size: 1.2rem;
+  }
+  
+  .menu-item p {
+    font-size: 0.85rem;
+    -webkit-line-clamp: 3;
+  }
+  
+  .header-content {
+    gap: 20px;
+  }
+  
+  .header-content img.logo {
+    width: 120px;
+    height: 120px;
+  }
+  
+  .header-content h1 {
+    font-size: 2.2rem;
+    text-shadow: 2px 2px 0 var(--red);
+  }
+  
+  .header-content .slogan {
+    font-size: 1rem;
+  }
+  
+  .cart {
+    width: 400px;
+    right: 0;
+    left: auto;
+    border-radius: 10px 0 0 10px;
+    height: 100vh;
+  }
+}
+
+/* ===========================
+   UTILITÁRIOS
+=========================== */
+.hidden {
+  display: none !important;
+}
+
+.text-center {
+  text-align: center;
+}
+
+.text-red {
+  color: var(--red);
+}
+
+.mt-10 {
+  margin-top: 10px;
+}
+
+.mb-10 {
+  margin-bottom: 10px;
+}
+
+/* ===========================
+   ANIMAÇÕES
+=========================== */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.fade-in {
+  animation: fadeIn 0.3s ease;
+}
+
+/* Mensagens de feedback */
+.mensagem {
+  padding: 10px 15px;
+  border-radius: var(--radius);
+  margin: 10px 0;
+  text-align: center;
+  font-weight: 600;
+}
+
+.mensagem.sucesso {
+  background: rgba(46, 204, 113, 0.2);
+  color: #2ecc71;
+  border: 1px solid #2ecc71;
+}
+
+.mensagem.erro {
+  background: rgba(231, 76, 60, 0.2);
+  color: #e74c3c;
+  border: 1px solid #e74c3c;
+}
+/* ===========================
+   FAIXAS DE FUNDO PARA OS TÍTULOS DAS SEÇÕES
+=========================== */
+
+/* Container dos títulos com faixa de fundo */
+.menu-section h2 {
+  background: linear-gradient(135deg, #2a1a0f, #3d2515);
+  color: #ffffff; /* NOME BRANCO */
+  padding: 15px 20px;
+  margin: 25px -10px 20px -10px;
+  border-radius: 10px;
+  border: 2px solid #e14b4b; /* BORDA VERMELHA SUAVE */
+  position: relative;
+  box-shadow: 0 4px 15px rgba(225, 75, 75, 0.3); /* Sombra vermelha suave */
+  text-align: center;
+  font-size: 1.3rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+/* Remove o estilo anterior dos títulos */
+.menu-section h2 {
+  border-left: none;
+  padding-left: 20px;
+  -webkit-text-fill-color: #ffffff; /* Garante texto branco */
+  text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+}
+
+/* Efeito de brilho nos títulos com vermelho */
+.menu-section h2::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  background: linear-gradient(45deg, #e14b4b, #ff6d6d, #e14b4b); /* Gradiente vermelho */
+  border-radius: 12px;
+  z-index: -1;
+  opacity: 0.4; /* Mais suave */
+}
+
+/* Mantém os grids sem fundo (como estavam) */
+#cat-Hambúrgueres,
+#cat-Combos, 
+#cat-Acompanhamentos,
+#cat-Adicionais,
+#cat-Bebidas {
+  background: transparent;
+  padding: 0;
+  margin: 0;
+  border: none;
+  box-shadow: none;
+}
+
+/* Remove os efeitos anteriores dos grids */
+#cat-Hambúrgueres::before,
+#cat-Combos::before,
+#cat-Acompanhamentos::before,
+#cat-Adicionais::before,
+#cat-Bebidas::before {
+  display: none;
+}
+/* ===========================
+   VERSÃO OTIMIZADA PARA CELULAR
 =========================== */
 @media (max-width: 600px) {
 
+  /* Carrinho ocupa quase toda a tela */
   .cart {
     height: 100vh;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    border-radius: 15px 15px 0 0;
+    padding-bottom: 80px; /* espaço pro botão fixo */
     display: flex;
     flex-direction: column;
   }
 
-  /* Itens com preço entre os botões */
-  .cart-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    background: var(--card);
-    border-radius: var(--radius);
-    padding: 10px;
+  /* Itens ocupam o espaço principal */
+  .cart-items {
+    flex: 1;
+    overflow-y: auto;
+    min-height: 250px;
     margin-bottom: 10px;
+    scroll-behavior: smooth;
   }
 
-  .item-controls {
-    display: flex;
-    align-items: center;
-    gap: 6px;
+  /* Área do cliente fica abaixo dos itens */
+  .cliente-info {
+    background: #1f1f1f;
+    border-radius: 10px;
+    padding: 12px;
+    margin-top: 10px;
   }
 
-  .item-controls button {
-    background: var(--red);
-    color: #fff;
-    border: none;
-    border-radius: 6px;
-    width: 28px;
-    height: 28px;
-    font-weight: bold;
-    font-size: 0.9rem;
-  }
-
-  .item-controls span {
-    font-weight: 700;
-    color: var(--red);
-    font-size: 0.9rem;
-    min-width: 60px;
-    text-align: center;
-  }
-
-  /* Botão de envio logo após observações */
-  #customerObs {
-    margin-bottom: 12px;
-  }
-
+  /* Botão de envio fixo na parte inferior */
   #checkoutBtn {
-    position: relative;
-    bottom: auto;
-    left: auto;
-    right: auto;
-    width: 100%;
+    position: fixed;
+    bottom: 15px;
+    left: 10px;
+    right: 10px;
+    width: calc(100% - 20px);
+    z-index: 500;
     border-radius: 12px;
-    padding: 14px;
+    padding: 15px;
     font-size: 1rem;
     background: var(--red);
     color: white;
     font-weight: 700;
-    margin-top: 10px;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+    text-transform: uppercase;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.4);
   }
 
   #checkoutBtn:hover {
     background: var(--red-light);
   }
+
+  /* Reduz a altura do cabeçalho e título dentro do carrinho */
+  .cart-header h3 {
+    font-size: 1.1rem;
+  }
+
+  .cart-header {
+    padding-bottom: 5px;
+    margin-bottom: 10px;
+  }
+
+  /* Ajuste geral de espaçamento interno */
+  .cart-total-container {
+    margin-bottom: 5px;
+  }
+
 }
