@@ -685,27 +685,14 @@ footer {
 }
 
 /* ===========================
-   FAIXAS NOS TÍTULOS DAS CATEGORIAS
-   (igual na imagem - fundo escuro com borda)
+   FUNDO NOS TÍTULOS DAS CATEGORIAS
 =========================== */
 .menu-section h2 {
   background: #2a2a2a; /* Fundo escuro */
-  color: #e14b4b; /* Cor vermelha */
-  padding: 15px 20px; /* Espaçamento interno */
-  margin: 25px 0 15px 0; /* Espaçamento externo */
-  font-size: 1.4rem; /* Tamanho da fonte */
-  font-weight: 800; /* Negrito */
-  text-transform: uppercase; /* Tudo maiúsculo */
-  border-left: 5px solid #e14b4b; /* Borda lateral vermelha */
-  border-radius: 0 8px 8px 0; /* Cantos arredondados à direita */
-  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.4); /* Sombra */
-  letter-spacing: 1px; /* Espaçamento entre letras */
+  padding: 12px 15px; /* Espaçamento interno */
+  margin: 20px 0 15px 0; /* Espaçamento externo */
+  border-radius: 8px; /* Cantos arredondados */
+  border-left: 4px solid #e14b4b; /* Borda lateral vermelha */
 }
-
-/* Ajuste no espaçamento das seções */
-.menu-section {
-  padding: 10px 0;
-}
-
 
 
