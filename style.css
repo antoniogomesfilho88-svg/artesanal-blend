@@ -133,8 +133,9 @@ header {
 }
 
 .menu-grid > div:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 5px 15px rgba(225, 75, 75, 0.2);
+  transform: translateY(-4px);
+  box-shadow: 0 8px 25px rgba(225, 75, 75, 0.2);
+  border: 2px solid var(--red-light);
 }
 
 /* Imagens dos produtos - menor no mobile */
@@ -734,3 +735,4 @@ footer {
 #cat-Bebidas::before {
   display: none;
 }
+
