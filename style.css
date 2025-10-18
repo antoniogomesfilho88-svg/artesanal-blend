@@ -670,7 +670,6 @@ footer {
   color: #e74c3c;
   border: 1px solid #e74c3c;
 }
-
 /* ===========================
    FAIXA DE CATEGORIAS FIXA
 =========================== */
@@ -727,3 +726,11 @@ footer {
   padding: 25px 10px;
   scroll-margin-top: 140px;
 }
+
+/* Ajuste para os títulos das seções */
+.menu-section h2 {
+  scroll-margin-top: 140px;
+  padding-top: 10px;
+}
+
+
