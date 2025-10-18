@@ -671,28 +671,3 @@ footer {
   border: 1px solid #e74c3c;
 }
 
-
-/* Ajuste no espaçamento das seções */
-.menu-section {
-  padding: 25px 10px;
-  scroll-margin-top: 140px;
-}
-
-/* Ajuste para os títulos das seções */
-.menu-section h2 {
-  scroll-margin-top: 140px;
-  padding-top: 10px;
-}
-
-/* ===========================
-   FUNDO NOS TÍTULOS DAS CATEGORIAS
-=========================== */
-.menu-section h2 {
-  background: #2a2a2a; /* Fundo escuro */
-  padding: 12px 15px; /* Espaçamento interno */
-  margin: 20px 0 15px 0; /* Espaçamento externo */
-  border-radius: 8px; /* Cantos arredondados */
-  border-left: 4px solid #e14b4b; /* Borda lateral vermelha */
-}
-
-
