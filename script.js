@@ -114,13 +114,6 @@ function carregarCardapioLocal() {
 
 // ===== FUNÇÕES DO CARRINHO =====
 function adicionarAoCarrinho(categoria, nome, preco) {
-    const clienteNome = document.getElementById('customerName')?.value;
-    
-    // Apenas dá um aviso, mas permite adicionar
-    if (!clienteNome) {
-        alert('Por favor, preencha seu nome no carrinho antes de adicionar itens.');
-    }
-    
     const itemExistente = carrinho.find(item => item.nome === nome);
     
     if (itemExistente) {
@@ -345,3 +338,4 @@ window.alterarQuantidade = alterarQuantidade;
 window.atualizarTaxa = atualizarTaxa;
 window.finalizarPedido = finalizarPedido;
 window.toggleCart = toggleCart;
+
