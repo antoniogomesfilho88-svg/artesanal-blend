@@ -740,6 +740,69 @@ footer {
 #cat-Bebidas::before {
   display: none;
 }
+/* ===========================
+   CORREÇÃO URGENTE - CARRINHO MOBILE
+=========================== */
+
+@media (max-width: 768px) {
+  .cart {
+    height: auto; /* Remove altura fixa */
+    max-height: 90vh; /* Altura máxima, mas não fixa */
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .cart-header {
+    flex-shrink: 0; /* Não encolhe */
+  }
+  
+  .cart-items {
+    flex: 1; /* Ocupa o espaço disponível */
+    max-height: 40vh; /* Limita a altura */
+    overflow-y: auto;
+    margin: 10px 0;
+    border: 1px solid #333; /* Borda para ver a área */
+    border-radius: var(--radius);
+    padding: 10px;
+    background: var(--card);
+  }
+  
+  .cart-total-container {
+    flex-shrink: 0; /* Não encolhe */
+    padding: 15px 0;
+    border-top: 2px solid var(--red);
+    margin-top: 10px;
+  }
+  
+  .cliente-info {
+    flex-shrink: 0; /* Não encolhe */
+    margin-top: 15px;
+  }
+  
+  #checkoutBtn {
+    flex-shrink: 0; /* Não encolhe */
+    margin-top: 15px;
+  }
+}
+
+/* DEBUG - Para ver se os itens estão aparecendo */
+.cart-items:empty::before {
+  content: "Carrinho vazio - DEBUG";
+  color: #ff0000;
+  font-weight: bold;
+  text-align: center;
+  display: block;
+  padding: 20px;
+}
+
+.cart-items:not(:empty)::before {
+  content: "Itens carregados: " attr(data-item-count);
+  color: #00ff00;
+  font-weight: bold;
+  text-align: center;
+  display: block;
+  padding: 10px;
+}
 
 
 
