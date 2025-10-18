@@ -11,14 +11,14 @@
 <body>
   <!-- Cabeçalho -->
   <header class="header">
-  <div class="header-content">
-    <img src="logo.jpg" alt="Logo" class="logo" />
-    <div class="header-text-container">
-      <h1>Artesanal Blend</h1>
-      <p class="slogan">O seu hambúrguer artesanal no Jardim Canadá.</p> 
+    <div class="header-content">
+      <img src="logo.jpg" alt="Logo" class="logo" />
+      <div class="header-text-container">
+        <h1>Artesanal Blend</h1>
+        <p class="slogan">O seu hambúrguer artesanal no Jardim Canadá.</p> 
+      </div>
     </div>
-  </div>
-</header>
+  </header>
 
   <!-- Seções do Cardápio -->
   <main>
@@ -60,21 +60,20 @@
     <div class="cliente-info">
       <h4>🧾 Informações do Cliente</h4>
 
-      <input type="text" id="clienteNome" placeholder="Nome completo" />
-      <input type="text" id="clienteTelefone" placeholder="Telefone (WhatsApp)" />
-      <input type="text" id="clienteEndereco" placeholder="Endereço para entrega" />
+      <!-- IDs corrigidos -->
+      <input type="text" id="customerName" placeholder="Nome completo" />
+      <input type="text" id="customerPhone" placeholder="Telefone (WhatsApp)" />
+      <input type="text" id="customerAddress" placeholder="Endereço para entrega" />
 
-      <select id="clienteRegiao" onchange="atualizarTaxa()">
+      <select id="region" onchange="atualizarTaxa()">
         <option value="">Selecione sua região</option>
-        <option value="Jardim Canadá">Jardim Canadá - R$ 6,00</option>
-        <option value="Retiro das Pedras">Retiro das Pedras - R$ 10,00</option>
-        <option value="Serra do Manacás">Serra do Manacás - R$ 10,00</option>
-        <option value="Vale do Sol">Vale do Sol - R$ 12,00</option>
-        <option value="Alphaville">Alphaville - R$ 15,00</option>
+        <option data-fee="5.00" value="Jardim Canadá">Jardim Canadá - R$ 5,00</option>
+        <option data-fee="10.00" value="Vila da Serra">Vila da Serra - R$ 10,00</option>
+        <option data-fee="15.00" value="Outras Regiões">Outras Regiões - R$ 15,00</option>
       </select>
 
-      <label for="pagamento">💳 Forma de Pagamento:</label>
-      <select id="pagamento" onchange="mostrarTroco()">
+      <label for="customerPayment">💳 Forma de Pagamento:</label>
+      <select id="customerPayment" onchange="mostrarTroco()">
         <option value="">Selecione</option>
         <option value="Pix">Pix</option>
         <option value="Cartão de Crédito">Cartão de Crédito</option>
@@ -86,7 +85,7 @@
         <input type="number" id="troco" placeholder="Troco para quanto?" />
       </div>
 
-      <textarea id="obsCliente" rows="2" placeholder="Observações (ex: tirar cebola, ponto da carne...)"></textarea>
+      <textarea id="customerObs" rows="2" placeholder="Observações (ex: tirar cebola, ponto da carne...)"></textarea>
     </div>
 
     <button id="checkoutBtn" class="btn primary" disabled>📩 Enviar pedido pelo WhatsApp</button>
@@ -139,5 +138,3 @@
   </script>
 </body>
 </html>
-
-
