@@ -1,251 +1,5 @@
 /* ===========================
-    ARTESANAL BLEND - CSS COMPLETO E CONSOLIDADO
-    MOBILE FIRST APPROACH
-=========================== */
-
-:root {
-    --bg: #1b1b1b;
-    --card: #2a2a2a;
-    --text: #f5f5f5;
-    --red: #e14b4b;
-    --red-light: #ff6d6d;
-    --gray: #aaa;
-    --dark-gray: #444;
-    --radius: 10px;
-    --font: "Poppins", sans-serif;
-}
-
-/* ===========================
-    RESET E BASE GLOBAL
-=========================== */
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-    font-family: var(--font);
-}
-
-html {
-    overflow-x: hidden;
-}
-
-body {
-    background-color: var(--bg);
-    color: var(--text);
-    overflow-x: hidden;
-    line-height: 1.5;
-    padding-bottom: 70px; /* Espaço para o botão do carrinho */
-}
-
-/* ===========================
-    CABEÇALHO MODERNO
-=========================== */
-header {
-    background: var(--card);
-    border-bottom: 5px solid var(--red);
-    padding: 20px 15px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.7);
-    position: sticky;
-    top: 0;
-    z-index: 100;
-}
-
-.header-content {
-    display: flex;
-    align-items: center;
-    gap: 15px;
-}
-
-.header-content img.logo {
-    width: 80px;
-    height: 80px;
-    border-radius: 50%;
-    border: 3px solid var(--red-light);
-    object-fit: cover;
-    box-shadow: 0 0 10px var(--red);
-}
-
-.header-text-container {
-    display: flex;
-    flex-direction: column;
-    line-height: 1.1;
-}
-
-.header-content h1 {
-    font-size: 1.5rem;
-    color: var(--text);
-    font-weight: 800;
-    letter-spacing: 1px;
-    text-shadow: 1px 1px 0 var(--red);
-}
-
-.header-content .slogan {
-    font-size: 0.8rem;
-    color: var(--gray);
-    margin-top: 2px;
-    font-weight: 300;
-    font-style: italic;
-    letter-spacing: 0.5px;
-}
-
-/* ===========================
-    SEÇÕES DO CARDÁPIO & TÍTULOS ESTILIZADOS
-=========================== */
-.menu-section {
-    padding: 20px 10px;
-}
-
-.menu-section h2 {
-    /* Base do Título */
-    background: linear-gradient(135deg, #2a1a0f, #3d2515);
-    color: #ffffff;
-    padding: 15px 20px;
-    margin: 25px -10px 20px -10px;
-    border-radius: 10px;
-    border: 2px solid #e14b4b;
-    position: relative;
-    box-shadow: 0 4px 15px rgba(225, 75, 75, 0.3);
-    text-align: center;
-    font-size: 1.3rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    /* Sobrescreve estilos antigos */
-    border-left: none;
-    padding-left: 20px;
-    -webkit-text-fill-color: #ffffff; 
-    text-shadow: 0 2px 4px rgba(0,0,0,0.5);
-}
-
-/* Efeito de brilho nos títulos */
-.menu-section h2::before {
-    content: '';
-    position: absolute;
-    top: -2px;
-    left: -2px;
-    right: -2px;
-    bottom: -2px;
-    background: linear-gradient(45deg, #e14b4b, #ff6d6d, #e14b4b);
-    border-radius: 12px;
-    z-index: -1;
-    opacity: 0.4;
-}
-
-/* Garante que os containers de grid não tenham o estilo de h2 */
-.menu-section > div {
-    background: transparent;
-    padding: 0;
-    margin: 0;
-    border: none;
-    box-shadow: none;
-}
-
-
-/* ===========================
-    ITENS DO CARDÁPIO - 2 COLUNAS NO MOBILE
-=========================== */
-.menu-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr; /* 2 colunas no mobile */
-    gap: 12px;
-    padding: 0 8px;
-}
-
-/* Estilo para os cards existentes */
-.menu-grid > div {
-    background: var(--card);
-    border-radius: var(--radius);
-    padding: 0;
-    display: flex;
-    flex-direction: column;
-    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.3);
-    height: 100%;
-    text-align: left;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-    overflow: hidden;
-}
-
-.menu-grid > div:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(225, 75, 75, 0.2);
-}
-
-/* Imagens dos produtos - menor no mobile */
-.menu-grid > div img {
-    width: 100%;
-    height: 100px; /* Altura reduzida para caber 2 colunas */
-    object-fit: cover;
-    border-radius: var(--radius) var(--radius) 0 0;
-    background: #333;
-}
-
-/* Conteúdo textual dos cards */
-.menu-grid > div > div {
-    padding: 8px;
-    flex-grow: 1;
-    display: flex;
-    flex-direction: column;
-}
-
-/* Nome do produto */
-.menu-grid > div > div strong {
-    font-size: 0.85rem;
-    line-height: 1.3;
-    margin-bottom: 4px;
-    display: block;
-    min-height: 2.2em;
-}
-
-/* Preço */
-.menu-grid > div > div > span {
-    color: var(--red);
-    font-weight: 800;
-    font-size: 0.9rem;
-    margin-bottom: 6px;
-    display: block;
-}
-
-/* Descrição */
-.menu-grid > div > div > span:not(:first-child) {
-    font-size: 0.7rem;
-    color: var(--gray);
-    line-height: 1.2;
-    margin-bottom: 8px;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-    min-height: 1.8em;
-}
-
-/* Botões Adicionar */
-.menu-grid > div > div button,
-.menu-grid > div > div a {
-    background: var(--red);
-    color: white;
-    border: none;
-    border-radius: 6px;
-    padding: 6px 8px;
-    font-size: 0.75rem;
-    font-weight: 600;
-    cursor: pointer;
-    text-decoration: none;
-    text-align: center;
-    margin-top: auto;
-    transition: background 0.2s ease;
-    text-transform: uppercase;
-}
-
-.menu-grid > div > div button:hover,
-.menu-grid > div > div a:hover {
-    background: var(--red-light);
-}
-
-/* ===========================
-    CARRINHO DE COMPRAS - OTIMIZADO PARA MOBILE
+    CARRINHO DE COMPRAS - OTIMIZADO PARA MOBILE E VISUAL DO MODELO
 =========================== */
 .cart {
     position: fixed;
@@ -267,7 +21,7 @@ header {
     scroll-behavior: smooth;
     border-top-left-radius: 15px;
     border-top-right-radius: 15px;
-    box-shadow: 0 -5px 20px rgba(0, 0, 0, 0.9); /* Sombra para destacar a abertura */
+    box-shadow: 0 -5px 20px rgba(0, 0, 0, 0.9);
 }
 
 .cart.show {
@@ -279,8 +33,8 @@ header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding-bottom: 10px;
-    border-bottom: 1px solid #333;
+    padding-bottom: 5px; /* Reduzido */
+    border-bottom: none; /* Removido a borda para visual limpo */
     margin-bottom: 15px;
     position: sticky;
     top: 0;
@@ -294,7 +48,7 @@ header {
     font-weight: 700;
 }
 
-.btn-fechar-carrinho {
+.btn-fechar-carrinho, .close-cart {
     background: transparent;
     border: none;
     color: var(--gray);
@@ -304,7 +58,7 @@ header {
     transition: color 0.2s ease;
 }
 
-.btn-fechar-carrinho:hover {
+.btn-fechar-carrinho:hover, .close-cart:hover {
     color: var(--red-light);
 }
 
@@ -314,425 +68,93 @@ header {
     margin: 5px 0;
 }
 
-/* OTIMIZAÇÃO VISUAL DO ITEM DO CARRINHO */
+/* OTIMIZAÇÃO VISUAL DO ITEM DO CARRINHO ( +- e Preço ) */
+.cart-item {
+    display: flex;
+    flex-direction: column; 
+    justify-content: space-between;
+    background: transparent; /* Fundo transparente para visual limpo */
+    border-radius: 0;
+    padding: 8px 0;
+    margin-bottom: 5px;
+    font-size: 0.9rem;
+    box-shadow: none;
+    border-bottom: 1px dashed #3d3d3d; /* Linha sutil de separação */
+}
+
+.cart-item-info {
+    width: 100%;
+    margin-bottom: 5px;
+}
+
+.cart-item-nome {
+    font-weight: 600;
+    color: var(--text);
+}
+
+.cart-item-preco {
+    color: var(--text); /* Preço do item com cor do texto, não vermelho */
+    font-weight: 700;
+    font-size: 1rem;
+    line-height: 28px;
+    margin: 0;
+}
+
+.cart-item-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+}
+
 .cart-item-controles {
     display: flex;
     align-items: center;
-    gap: 5px; /* Reduzido o espaço para ficar mais compacto */
-    margin-left: 0; /* Removido o margin-left: 15px; antigo */
+    gap: 5px;
+    margin-left: 0; 
 }
 
 .cart-item-quantidade {
     font-weight: 700;
     color: var(--text);
-    min-width: 25px; /* Um pouco mais largo para acomodar números de dois dígitos */
+    min-width: 25px;
     text-align: center;
     font-size: 1rem;
     padding: 0 3px;
 }
 
 .cart-item button {
-    background: var(--red);
+    background: #444; /* Fundo mais discreto para os botões */
     border: none;
     border-radius: 50%;
-    width: 28px; 
-    height: 28px;
+    width: 26px;
+    height: 26px;
     color: #fff;
     font-weight: bold;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.1rem;
-    flex-shrink: 0; /* Garante que os botões não diminuam */
-}
-
-.cart-item button:hover {
-    background: var(--red-light);
-}
-/* Total do carrinho */
-.cart-total-container {
-    padding: 10px 0;
-    border-top: 1px solid #333;
-    margin-top: 10px;
-    /* Destaque visual do Total antes do formulário */
-    background: var(--card);
-    padding: 15px;
-    border-radius: var(--radius);
-    box-shadow: 0 0 10px rgba(225, 75, 75, 0.1);
-}
-
-#cart-total {
-    text-align: right;
-    font-weight: 800;
-    color: var(--red);
-    font-size: 1.4rem; /* Total bem destacado */
-}
-
-/* ===========================
-    FORMULÁRIO DO CLIENTE
-=========================== */
-.cliente-info {
-    background: var(--card);
-    padding: 15px;
-    border-radius: var(--radius);
-    margin-top: 15px;
-}
-
-.cliente-info h4 {
-    color: var(--red);
     font-size: 1rem;
-    margin-bottom: 10px;
-    font-weight: 600;
-}
-
-.cliente-info input,
-.cliente-info select,
-.cliente-info textarea {
-    width: 100%;
-    margin: 8px 0;
-    padding: 10px;
-    border-radius: 6px;
-    border: 1px solid #444;
-    background: #333;
-    color: var(--text);
-    font-size: 0.9rem;
-}
-
-.cliente-info input:focus,
-.cliente-info select:focus,
-.cliente-info textarea:focus {
-    border-color: var(--red);
-}
-
-.cliente-info textarea {
-    resize: none;
-    height: 70px;
-}
-
-/* ===========================
-    BOTÕES PRINCIPAIS
-=========================== */
-button.primary {
-    background: var(--red);
-    color: #fff;
-    border: none;
-    border-radius: var(--radius);
-    padding: 12px;
-    font-weight: 700;
-    cursor: pointer;
-    font-size: 1rem;
-    width: 100%;
-    margin-top: 15px;
-    text-transform: uppercase;
-    letter-spacing: 1px;
+    flex-shrink: 0;
     transition: background 0.2s ease;
 }
 
-button.primary:hover {
-    background: var(--red-light);
+.cart-item button:hover {
+    background: var(--dark-gray);
 }
 
-/* Botão flutuante do carrinho */
-.cart-toggle {
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
-    background: var(--red);
-    color: #fff;
-    border: none;
-    border-radius: 50%;
-    width: 60px;
-    height: 60px;
-    font-size: 1.5rem;
-    font-weight: bold;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
-    cursor: pointer;
-    z-index: 300;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: transform 0.2s ease, background 0.2s ease;
-}
-
-.cart-toggle:hover {
-    background: var(--red-light);
-    transform: scale(1.05);
-}
-
-.cart-count {
-    position: absolute;
-    top: 5px;
-    right: 5px;
-    background: #fff;
-    color: var(--red);
-    border-radius: 50%;
-    font-size: 0.75rem;
-    padding: 3px 6px;
-    font-weight: 800;
-    min-width: 20px;
-    text-align: center;
-}
-
-/* ===========================
-    RODAPÉ
-=========================== */
-footer {
-    text-align: center;
-    font-size: 0.8rem;
-    padding: 20px 10px;
-    color: var(--gray);
-    border-top: 1px solid #333;
-    margin-top: 30px;
-}
-
-/* ===========================
-    SCROLLBAR ESTILIZADA
-=========================== */
-.cart::-webkit-scrollbar {
-    width: 6px;
-}
-
-.cart::-webkit-scrollbar-thumb {
-    background: var(--red);
-    border-radius: 10px;
-}
-
-.cart::-webkit-scrollbar-track {
-    background: #2a2a2a;
-}
-
-/* ===========================
-    RESPONSIVIDADE: AJUSTES PARA TELAS MUITO PEQUENAS (Max-width: 360px)
-=========================== */
-@media (max-width: 360px) {
-    .menu-grid {
-        grid-template-columns: 1fr 1fr;
-        gap: 8px;
-        padding: 0 5px;
-    }
-    
-    .menu-grid > div img {
-        height: 90px;
-    }
-    
-    .menu-grid > div > div {
-        padding: 6px;
-    }
-    
-    .menu-grid > div > div strong {
-        font-size: 0.8rem;
-    }
-    
-    .menu-grid > div > div button,
-    .menu-grid > div > div a {
-        font-size: 0.7rem;
-        padding: 5px 6px;
-    }
-}
-
-/* ===========================
-    RESPONSIVIDADE: OTIMIZAÇÃO DE CELULAR (Max-width: 600px)
-=========================== */
-@media (max-width: 600px) {
-    
-    /* Carrinho ocupa toda a tela verticalmente */
-    .cart {
-        height: 100vh;
-        bottom: 0;
-        left: 0;
-        width: 100%;
-        border-radius: 15px 15px 0 0;
-        padding-bottom: 80px; /* espaço pro botão fixo */
-    }
-
-    /* Itens e formulário do cliente no fluxo de rolagem */
-    .cart-items {
-        flex: 1;
-        min-height: 200px;
-        margin-bottom: 10px;
-    }
-
-    /* Total do carrinho */
-    .cart-total-container {
-        margin-top: 10px;
-        padding: 10px;
-    }
-    
-    /* Área do cliente */
-    .cliente-info {
-        background: #1f1f1f;
-        padding: 12px;
-        margin-top: 10px;
-    }
-
-    /* Botão de envio fixo na parte inferior */
-    #checkoutBtn {
-        position: fixed;
-        bottom: 15px;
-        left: 10px;
-        right: 10px;
-        width: calc(100% - 20px);
-        z-index: 500;
-        border-radius: 12px;
-        padding: 15px;
-        font-size: 1rem;
-        box-shadow: 0 4px 10px rgba(0,0,0,0.4);
-        margin-top: 0 !important; 
-    }
-    
-    /* Pequenos ajustes de layout */
-    .cart-header h3 {
-        font-size: 1.1rem;
-    }
-
-    .cart-header {
-        padding-bottom: 5px;
-        margin-bottom: 10px;
-    }
-}
-
-/* ===========================
-    RESPONSIVIDADE: TABLET (Min-width: 480px)
-=========================== */
-@media (min-width: 480px) {
-    .menu-grid {
-        grid-template-columns: 1fr 1fr; /* 2 colunas em tablet */
-        gap: 18px;
-        padding: 0 10px;
-    }
-    
-    .header-content img.logo {
-        width: 100px;
-        height: 100px;
-    }
-    
-    .header-content h1 {
-        font-size: 1.8rem;
-    }
-    
-    .header-content .slogan {
-        font-size: 0.9rem;
-    }
-}
-
-/* ===========================
-    RESPONSIVIDADE: DESKTOP (Min-width: 768px)
-=========================== */
-@media (min-width: 768px) {
-    .menu-grid {
-        grid-template-columns: 1fr 1fr 1fr; /* 3 colunas no desktop */
-        gap: 20px;
-        padding: 0 15px;
-    }
-    
-    .menu-grid > div img {
-        height: 140px;
-    }
-    
-    .header-content {
-        gap: 20px;
-    }
-    
-    .header-content img.logo {
-        width: 120px;
-        height: 120px;
-    }
-    
-    .header-content h1 {
-        font-size: 2.2rem;
-        text-shadow: 2px 2px 0 var(--red);
-    }
-    
-    .header-content .slogan {
-        font-size: 1rem;
-    }
-    
-    .cart {
-        width: 400px;
-        right: 0;
-        left: auto;
-        border-radius: 10px 0 0 10px;
-        height: 100vh;
-        padding-bottom: 20px; 
-    }
-
-    /* Remove a fixação do botão de checkout para telas grandes */
-    #checkoutBtn {
-        position: static !important;
-        margin: 20px auto 0 auto !important;
-        width: 100% !important;
-        box-shadow: none !important;
-    }
-}
-
-/* ===========================
-    UTILITÁRIOS
-=========================== */
-.hidden {
-    display: none !important;
-}
-
-.text-center {
-    text-align: center;
-}
-
-.text-red {
-    color: var(--red);
-}
-
-.mt-10 {
-    margin-top: 10px;
-}
-
-.mb-10 {
-    margin-bottom: 10px;
-}
-
-/* ===========================
-    ANIMAÇÕES
-=========================== */
-@keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
-}
-
-.fade-in {
-    animation: fadeIn 0.3s ease;
-}
-
-/* Mensagens de feedback */
-.mensagem {
-    padding: 10px 15px;
-    border-radius: var(--radius);
-    margin: 10px 0;
-    text-align: center;
-    font-weight: 600;
-}
-
-.mensagem.sucesso {
-    background: rgba(46, 204, 113, 0.2);
-    color: #2ecc71;
-    border: 1px solid #2ecc71;
-}
-
-.mensagem.erro {
-    background: rgba(231, 76, 60, 0.2);
-    color: #e74c3c;
-    border: 1px solid #e74c3c;
-}
 /* ==================================================
-    AJUSTES PARA O MODELO VISUAL - RESUMO E FORMULÁRIO
+    ESTILOS DO MODELO FOTOGRÁFICO (RESUMO E FORMULÁRIO)
 ================================================== */
 
-/* --- 1. Resumo do Pedido (Sub-total, Taxa, Total) --- */
 .pedido-resumo {
     display: grid;
-    grid-template-columns: 1fr auto; /* Texto à esquerda, valor à direita */
-    gap: 8px 15px; /* Espaçamento entre linhas e colunas */
-    padding: 10px 15px;
+    grid-template-columns: 1fr auto;
+    gap: 8px 15px; 
+    padding: 10px 0; /* Padding lateral zero para usar o padding do .cart */
     margin-bottom: 15px;
-    border-bottom: 1px solid #3d3d3d; /* Linha divisória */
+    border-bottom: 1px solid #3d3d3d; 
     font-size: 1rem;
     color: var(--gray);
 }
@@ -741,6 +163,7 @@ footer {
     text-align: left;
     margin: 0;
     font-weight: 500;
+    /* Alinhamento de Sub-total e Taxa */
 }
 
 .pedido-resumo span {
@@ -749,10 +172,9 @@ footer {
     color: var(--text);
 }
 
-/* Estilo para a Linha Total */
 .pedido-resumo .total-linha {
     font-weight: 800;
-    color: var(--red); /* Cor do total diferente */
+    color: var(--red); 
     font-size: 1.2rem;
     padding-top: 5px;
     border-top: 1px dashed #3d3d3d;
@@ -764,38 +186,36 @@ footer {
     font-weight: 900;
 }
 
-/* --- 2. Formulário do Cliente (Limpeza de Fundo e Borda) --- */
+/* --- Formulário do Cliente --- */
 .cliente-info {
-    background: transparent; /* Fundo transparente (como no modelo) */
-    padding: 0 15px; /* Ajusta o padding para alinhamento */
-    border-radius: 0; /* Remove a borda arredondada */
+    background: transparent;
+    padding: 0; /* Removendo padding interno para alinhamento */
+    border-radius: 0;
     margin-top: 0;
 }
 
 .cliente-info h4 {
-    display: none; /* Remove o título "Informações do Cliente" para o visual limpo */
+    display: none;
 }
 
 .cliente-info input,
 .cliente-info select,
 .cliente-info textarea {
-    /* Estilos para parecerem "Embutidos" no fundo escuro */
-    background: #444444; /* Fundo mais escuro para os campos */
+    background: #444444; 
     border: none;
     border-radius: 5px;
-    padding: 12px; /* Aumenta o padding para serem mais visíveis */
+    padding: 12px; 
     margin: 10px 0;
     font-size: 0.95rem;
     color: var(--text);
 }
 
 .cliente-info textarea {
-    height: 50px; /* Mais baixo para caber no visual */
+    height: 50px;
     margin-bottom: 15px;
 }
 
 .cliente-info select {
-    /* Garante que o placeholder da seleção seja mais escuro antes de selecionar */
     color: var(--gray);
 }
 
@@ -803,37 +223,36 @@ footer {
     color: var(--text);
 }
 
-
-/* --- 3. Botão de Checkout (Enfatizado) --- */
+/* --- Botão de Checkout (Fixado no Mobile) --- */
 #checkoutBtn {
-    background: #e14b4b; /* Cor primária */
+    background: #e14b4b; 
     color: white;
+    font-weight: 700;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
 }
 
-#checkoutBtn:hover {
-    background: var(--red-light);
-}
-
 #checkoutBtn i {
-    margin-right: 8px; /* Espaçamento do ícone */
+    margin-right: 8px;
 }
 
-/* --- 4. Ajustes Finais no Carrinho --- */
-.cart-header {
-    border-bottom: none; /* Remove a linha do cabeçalho */
-    padding-bottom: 0;
+@media (max-width: 600px) {
+    /* Garante que o botão fixe no final */
+    #checkoutBtn {
+        position: fixed;
+        bottom: 15px;
+        left: 15px;
+        right: 15px;
+        width: calc(100% - 30px);
+        z-index: 500;
+        border-radius: 12px;
+        padding: 15px;
+        font-size: 1rem;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+        margin-top: 0 !important; 
+    }
+    
+    /* Adiciona espaço na base do carrinho para o botão fixo */
+    .cart {
+        padding-bottom: 80px; 
+    }
 }
-
-.close-cart {
-    font-size: 1.2rem !important;
-    padding: 0 5px !important;
-}
-
-/* Ajuste na Linha do Cliente (Se seu JS gera essa linha) */
-.muted {
-    text-align: center;
-    display: block;
-    padding-top: 5px;
-}
-
