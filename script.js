@@ -1,209 +1,358 @@
-// ==============================
-// ARTESANAL BLEND - SCRIPT FINAL
-// ==============================
+/* ========== DADOS DO CARDÁPIO ========== */
+// Mantenha os seus dados do cardápio aqui
+const menuItems = [
+  // HAMBURGUERES
+  { id:1, name:"CLASSICO BLEND", price:24.50, desc:"Pão brioche, blend 120g, cheddar, picles, molho especial", cat:"Hambúrgueres" },
+  { id:2, name:"SALADA BLEND", price:23.50, desc:"Pão brioche, blend 120g, cheddar, tomate, alface americana, molho especial", cat:"Hambúrgueres" },
+  { id:3, name:"BACON BLEND 180g", price:29.50, desc:"Pão brioche, blend 180g, cheddar, bacon, molho especial", cat:"Hambúrgueres" },
+  { id:4, name:"BACON BLEND 120g", price:27.00, desc:"Pão brioche, blend 120g, cheddar, bacon, molho especial", cat:"Hambúrgueres" },
+  { id:5, name:"SMACH BLEND 180g", price:34.50, desc:"Pão brioche, blend 180g, cheddar, bacon, 1 ovo, cebola caramelizada, molho especial", cat:"Hambúrgueres" },
+  { id:6, name:"SMACH BLEND 120g", price:32.50, desc:"Pão brioche, blend 120g, cheddar, bacon, 1 ovo, cebola caramelizada, molho especial", cat:"Hambúrgueres" },
 
-let carrinho = JSON.parse(localStorage.getItem('carrinho')) || [];
-const TAXAS = {
-  "Jardim Canadá": 6.00,
-  "Retiro das Pedras": 10.00,
-  "Serra do Manacás": 10.00,
-  "Vale do Sol": 12.00,
-  "Alphaville": 15.00,
-  "": 0.00
-};
+  // ACOMPANHAMENTOS
+  { id:7, name:"BATATA FRITA 200g", price:12.50, desc:"Batata frita crocante 200g", cat:"Acompanhamentos" },
+  { id:8, name:"BATATA FRITA 100g", price:7.80, desc:"Batata frita crocante 100g", cat:"Acompanhamentos" },
+  
+  // COMBOS
+  { id:9, name:"BACON BLEND 1 (Combo)", price:38.25, desc:"1 Bacon Blend, 1 Batata 100g, 1 Refrigerante 350ml", cat:"Combos" },
+  { id:10, name:"SMACH BLEND 1 (Combo)", price:42.50, desc:"1 Smach Blend, 1 Batata 100g, 1 Refrigerante 350ml", cat:"Combos" },
+  
+  // ADICIONAIS
+  { id:19, name:"CHEDDAR (Adicional)", price:3.00, desc:"Adicional de cheddar", cat:"Adicionais" },
+  { id:20, name:"BACON (Adicional)", price:4.00, desc:"Adicional de bacon", cat:"Adicionais" },
+  
+  // BEBIDAS
+  { id:25, name:"REFRIGERANTE 350ml", price:6.00, desc:"Coca-Cola / Coca-Cola Zero / Fanta", cat:"Bebidas" },
+  { id:26, name:"SUCO LATA", price:5.50, desc:"Suco de uva / laranja", cat:"Bebidas" }
+];
 
-// ==============================
-// 🔹 CARREGAR CARDÁPIO
-// ==============================
+/* Variáveis e Utilitários */
+let cart = {};
+const nameInput = document.getElementById('customerName');
+const phoneInput = document.getElementById('customerPhone');
+const addrInput = document.getElementById('customerAddress');
+const paymentInput = document.getElementById('customerPayment');
+const obsInput = document.getElementById('customerObs'); // Observações Gerais
+const regionSel = document.getElementById('region');
 
-async function carregarCardapio() {
-  try {
-    // 🔽 ALTERE AQUI COM SUA URL DO RENDER:
-    const API_URL = 'https://seuapp.onrender.com/api/cardapio';
+// Variáveis de Controle do Carrinho
+const cartToggleBtn = document.getElementById('cartToggle');
+const cartEl = document.querySelector('.cart');
+const overlayEl = document.getElementById('overlay');
+const closeCartBtn = document.getElementById('closeCartBtn');
+const checkoutBtn = document.getElementById('checkoutBtn');
 
-    const response = await fetch(API_URL);
-    if (!response.ok) throw new Error(`Erro: ${response.status}`);
+// Variáveis de Controle do Modal de Personalização
+const itemModal = document.getElementById('itemModal');
+const modalQtySpan = document.getElementById('modalQty');
+const modalItemName = document.getElementById('modalItemName');
+const modalItemDesc = document.getElementById('modalItemDesc');
+const modalItemPrice = document.getElementById('modalItemPrice');
+const itemObsTextarea = document.getElementById('itemObs');
+const addToCartModalBtn = document.getElementById('addToCartModalBtn');
 
-    const cardapio = await response.json();
-    renderizarCardapio(cardapio);
-  } catch (erro) {
-    console.warn('⚠️ Falha ao carregar API, usando menu local.', erro);
-    carregarCardapioLocal();
-  }
-}
+let currentItem = null; // Armazena o item que está sendo personalizado
+let modalQty = 1; // Quantidade inicial no modal
 
-function renderizarCardapio(cardapio) {
-  Object.keys(cardapio).forEach(categoria => {
-    const container = document.getElementById(`cat-${categoria}`);
+const money = v => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+
+
+/* ========== LÓGICA DO MENU E MODAL (Opcionais) ========== */
+
+function renderMenu() {
+  const categories = menuItems.reduce((acc, item) => {
+    acc[item.cat] = acc[item.cat] || [];
+    acc[item.cat].push(item);
+    return acc;
+  }, {});
+
+  Object.keys(categories).forEach(catName => {
+    const container = document.getElementById(`cat-${catName}`);
     if (container) {
-      container.innerHTML = cardapio[categoria].map(produto => {
-        const preco = Number(produto.preco) || 0;
-        const imagem = produto.imagem || '';
-        const descricao = produto.descricao || '';
-        return `
-          <div class="menu-item">
-            ${imagem ? `<img src="${imagem}" alt="${produto.nome}" />` : ''}
-            <div class="menu-item-content">
-              <span class="menu-item-name">${produto.nome}</span>
-              <span class="menu-item-price">R$ ${preco.toFixed(2)}</span>
-              <p class="menu-item-description">${descricao}</p>
-              <button class="btn-add" onclick="adicionarAoCarrinho('${categoria}', '${produto.nome}', ${preco})">
-                ➕ Adicionar
-              </button>
-            </div>
+      container.innerHTML = categories[catName].map(item => `
+        <div class="menu-item" data-id="${item.id}" onclick="openItemModal(${item.id})">
+          <div class="text">
+            <h4>${item.name}</h4>
+            <p>${item.desc}</p>
           </div>
-        `;
-      }).join('');
+          <div class="actions">
+            <span class="price">${money(item.price)}</span>
+            <button class="btn" style="pointer-events: none;">Ver opções</button> 
+          </div>
+        </div>
+      `).join('');
     }
   });
-  renderResumoCarrinho();
 }
 
-function carregarCardapioLocal() {
-  fetch('menu.json')
-    .then(r => r.json())
-    .then(renderizarCardapio)
-    .catch(err => console.error('❌ Erro ao carregar menu local:', err));
+function closeItemModal() {
+    itemModal.style.display = 'none';
+    overlayEl.classList.remove('active');
+    currentItem = null; // Limpa o item atual
 }
 
-// ==============================
-// 🔹 CARRINHO DE COMPRAS
-// ==============================
+function openItemModal(itemId) {
+    currentItem = menuItems.find(m => m.id == itemId);
 
-function adicionarAoCarrinho(categoria, nome, preco) {
-  const existente = carrinho.find(item => item.nome === nome);
-  if (existente) {
-    existente.qtd++;
-  } else {
-    carrinho.push({ categoria, nome, preco, qtd: 1 });
-  }
-  salvarCarrinho();
-  renderResumoCarrinho();
+    if (!currentItem) return;
+
+    // Preenche o modal
+    modalItemName.textContent = currentItem.name;
+    modalItemDesc.textContent = currentItem.desc;
+    modalItemPrice.textContent = money(currentItem.price);
+    itemObsTextarea.value = ''; // Limpa observações anteriores
+    modalQty = 1;
+    modalQtySpan.textContent = modalQty;
+    
+    // Abre o modal
+    itemModal.style.display = 'block';
+    overlayEl.classList.add('active');
+
+    // Fecha o carrinho, se estiver aberto (para mobile)
+    toggleCart(false);
 }
 
-function alterarQuantidadeResumo(index, delta) {
-  carrinho[index].qtd += delta;
-  if (carrinho[index].qtd <= 0) carrinho.splice(index, 1);
-  salvarCarrinho();
-  renderResumoCarrinho();
-}
 
-function removerDoResumo(index) {
-  carrinho.splice(index, 1);
-  salvarCarrinho();
-  renderResumoCarrinho();
-}
+/* ========== LÓGICA DO CARRINHO ========== */
 
-function salvarCarrinho() {
-  localStorage.setItem('carrinho', JSON.stringify(carrinho));
-}
-
-// ==============================
-// 🔹 RESUMO DO PEDIDO
-// ==============================
-
-function renderResumoCarrinho() {
-  const cartItems = document.getElementById('cart-items');
-  const subtotalEl = document.getElementById('subTotalDisplay');
-  const taxaEl = document.getElementById('taxaEntregaDisplay');
-  const totalEl = document.getElementById('cart-total');
-  const countEl = document.getElementById('cartCount');
-  const checkoutBtn = document.getElementById('checkoutBtn');
-
-  cartItems.innerHTML = '';
-
+function renderCart() {
+  const cartItemsEl = document.getElementById('cart-items');
+  const subtotalEl = document.getElementById('subtotal');
+  const feeEl = document.getElementById('fee');
+  const totalEl = document.getElementById('total');
+  
   let subtotal = 0;
-  let totalItens = 0;
+  const cartItemKeys = Object.keys(cart);
 
-  carrinho.forEach((item, index) => {
-    const totalItem = item.qtd * item.preco;
-    subtotal += totalItem;
-    totalItens += item.qtd;
+  if (cartItemKeys.length === 0) {
+    cartItemsEl.innerHTML = '<div class="empty-cart-message">Carrinho vazio</div>';
+    checkoutBtn.disabled = true;
+    cartToggleBtn.setAttribute('data-count', 0);
+  } else {
+    checkoutBtn.disabled = false;
+    // Contador para o botão flutuante
+    cartToggleBtn.setAttribute('data-count', cartItemKeys.reduce((sum, key) => sum + cart[key], 0));
 
-    const div = document.createElement('div');
-    div.className = 'cart-item';
-    div.innerHTML = `
-      <div class="item-info">
-        <strong>${item.qtd}x ${item.nome}</strong>
-        <span>R$ ${totalItem.toFixed(2)}</span>
-      </div>
-      <div class="item-controls">
-        <button onclick="alterarQuantidadeResumo(${index}, -1)">−</button>
-        <button onclick="alterarQuantidadeResumo(${index}, 1)">+</button>
-        <button onclick="removerDoResumo(${index})" class="remove">🗑️</button>
-      </div>
-    `;
-    cartItems.appendChild(div);
-  });
+    cartItemsEl.innerHTML = cartItemKeys.map(key => {
+      // Separa o ID do item da observação (ex: "1_Sem picles")
+      const [itemId, obsText] = key.split('_'); 
+      const item = menuItems.find(m => m.id == itemId);
+      
+      const qty = cart[key];
+      const sub = item.price * qty;
+      subtotal += sub;
+      
+      // Monta a exibição da observação
+      const obsDisplay = obsText && obsText.trim() ? `<p class="item-obs-text">Obs: ${obsText.trim()}</p>` : '';
 
-  if (carrinho.length === 0)
-    cartItems.innerHTML = '<div class="muted text-center">Carrinho vazio</div>';
+      return `
+        <div class="cart-item">
+          <div class="qty-control">
+            <button data-id="${key}" data-action="dec">-</button>
+            <span>${qty}</span>
+            <button data-id="${key}" data-action="add">+</button>
+          </div>
+          <div class="details">
+            <p class="name">${item.name}</p>
+            ${obsDisplay}
+            <p class="price-line">${money(item.price)} x ${qty} = <strong>${money(sub)}</strong></p>
+          </div>
+          <button class="remove-btn" data-id="${key}" data-action="rem">✕</button>
+        </div>
+      `;
+    }).join('');
+  }
 
-  const regiao = document.getElementById('clienteRegiao')?.value || '';
-  const taxa = TAXAS[regiao] || 0;
-  const total = subtotal + taxa;
+  // Taxa de entrega
+  const selectedOption = regionSel.options[regionSel.selectedIndex];
+  const fee = parseFloat(selectedOption.getAttribute('data-fee')) || 0;
+  
+  const total = subtotal + fee;
 
-  subtotalEl.textContent = `R$ ${subtotal.toFixed(2)}`;
-  taxaEl.textContent = `R$ ${taxa.toFixed(2)}`;
-  totalEl.textContent = `R$ ${total.toFixed(2)}`;
-
-  if (countEl) countEl.textContent = totalItens;
-  if (checkoutBtn) checkoutBtn.disabled = carrinho.length === 0;
+  subtotalEl.textContent = money(subtotal);
+  feeEl.textContent = money(fee);
+  totalEl.textContent = money(total);
+  // Atualiza o valor no botão flutuante (ícone)
+  cartToggleBtn.innerHTML = `<i class="fas fa-shopping-cart"></i> ${money(total)}`;
 }
 
-// ==============================
-// 🔹 FINALIZAR PEDIDO
-// ==============================
+/**
+ * Função para alternar o carrinho no modo mobile (ESSENCIAL)
+ */
+function toggleCart(open) {
+  if(window.innerWidth > 1100) return; // Não faz nada no desktop
 
-function finalizarPedido() {
-  const nome = document.getElementById('clienteNome').value.trim();
-  const telefone = document.getElementById('clienteTelefone').value.trim();
-  const endereco = document.getElementById('clienteEndereco').value.trim();
-  const regiao = document.getElementById('clienteRegiao').value;
-  const pagamento = document.getElementById('pagamento').value;
-  const obs = document.getElementById('obsCliente').value.trim();
-
-  if (!carrinho.length) return alert('Seu carrinho está vazio!');
-  if (!nome || !telefone || !endereco || !pagamento)
-    return alert('Preencha todos os campos obrigatórios.');
-
-  const subtotal = carrinho.reduce((acc, i) => acc + i.qtd * i.preco, 0);
-  const taxa = TAXAS[regiao] || 0;
-  const total = subtotal + taxa;
-
-  let mensagem = `*🍔 NOVO PEDIDO - ARTESANAL BLEND*\n\n`;
-  mensagem += `*Cliente:* ${nome}\n`;
-  mensagem += `*Telefone:* ${telefone}\n`;
-  mensagem += `*Endereço:* ${endereco} (${regiao})\n\n`;
-  mensagem += `*Itens do pedido:*\n`;
-
-  carrinho.forEach(item => {
-    mensagem += `• ${item.qtd}x ${item.nome} - R$ ${(item.qtd * item.preco).toFixed(2)}\n`;
-  });
-
-  mensagem += `\n*Subtotal:* R$ ${subtotal.toFixed(2)}\n`;
-  mensagem += `*Taxa de entrega:* R$ ${taxa.toFixed(2)}\n`;
-  mensagem += `*Total:* R$ ${total.toFixed(2)}\n\n`;
-  mensagem += `*Pagamento:* ${pagamento}\n`;
-  if (obs) mensagem += `\n*Obs:* ${obs}\n`;
-  mensagem += `\n_Pedido gerado via sistema online._`;
-
-  const url = `https://wa.me/5531992128891?text=${encodeURIComponent(mensagem)}`;
-  window.open(url, '_blank');
-
-  carrinho = [];
-  salvarCarrinho();
-  renderResumoCarrinho();
+  if(open) {
+    cartEl.classList.add('open');
+    overlayEl.classList.add('active');
+  } else {
+    cartEl.classList.remove('open');
+    overlayEl.classList.remove('active');
+  }
 }
 
-// ==============================
-// 🔹 EVENTOS
-// ==============================
+/* ========== EVENT LISTENERS ========== */
 
-document.addEventListener('DOMContentLoaded', () => {
-  carregarCardapio();
-  renderResumoCarrinho();
-
-  document.getElementById('checkoutBtn')?.addEventListener('click', finalizarPedido);
-  document.getElementById('clienteRegiao')?.addEventListener('change', renderResumoCarrinho);
+// Listener de cliques gerais (Adicionar/Remover no carrinho)
+document.addEventListener('click', e => {
+  const target = e.target.closest('[data-id][data-action]');
+  if (target) {
+    const id = target.getAttribute('data-id'); 
+    const act = target.getAttribute('data-action');
+    
+    if (act === 'add') {
+      cart[id] = (cart[id] || 0) + 1;
+    } 
+    else if (act === 'dec') {
+      cart[id] = (cart[id] || 0) - 1;
+      if (cart[id] <= 0) {
+        delete cart[id];
+      }
+    }
+    else if(act === 'rem') {
+      delete cart[id];
+    }
+    renderCart();
+  }
 });
+
+/* Mudança de região recalcula */
+regionSel.addEventListener('change', renderCart);
+
+
+// ===============================================
+// LÓGICA DE CONTROLE DO MODAL
+// ===============================================
+
+// Controle de Quantidade no Modal
+document.getElementById('addModalQty').addEventListener('click', () => {
+    modalQty++;
+    modalQtySpan.textContent = modalQty;
+});
+document.getElementById('decModalQty').addEventListener('click', () => {
+    if (modalQty > 1) {
+        modalQty--;
+        modalQtySpan.textContent = modalQty;
+    }
+});
+
+// Adicionar ao Carrinho do Modal
+addToCartModalBtn.addEventListener('click', () => {
+    if (!currentItem || modalQty <= 0) return;
+
+    const obs = itemObsTextarea.value.trim().replace(/_/g, ' '); // Evita quebra na chave
+    // Chave única: ID_OBSERVACAO
+    const itemKey = `${currentItem.id}_${obs || 'SemObs'}`; 
+    
+    // Adiciona a quantidade selecionada ao carrinho
+    cart[itemKey] = (cart[itemKey] || 0) + modalQty;
+
+    // Renderiza e fecha
+    renderCart();
+    closeItemModal();
+});
+
+
+// ===============================================
+// LÓGICA DE ABRIR/FECHAR O CARRINHO FLUTUANTE
+// ===============================================
+
+// Eventos de clique para abrir/fechar o carrinho mobile
+cartToggleBtn.addEventListener('click', () => {
+  const isOpen = cartEl.classList.contains('open');
+  toggleCart(!isOpen);
+});
+
+overlayEl.addEventListener('click', () => {
+  toggleCart(false); 
+  closeItemModal(); // Fecha o modal se o overlay for clicado
+});
+
+// O botão de fechar (X) dentro do carrinho:
+closeCartBtn.addEventListener('click', () => {
+  toggleCart(false);
+});
+
+
+/* checkout -> whatsapp */
+const WHATSAPP_NUMBER = '5531992128891';
+
+checkoutBtn.addEventListener('click', () => {
+  if(Object.keys(cart).length === 0) return alert('Carrinho vazio.');
+
+  const customerName = nameInput.value.trim();
+  const customerPhone = phoneInput.value.trim();
+  const customerAddress = addrInput.value.trim();
+  const customerPayment = paymentInput.value.trim();
+  const customerObs = obsInput.value.trim() || 'Nenhuma.'; // Observações gerais
+
+  if (!customerName || !customerPhone || !customerPayment) {
+    alert('Por favor, preencha nome, telefone e método de pagamento.');
+    return;
+  }
+  
+  const selectedOption = regionSel.options[regionSel.selectedIndex];
+  const selectedOptionText = selectedOption.text;
+  const isDelivery = regionSel.value !== 'none';
+  const fee = parseFloat(selectedOption.getAttribute('data-fee')) || 0;
+
+  if (isDelivery && !customerAddress) {
+    alert('Por favor, preencha o endereço completo para entrega.');
+    return;
+  }
+
+  // Monta as linhas do pedido (incluindo observações específicas)
+  let subtotal = 0;
+  const itemsLines = Object.keys(cart).map(key => {
+    const [itemId, obsTextEncoded] = key.split('_'); 
+    const item = menuItems.find(m => m.id==itemId);
+    const qty = cart[key];
+    const sub = item.price * qty;
+    subtotal += sub;
+    
+    let line = `${qty}x ${item.name}`;
+
+    // Adiciona a observação específica do item se existir
+    if (obsTextEncoded && obsTextEncoded !== 'SemObs') {
+      line += `\n    (Obs: ${obsTextEncoded.trim()})`;
+    }
+    line += ` — ${money(sub)}`;
+    return line;
+  });
+  
+  const totalGeral = subtotal + fee;
+
+  const lines = [];
+  lines.push(`🧾 *NOVO PEDIDO - Artesanal Blend* 🎯`);
+  lines.push('');
+  lines.push(`✅ *DADOS DO CLIENTE:*`);
+  lines.push(`Nome: ${customerName}`);
+  lines.push(`Telefone: ${customerPhone}`);
+  
+  lines.push(`Opção de Entrega: ${selectedOptionText}`); 
+  
+  if (isDelivery) {
+    lines.push(`Endereço: ${customerAddress}`);
+  } else {
+    lines.push(`Local de Retirada: Rua Coniston, 380 B2`);
+  }
+  
+  lines.push(`Pagamento: ${customerPayment}`);
+  lines.push(`Obs. Gerais: ${customerObs}`); 
+  lines.push('');
+  lines.push(`📦 *ITENS DO PEDIDO:*`);
+  lines.push(itemsLines.join('\n'));
+  lines.push('');
+  
+  lines.push(`🛵 *TAXA DE ENTREGA:* ${money(fee)}`); 
+  lines.push(`💰 *TOTAL GERAL:* ${money(totalGeral)}`);
+
+  const text = encodeURIComponent(lines.join('\n'));
+  const url = `https://wa.me/${WHATSAPP_NUMBER}?text=${text}`;
+  window.open(url,'_blank');
+});
+
+
+/* ========== INICIALIZAÇÃO ========== */
+renderMenu();
+renderCart();
