@@ -4,7 +4,7 @@
       "nome": "Blend Clássico",
       "preco": 25.90,
       "descricao": "Hambúrguer 180g, queijo, alface, tomate e molho especial",
-      "imagem": "hamburguer-classico.jpg",
+      "imagem": "images/baconblend.jpg",
       "categoria": "Hambúrgueres",
       "disponivel": true
     }
