@@ -372,7 +372,7 @@ function finalizarPedido() {
     document.getElementById('obsCliente').value = '';
     document.getElementById('troco').value = '';
     mostrarTroco(); // Esconde o campo de troco
-}
+
 
 async function salvarPedidoNoBanco(pedidoData) {
     try {
@@ -409,4 +409,5 @@ window.atualizarTaxa = atualizarTaxa;
 window.finalizarPedido = finalizarPedido;
 window.toggleCart = toggleCart;
 window.mostrarTroco = mostrarTroco;
+
 
