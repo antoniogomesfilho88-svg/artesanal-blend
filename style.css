@@ -1,5 +1,5 @@
 /* ===========================
-   ARTESANAL BLEND - CSS COMPLETO E CORRIGIDO
+   ARTESANAL BLEND - CSS OTIMIZADO
    MOBILE FIRST APPROACH
 =========================== */
 
@@ -98,18 +98,39 @@ header {
   padding: 20px 10px;
 }
 
+/* Títulos das seções com faixa de fundo */
 .menu-section h2 {
-  color: var(--red);
-  font-size: 1.2rem;
-  border-left: 3px solid var(--red);
-  padding-left: 10px;
-  margin-bottom: 15px;
-  text-transform: uppercase;
+  background: linear-gradient(135deg, #2a1a0f, #3d2515);
+  color: #ffffff;
+  padding: 15px 20px;
+  margin: 25px -10px 20px -10px;
+  border-radius: 10px;
+  border: 2px solid var(--red);
+  position: relative;
+  box-shadow: 0 4px 15px rgba(225, 75, 75, 0.3);
+  text-align: center;
+  font-size: 1.3rem;
   font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+}
+
+.menu-section h2::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  background: linear-gradient(45deg, var(--red), var(--red-light), var(--red));
+  border-radius: 12px;
+  z-index: -1;
+  opacity: 0.4;
 }
 
 /* ===========================
-   ITENS DO CARDÁPIO - 2 COLUNAS NO MOBILE
+   ITENS DO CARDÁPIO - GRID RESPONSIVO
 =========================== */
 .menu-grid {
   display: grid;
@@ -118,8 +139,8 @@ header {
   padding: 0 8px;
 }
 
-/* Estilo para os cards existentes */
-.menu-grid > div {
+/* Cards de produtos */
+.menu-item {
   background: var(--card);
   border-radius: var(--radius);
   padding: 0;
@@ -132,22 +153,22 @@ header {
   overflow: hidden;
 }
 
-.menu-grid > div:hover {
+.menu-item:hover {
   transform: translateY(-2px);
   box-shadow: 0 5px 15px rgba(225, 75, 75, 0.2);
 }
 
-/* Imagens dos produtos - menor no mobile */
-.menu-grid > div img {
+/* Imagens dos produtos */
+.menu-item img {
   width: 100%;
-  height: 100px; /* Altura reduzida para caber 2 colunas */
+  height: 100px;
   object-fit: cover;
   border-radius: var(--radius) var(--radius) 0 0;
   background: #333;
 }
 
 /* Conteúdo textual dos cards */
-.menu-grid > div > div {
+.menu-item-content {
   padding: 8px;
   flex-grow: 1;
   display: flex;
@@ -155,7 +176,7 @@ header {
 }
 
 /* Nome do produto */
-.menu-grid > div > div strong {
+.menu-item-name {
   font-size: 0.85rem;
   line-height: 1.3;
   margin-bottom: 4px;
@@ -164,7 +185,7 @@ header {
 }
 
 /* Preço */
-.menu-grid > div > div > span {
+.menu-item-price {
   color: var(--red);
   font-weight: 800;
   font-size: 0.9rem;
@@ -173,7 +194,7 @@ header {
 }
 
 /* Descrição */
-.menu-grid > div > div > span:not(:first-child) {
+.menu-item-description {
   font-size: 0.7rem;
   color: var(--gray);
   line-height: 1.2;
@@ -186,8 +207,7 @@ header {
 }
 
 /* Botões Adicionar */
-.menu-grid > div > div button,
-.menu-grid > div > div a {
+.btn-add {
   background: var(--red);
   color: white;
   border: none;
@@ -203,71 +223,8 @@ header {
   text-transform: uppercase;
 }
 
-.menu-grid > div > div button:hover,
-.menu-grid > div > div a:hover {
+.btn-add:hover {
   background: var(--red-light);
-}
-
-/* ===========================
-   RESPONSIVIDADE - TABLET
-=========================== */
-@media (min-width: 768px) {
-  .menu-grid {
-    grid-template-columns: 1fr 1fr 1fr; /* 3 colunas no tablet/desktop */
-    gap: 20px;
-    padding: 0 15px;
-  }
-  
-  .menu-grid > div img {
-    height: 140px; /* Imagem maior em telas maiores */
-  }
-  
-  .menu-grid > div > div strong {
-    font-size: 1rem;
-  }
-  
-  .menu-grid > div > div > span {
-    font-size: 1.1rem;
-  }
-  
-  .menu-grid > div > div > span:not(:first-child) {
-    font-size: 0.8rem;
-  }
-  
-  .menu-grid > div > div button,
-  .menu-grid > div > div a {
-    font-size: 0.85rem;
-    padding: 8px 12px;
-  }
-}
-
-/* ===========================
-   AJUSTE PARA TELAS MUITO PEQUENAS
-=========================== */
-@media (max-width: 360px) {
-  .menu-grid {
-    grid-template-columns: 1fr 1fr;
-    gap: 8px;
-    padding: 0 5px;
-  }
-  
-  .menu-grid > div img {
-    height: 90px;
-  }
-  
-  .menu-grid > div > div {
-    padding: 6px;
-  }
-  
-  .menu-grid > div > div strong {
-    font-size: 0.8rem;
-  }
-  
-  .menu-grid > div > div button,
-  .menu-grid > div > div a {
-    font-size: 0.7rem;
-    padding: 5px 6px;
-  }
 }
 
 /* ===========================
@@ -448,7 +405,7 @@ header {
 /* ===========================
    BOTÕES PRINCIPAIS
 =========================== */
-button.primary {
+.btn-primary {
   background: var(--red);
   color: #fff;
   border: none;
@@ -464,7 +421,7 @@ button.primary {
   transition: background 0.2s ease;
 }
 
-button.primary:hover {
+.btn-primary:hover {
   background: var(--red-light);
 }
 
@@ -538,11 +495,39 @@ footer {
 }
 
 /* ===========================
-   RESPONSIVIDADE - TABLET
+   RESPONSIVIDADE
 =========================== */
+
+/* Telas muito pequenas (até 360px) */
+@media (max-width: 360px) {
+  .menu-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    padding: 0 5px;
+  }
+  
+  .menu-item img {
+    height: 90px;
+  }
+  
+  .menu-item-content {
+    padding: 6px;
+  }
+  
+  .menu-item-name {
+    font-size: 0.8rem;
+  }
+  
+  .btn-add {
+    font-size: 0.7rem;
+    padding: 5px 6px;
+  }
+}
+
+/* Tablet (a partir de 480px) */
 @media (min-width: 480px) {
   .menu-grid {
-    grid-template-columns: 1fr 1fr; /* 2 colunas em tablet */
+    grid-template-columns: 1fr 1fr;
     gap: 18px;
     padding: 0 10px;
   }
@@ -559,14 +544,33 @@ footer {
   .header-content .slogan {
     font-size: 0.9rem;
   }
+  
+  .menu-item img {
+    height: 120px;
+  }
+  
+  .menu-item-name {
+    font-size: 0.9rem;
+  }
+  
+  .menu-item-price {
+    font-size: 1rem;
+  }
+  
+  .menu-item-description {
+    font-size: 0.75rem;
+  }
+  
+  .btn-add {
+    font-size: 0.8rem;
+    padding: 7px 10px;
+  }
 }
 
-/* ===========================
-   RESPONSIVIDADE - DESKTOP
-=========================== */
+/* Desktop (a partir de 768px) */
 @media (min-width: 768px) {
   .menu-grid {
-    grid-template-columns: 1fr 1fr 1fr; /* 3 colunas no desktop */
+    grid-template-columns: 1fr 1fr 1fr;
     gap: 20px;
     padding: 0 15px;
   }
@@ -575,17 +579,22 @@ footer {
     height: 140px;
   }
   
-  .menu-item h3 {
+  .menu-item-name {
+    font-size: 1rem;
+  }
+  
+  .menu-item-price {
     font-size: 1.1rem;
   }
   
-  .menu-item-header .price {
-    font-size: 1.2rem;
+  .menu-item-description {
+    font-size: 0.8rem;
+    -webkit-line-clamp: 3;
   }
   
-  .menu-item p {
+  .btn-add {
     font-size: 0.85rem;
-    -webkit-line-clamp: 3;
+    padding: 8px 12px;
   }
   
   .header-content {
@@ -669,68 +678,4 @@ footer {
   background: rgba(231, 76, 60, 0.2);
   color: #e74c3c;
   border: 1px solid #e74c3c;
-}
-/* ===========================
-   FAIXAS DE FUNDO PARA OS TÍTULOS DAS SEÇÕES
-=========================== */
-
-/* Container dos títulos com faixa de fundo */
-.menu-section h2 {
-  background: linear-gradient(135deg, #2a1a0f, #3d2515);
-  color: #ffffff; /* NOME BRANCO */
-  padding: 15px 20px;
-  margin: 25px -10px 20px -10px;
-  border-radius: 10px;
-  border: 2px solid #e14b4b; /* BORDA VERMELHA SUAVE */
-  position: relative;
-  box-shadow: 0 4px 15px rgba(225, 75, 75, 0.3); /* Sombra vermelha suave */
-  text-align: center;
-  font-size: 1.3rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-}
-
-/* Remove o estilo anterior dos títulos */
-.menu-section h2 {
-  border-left: none;
-  padding-left: 20px;
-  -webkit-text-fill-color: #ffffff; /* Garante texto branco */
-  text-shadow: 0 2px 4px rgba(0,0,0,0.5);
-}
-
-/* Efeito de brilho nos títulos com vermelho */
-.menu-section h2::before {
-  content: '';
-  position: absolute;
-  top: -2px;
-  left: -2px;
-  right: -2px;
-  bottom: -2px;
-  background: linear-gradient(45deg, #e14b4b, #ff6d6d, #e14b4b); /* Gradiente vermelho */
-  border-radius: 12px;
-  z-index: -1;
-  opacity: 0.4; /* Mais suave */
-}
-
-/* Mantém os grids sem fundo (como estavam) */
-#cat-Hambúrgueres,
-#cat-Combos, 
-#cat-Acompanhamentos,
-#cat-Adicionais,
-#cat-Bebidas {
-  background: transparent;
-  padding: 0;
-  margin: 0;
-  border: none;
-  box-shadow: none;
-}
-
-/* Remove os efeitos anteriores dos grids */
-#cat-Hambúrgueres::before,
-#cat-Combos::before,
-#cat-Acompanhamentos::before,
-#cat-Adicionais::before,
-#cat-Bebidas::before {
-  display: none;
 }
