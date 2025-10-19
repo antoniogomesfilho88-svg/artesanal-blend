@@ -48,40 +48,30 @@
       <button id="closeCartBtn" class="btn close-cart">✖</button>
     </div>
 
-    <div id="cart-items" class="cart-items">
-      </div>
+    <div id="cart-items" class="cart-items"></div>
 
     <div class="pedido-resumo">
-        <p>Sub-total:</p>
-        <span id="subTotalDisplay">R$ 0,00</span>
-        
-        <p>Taxa de entrega:</p>
-        <span id="taxaEntregaDisplay">R$ 0,00</span>
-        
-        <p class="total-linha">Total:</p>
-        <span id="cart-total" class="total-linha total-value">R$ 0,00</span>
+      <p>Sub-total: <span id="subTotalDisplay">R$ 0,00</span></p>
+      <p>Taxa de entrega: <span id="taxaEntregaDisplay">R$ 0,00</span></p>
+      <p class="total-linha">Total: <span id="cart-total" class="total-value">R$ 0,00</span></p>
     </div>
 
     <div class="cliente-info">
-      
       <textarea id="obsCliente" rows="2" placeholder="Observações do pedido (Opcional)"></textarea>
-
       <input type="text" id="clienteNome" placeholder="Seu nome completo (Obrigatório)" />
-      
       <input type="text" id="clienteTelefone" placeholder="Seu Telefone (WhatsApp - Obrigatório)" />
-      
       <input type="text" id="clienteEndereco" placeholder="Seu endereço completo (Obrigatório para Entrega)" />
 
       <select id="pagamento" onchange="mostrarTroco()">
-        <option value="">Método de Pagamento (Pix, Cartão, Dinheiro...)</option>
+        <option value="">Método de Pagamento</option>
         <option value="Pix">Pix</option>
         <option value="Cartão de Crédito">Cartão de Crédito</option>
         <option value="Cartão de Débito">Cartão de Débito</option>
         <option value="Dinheiro">Dinheiro</option>
       </select>
-      
-      <select id="clienteRegiao" onchange="atualizarTaxa()">
-        <option value="">Selecione sua região (Para calcular a taxa de entrega)</option>
+
+      <select id="clienteRegiao" onchange="renderCarrinho()">
+        <option value="">Selecione sua região</option>
         <option value="Jardim Canadá">Jardim Canadá - R$ 6,00</option>
         <option value="Retiro das Pedras">Retiro das Pedras - R$ 10,00</option>
         <option value="Serra do Manacás">Serra do Manacás - R$ 10,00</option>
@@ -94,54 +84,16 @@
       </div>
     </div>
 
-    <button id="checkoutBtn" class="btn primary" disabled>
-        <i class="fa-brands fa-whatsapp"></i> Enviar pedido pelo WhatsApp
+    <button id="checkoutBtn" class="btn primary">
+      <i class="fa-brands fa-whatsapp"></i> Enviar pedido pelo WhatsApp
     </button>
     <small class="muted">O pedido será enviado para: <strong>(31) 99212-8891</strong></small>
   </section>
+
   <footer>
     <p>🍔 Artesanal Blend - Todos os direitos reservados</p>
   </footer>
 
   <script src="script.js"></script>
-
-  <script>
-    // Controle suave de abrir/fechar carrinho
-    document.addEventListener("DOMContentLoaded", () => {
-      const openCartBtn = document.getElementById("openCartBtn");
-      const closeCartBtn = document.getElementById("closeCartBtn");
-      const cart = document.getElementById("cart");
-      const cartCount = document.getElementById("cartCount");
-
-      if (openCartBtn && cart) {
-        openCartBtn.addEventListener("click", () => {
-          cart.classList.add("show");
-        });
-      }
-
-      if (closeCartBtn && cart) {
-        closeCartBtn.addEventListener("click", () => {
-          cart.classList.remove("show");
-        });
-      }
-
-      // Atualizar contador do carrinho
-      function atualizarContador() {
-        // Assume que 'carrinho' é definido em script.js
-        const totalItens = typeof carrinho !== 'undefined' ? carrinho.reduce((acc, item) => acc + item.qtd, 0) : 0;
-        cartCount.textContent = totalItens;
-      }
-
-      // Se o renderCarrinho existir, sobrescreve para atualizar o contador
-      if (typeof renderCarrinho === "function") {
-        const oldRender = renderCarrinho;
-        renderCarrinho = function () {
-          oldRender();
-          atualizarContador();
-        };
-      }
-    });
-  </script>
 </body>
 </html>
-
