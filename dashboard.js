@@ -200,12 +200,12 @@ class Dashboard {
                 <div class="preco">R$ ${produto.preco?.toFixed(2) || '0.00'}</div>
                 <div class="descricao">${produto.descricao || ''}</div>
                 
-                ${produto.imagem ? `
-                    <div style="margin: 1rem 0;">
-                        <img src="${produto.imagem}" alt="${produto.nome}" 
-                             style="max-width: 100%; height: 150px; object-fit: cover; border-radius: 4px;">
-                    </div>
-                ` : ''}
+               ${produto.imagem ? `
+    <div style="margin: 1rem 0;">
+        <img src="../${produto.imagem}" alt="${produto.nome}" 
+             style="max-width: 100%; height: 150px; object-fit: cover; border-radius: 4px;">
+    </div>
+` : ''}
                 
                 <div class="card-actions">
                     <button class="btn-editar" onclick="dashboard.abrirModalProduto(${JSON.stringify(produto).replace(/"/g, '&quot;')})">
@@ -520,3 +520,4 @@ class Dashboard {
 document.addEventListener('DOMContentLoaded', () => {
     window.dashboard = new Dashboard();
 });
+
