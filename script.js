@@ -270,58 +270,48 @@ function mostrarTroco() {
 }
 
 function finalizarPedido() {
+    // CORRIGIDO: Novos IDs do HTML
     const clienteNome = document.getElementById('clienteNome').value;
     const clienteTelefone = document.getElementById('clienteTelefone').value;
     const clienteEndereco = document.getElementById('clienteEndereco').value;
     const clienteRegiaoSelect = document.getElementById('clienteRegiao');
-    
-    // Pega o nome da região (ex: "Jardim Canadá" ou "Retirada no Local")
-    const clienteRegiao = clienteRegiaoSelect.options[clienteRegiaoSelect.selectedIndex].text.split(' - ')[0]; 
-    
+    const clienteRegiao = clienteRegiaoSelect.options[clienteRegiaoSelect.selectedIndex].text.split(' - ')[0]; // Pega só o nome da região
     const pagamento = document.getElementById('pagamento').value;
     const obsCliente = document.getElementById('obsCliente').value;
     const trocoNecessario = document.getElementById('troco')?.value;
     
-    // ... (Bloco de validações omitido para brevidade)
+    const showMessage = (message, isError = true) => {
+        const msgDiv = document.createElement('div');
+        msgDiv.className = isError ? 'custom-message error' : 'custom-message success';
+        msgDiv.textContent = message;
+        
+        const cartContent = document.getElementById('cart'); 
+        if (cartContent) cartContent.prepend(msgDiv);
+
+        setTimeout(() => msgDiv.remove(), 4000);
+    };
 
     if (!carrinho || carrinho.length === 0) {
-        // ... (Mensagem de erro)
+        showMessage('Seu carrinho está vazio!', true);
         return;
     }
 
-    // --- Validação Condicional ---
-    // Se for entrega, o endereço é obrigatório.
-    if (clienteRegiao !== 'Retirada no Local' && !clienteEndereco) {
-        showMessage('Para entrega, preencha o endereço completo!', true);
-        return;
-    }
-    
-    if (!clienteNome || !clienteTelefone || !pagamento) {
+    if (!clienteNome || !clienteTelefone || !clienteEndereco || !pagamento) {
         showMessage('Por favor, preencha todos os campos obrigatórios!', true);
         return;
     }
-    // -----------------------------
     
     const subtotal = carrinho.reduce((acc, item) => acc + ((item.preco || 0) * item.qtd), 0);
+    
     const taxa = getTaxaEntrega(clienteRegiaoSelect.value || "none");
+    
     const total = subtotal + taxa;
     
     let mensagem = `*NOVO PEDIDO - Artesanal Blend* 🍔\n\n`;
     mensagem += `*Cliente:* ${clienteNome}\n`;
     mensagem += `*Telefone:* ${clienteTelefone}\n`;
-    
-    // ===============================================
-    // LÓGICA DE ENDEREÇO E MODALIDADE
-    // ===============================================
-    if (clienteRegiao === 'Retirada no Local') {
-        mensagem += `*Modalidade:* Retirada no Local (O cliente irá buscar)\n`;
-    } else {
-        mensagem += `*Endereço:* ${clienteEndereco}\n`;
-        mensagem += `*Região de Entrega:* ${clienteRegiao}\n`;
-    }
-    // ===============================================
-
-    mensagem += `\n*ITENS DO PEDIDO:*\n`;
+    mensagem += `*Endereço:* ${clienteEndereco} (${clienteRegiao})\n\n`;
+    mensagem += `*ITENS DO PEDIDO:*\n`;
     
     carrinho.forEach(item => {
         mensagem += `• ${item.qtd}x ${item.nome} (R$ ${((item.preco || 0) * item.qtd).toFixed(2)})\n`;
@@ -342,8 +332,6 @@ function finalizarPedido() {
     
     mensagem += `\n_ Pedido gerado via sistema _`;
     
-    // ... (restante da função)
-}
     const urlWhatsApp = `https://wa.me/5531992128891?text=${encodeURIComponent(mensagem)}`;
     window.open(urlWhatsApp, '_blank');
     
@@ -372,7 +360,7 @@ function finalizarPedido() {
     document.getElementById('obsCliente').value = '';
     document.getElementById('troco').value = '';
     mostrarTroco(); // Esconde o campo de troco
-
+}
 
 async function salvarPedidoNoBanco(pedidoData) {
     try {
@@ -409,5 +397,3 @@ window.atualizarTaxa = atualizarTaxa;
 window.finalizarPedido = finalizarPedido;
 window.toggleCart = toggleCart;
 window.mostrarTroco = mostrarTroco;
-
-
