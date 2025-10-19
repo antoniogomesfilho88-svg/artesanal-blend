@@ -1,14 +1,37 @@
 let carrinho = JSON.parse(localStorage.getItem('carrinho')) || [];
+// As taxas estão no HTML, então a constante TAXAS não é estritamente necessária aqui, 
+// mas a mantemos como referência.
 const TAXAS = {
-    "Jardim Canadá": 5.00,
-    "Vila da Serra": 10.00,
-    "Outras Regiões": 15.00,
-    "none": 0.00 
+    "Jardim Canadá": 6.00,
+    "Retiro das Pedras": 10.00,
+    "Serra do Manacás": 10.00,
+    "Vale do Sol": 12.00,
+    "Alphaville": 15.00,
+    "none": 0.00
 };
 
 function escaparStringHTML(str) {
     if (typeof str !== 'string') return '';
+    // A função é mantida por segurança, mas o método 'data-attribute' é o ideal (veja as observações)
     return str.replace(/'/g, "\\'").replace(/"/g, '\\"');
+}
+
+// ====================================================================
+// FUNÇÃO AUXILIAR PARA PEGAR A TAXA DO HTML (mais robusto)
+// ====================================================================
+function getTaxaEntrega(regiao) {
+    const select = document.getElementById('clienteRegiao');
+    if (!select) return 0;
+
+    // A taxa agora está embutida no texto da opção (ex: "Jardim Canadá - R$ 6,00")
+    for (let i = 0; i < select.options.length; i++) {
+        const option = select.options[i];
+        if (option.value === regiao) {
+            const match = option.text.match(/R\$ ([\d,.]+)/);
+            return match ? parseFloat(match[1].replace(',', '.')) : 0;
+        }
+    }
+    return 0;
 }
 
 // Carregar cardápio da API
@@ -21,43 +44,8 @@ async function carregarCardapio() {
         }
         
         const cardapio = await response.json();
+        renderCardapio(cardapio);
         
-        Object.keys(cardapio).forEach(categoria => {
-            const container = document.getElementById(`cat-${categoria}`); 
-            
-            if (container) {
-                container.innerHTML = cardapio[categoria].map(produto => {
-                    const precoNumerico = produto.preco || 0;
-                    const precoFormatado = precoNumerico.toFixed(2);
-                    const imagemUrl = produto.imagem || '';
-                    const nomeEscapado = escaparStringHTML(produto.nome); 
-
-                    // ESTRUTURA PARA GRADE DE 2/3 COLUNAS (ONDE O BOTÃO É O ÚNICO INTERAGÍVEL)
-                    return `
-                        <div class="menu-item">
-                            ${imagemUrl ? `<img src="${imagemUrl}" alt="${produto.nome}" />` : ''}
-                            
-                            <div class="menu-item-text">
-                                <div class="menu-item-header">
-                                    <h3>${produto.nome}</h3>
-                                    <span class="price">R$ ${precoFormatado}</span>
-                                </div>
-                                <p>${produto.descricao || ''}</p>
-                            </div>
-                            
-                            <div class="menu-item-footer">
-                                <button class="btn-adicionar" 
-                                        onclick="adicionarAoCarrinho('${categoria}', '${nomeEscapado}', ${precoNumerico}); event.stopPropagation();"> 
-                                    ➕ Adicionar
-                                </button> 
-                            </div>
-                        </div>
-                    `;
-                }).join('');
-            }
-        });
-        
-        renderCarrinho();
     } catch (error) {
         console.log('⚠️ Erro ao carregar cardápio da API. Tentando fallback local.', error);
         carregarCardapioLocal(); 
@@ -74,51 +62,92 @@ function carregarCardapioLocal() {
              return response.json();
         })
         .then(cardapio => {
-            Object.keys(cardapio).forEach(categoria => {
-                const container = document.getElementById(`cat-${categoria}`);
-                if (container) {
-                    container.innerHTML = cardapio[categoria].map(produto => {
-                        const precoNumerico = produto.preco || 0;
-                        const precoFormatado = precoNumerico.toFixed(2);
-                        const imagemUrl = produto.imagem || '';
-                        const nomeEscapado = escaparStringHTML(produto.nome); 
-
-                        // ESTRUTURA PARA GRADE DE 2/3 COLUNAS
-                        return `
-                            <div class="menu-item">
-                                ${imagemUrl ? `<img src="${imagemUrl}" alt="${produto.nome}" />` : ''}
-                                
-                                <div class="menu-item-text">
-                                    <div class="menu-item-header">
-                                        <h3>${produto.nome}</h3>
-                                        <span class="price">R$ ${precoFormatado}</span>
-                                    </div>
-                                    <p>${produto.descricao || ''}</p>
-                                </div>
-                                
-                                <div class="menu-item-footer">
-                                    <button class="btn-adicionar" 
-                                            onclick="adicionarAoCarrinho('${categoria}', '${nomeEscapado}', ${precoNumerico}); event.stopPropagation();"> 
-                                        ➕ Adicionar
-                                    </button> 
-                                </div>
-                            </div>
-                        `;
-                    }).join('');
-                }
-            });
-            renderCarrinho();
+            renderCardapio(cardapio);
         })
         .catch(err => console.error('❌ Erro fatal ao carregar cardápio local ou API:', err));
 }
 
-// ===== FUNÇÕES DO CARRINHO =====
+// Função central para renderizar o cardápio (Chamada por ambas as fontes)
+function renderCardapio(cardapio) {
+    Object.keys(cardapio).forEach(categoria => {
+        const container = document.getElementById(`cat-${categoria}`);
+        
+        if (container) {
+            container.innerHTML = cardapio[categoria].map(produto => {
+                const precoNumerico = produto.preco || 0;
+                const precoFormatado = precoNumerico.toFixed(2);
+                const imagemUrl = produto.imagem || '';
+                
+                // Melhor prática: USAR DATA-ATTRIBUTES EM VEZ DE ONCLICK
+                return `
+                    <div class="menu-item">
+                        ${imagemUrl ? `<img src="${imagemUrl}" alt="${produto.nome}" />` : ''}
+                        
+                        <div class="menu-item-text">
+                            <div class="menu-item-header">
+                                <h3>${produto.nome}</h3>
+                                <span class="price">R$ ${precoFormatado}</span>
+                            </div>
+                            <p>${produto.descricao || ''}</p>
+                        </div>
+                        
+                        <div class="menu-item-footer">
+                            <button class="btn-adicionar" 
+                                    data-categoria="${categoria}" 
+                                    data-nome="${produto.nome}" 
+                                    data-preco="${precoNumerico}"> 
+                                ➕ Adicionar
+                            </button> 
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+    });
+    
+    // Configura os listeners APÓS a renderização
+    configurarListenersDeAdicao();
+    renderCarrinho();
+}
+
+// NOVO: Função para configurar os Event Listeners (Solução para o problema)
+function configurarListenersDeAdicao() {
+    // Remove listeners anteriores para evitar duplicação (se for o caso)
+    document.querySelectorAll('.btn-adicionar').forEach(oldButton => {
+        oldButton.replaceWith(oldButton.cloneNode(true));
+    });
+
+    // Adiciona o listener aos novos botões
+    document.querySelectorAll('.btn-adicionar').forEach(button => {
+        button.addEventListener('click', (event) => {
+            // Recupera os dados do produto dos data-attributes
+            const { categoria, nome, preco } = event.currentTarget.dataset;
+            
+            // Chama a função de adicionar ao carrinho
+            adicionarAoCarrinho(categoria, nome, parseFloat(preco));
+            
+            // Efeito visual (opcional)
+            const itemElement = event.currentTarget.closest('.menu-item');
+            if (itemElement) {
+                itemElement.style.transform = 'scale(0.95)';
+                setTimeout(() => itemElement.style.transform = 'scale(1)', 150);
+            }
+        });
+    });
+}
+// ===== FIM DA NOVA FUNÇÃO DE LISTENERS =====
+// ====================================================================
+
+
+// ===== FUNÇÕES DO CARRINHO (Ajustadas para os novos IDs) =====
 function adicionarAoCarrinho(categoria, nome, preco) {
-    const clienteNome = document.getElementById('customerName')?.value;
+    // CORRIGIDO: ID clienteNome
+    const clienteNome = document.getElementById('clienteNome')?.value;
     
     // Apenas dá um aviso, mas permite adicionar
     if (!clienteNome) {
-        alert('Por favor, preencha seu nome no carrinho antes de adicionar itens.');
+         // Não usamos alert em SPA, mas mantemos o aviso
+         console.warn('Preencha seu nome no carrinho antes de adicionar itens.');
     }
     
     const itemExistente = carrinho.find(item => item.nome === nome);
@@ -126,17 +155,12 @@ function adicionarAoCarrinho(categoria, nome, preco) {
     if (itemExistente) {
         itemExistente.qtd++;
     } else {
+        // Garantimos que 'preco' seja um número
         carrinho.push({ categoria, nome, preco: preco || 0, qtd: 1 });
     }
     
     salvarCarrinho();
     renderCarrinho();
-    
-    const btn = event.target.closest('.menu-item');
-    if (btn) {
-        btn.style.transform = 'scale(0.95)';
-        setTimeout(() => btn.style.transform = 'scale(1)', 150);
-    }
 }
 
 function removerDoCarrinho(index) {
@@ -162,16 +186,20 @@ function salvarCarrinho() {
 
 function renderCarrinho() {
     const cartItems = document.getElementById('cart-items');
-    const subtotalDisplay = document.getElementById('subtotal');
-    const feeDisplay = document.getElementById('fee');
-    const totalDisplay = document.getElementById('total');
-    const cartCount = document.getElementById('cartToggle');
+    // CORRIGIDO: Novos IDs do HTML
+    const subtotalDisplay = document.getElementById('subTotalDisplay');
+    const feeDisplay = document.getElementById('taxaEntregaDisplay');
+    const totalDisplay = document.getElementById('cart-total');
+    // CORRIGIDO: Novo ID do HTML
+    const cartCount = document.getElementById('cartCount');
     const checkoutBtn = document.getElementById('checkoutBtn');
+    // CORRIGIDO: Novo ID do HTML
+    const regionSelect = document.getElementById('clienteRegiao');
     
     if (!cartItems) return;
     
     const totalItens = carrinho.reduce((acc, item) => acc + item.qtd, 0);
-    if (cartCount) cartCount.setAttribute('data-count', totalItens);
+    if (cartCount) cartCount.textContent = totalItens;
     
     cartItems.innerHTML = carrinho.map((item, index) => {
         const totalItem = ((item.preco || 0) * item.qtd).toFixed(2);
@@ -197,9 +225,9 @@ function renderCarrinho() {
     
     const subtotal = carrinho.reduce((acc, item) => acc + ((item.preco || 0) * item.qtd), 0);
     
-    const regionSelect = document.getElementById('region');
-    const selectedOption = regionSelect ? regionSelect.options[regionSelect.selectedIndex] : null;
-    const taxa = selectedOption ? parseFloat(selectedOption.getAttribute('data-fee')) || 0 : 0;
+    const selectedRegion = regionSelect?.value;
+    // CORRIGIDO: Pega a taxa da nova função
+    const taxa = getTaxaEntrega(selectedRegion || "none");
     
     const totalComTaxa = subtotal + taxa;
     
@@ -217,27 +245,47 @@ function atualizarTaxa() {
 }
 
 function toggleCart() {
-    const cart = document.querySelector('.cart');
-    const overlay = document.getElementById('overlay');
+    // CORRIGIDO: Novo ID do HTML (section#cart)
+    const cart = document.getElementById('cart');
+    
+    // O seu HTML não tem mais o overlay, então vamos apenas alternar a classe 'show'
     cart.classList.toggle('show');
-    overlay.style.display = cart.classList.contains('show') ? 'block' : 'none';
+    
+    // Se quiser o overlay, adicione ao HTML: <div id="overlay"></div>
+    const overlay = document.getElementById('overlay');
+    if (overlay) overlay.style.display = cart.classList.contains('show') ? 'block' : 'none';
+}
+
+// NOVO: Função para exibir o campo de troco
+function mostrarTroco() {
+    // CORRIGIDO: Novo ID do HTML
+    const pagamentoSelect = document.getElementById('pagamento');
+    const campoTrocoDiv = document.getElementById('campoTroco');
+    
+    if (pagamentoSelect?.value === 'Dinheiro') {
+        campoTrocoDiv.style.display = 'block';
+    } else {
+        campoTrocoDiv.style.display = 'none';
+    }
 }
 
 function finalizarPedido() {
-    const clienteNome = document.getElementById('customerName').value;
-    const clienteTelefone = document.getElementById('customerPhone').value;
-    const clienteEndereco = document.getElementById('customerAddress').value;
-    const clienteRegiaoSelect = document.getElementById('region');
-    const clienteRegiao = clienteRegiaoSelect.options[clienteRegiaoSelect.selectedIndex].text;
-    const pagamento = document.getElementById('customerPayment').value;
-    const obsCliente = document.getElementById('customerObs').value;
+    // CORRIGIDO: Novos IDs do HTML
+    const clienteNome = document.getElementById('clienteNome').value;
+    const clienteTelefone = document.getElementById('clienteTelefone').value;
+    const clienteEndereco = document.getElementById('clienteEndereco').value;
+    const clienteRegiaoSelect = document.getElementById('clienteRegiao');
+    const clienteRegiao = clienteRegiaoSelect.options[clienteRegiaoSelect.selectedIndex].text.split(' - ')[0]; // Pega só o nome da região
+    const pagamento = document.getElementById('pagamento').value;
+    const obsCliente = document.getElementById('obsCliente').value;
+    const trocoNecessario = document.getElementById('troco')?.value;
     
     const showMessage = (message, isError = true) => {
         const msgDiv = document.createElement('div');
         msgDiv.className = isError ? 'custom-message error' : 'custom-message success';
         msgDiv.textContent = message;
         
-        const cartContent = document.querySelector('.cart'); 
+        const cartContent = document.getElementById('cart'); 
         if (cartContent) cartContent.prepend(msgDiv);
 
         setTimeout(() => msgDiv.remove(), 4000);
@@ -255,8 +303,7 @@ function finalizarPedido() {
     
     const subtotal = carrinho.reduce((acc, item) => acc + ((item.preco || 0) * item.qtd), 0);
     
-    const selectedOption = clienteRegiaoSelect.options[clienteRegiaoSelect.selectedIndex];
-    const taxa = parseFloat(selectedOption.getAttribute('data-fee')) || 0;
+    const taxa = getTaxaEntrega(clienteRegiaoSelect.value || "none");
     
     const total = subtotal + taxa;
     
@@ -275,11 +322,8 @@ function finalizarPedido() {
     mensagem += `*Total a pagar:* R$ ${total.toFixed(2)}\n\n`;
     mensagem += `*FORMA DE PAGAMENTO:* ${pagamento}\n`;
     
-    if (pagamento.includes('Dinheiro')) {
-        const troco = prompt('Você precisa de troco? Se sim, para quanto? Ex: 50.00');
-        if (troco) {
-             mensagem += `*Troco para:* R$ ${parseFloat(troco).toFixed(2)}\n`;
-        }
+    if (pagamento.includes('Dinheiro') && trocoNecessario) {
+          mensagem += `*Troco para:* R$ ${parseFloat(trocoNecessario).toFixed(2)}\n`;
     }
     
     if (obsCliente) {
@@ -303,16 +347,19 @@ function finalizarPedido() {
         observacao: obsCliente
     });
     
+    // Limpeza após o envio
     carrinho = [];
     salvarCarrinho();
     renderCarrinho();
     toggleCart();
     
-    document.getElementById('customerName').value = '';
-    document.getElementById('customerPhone').value = '';
-    document.getElementById('customerAddress').value = '';
-    document.getElementById('customerPayment').value = '';
-    document.getElementById('customerObs').value = '';
+    document.getElementById('clienteNome').value = '';
+    document.getElementById('clienteTelefone').value = '';
+    document.getElementById('clienteEndereco').value = '';
+    document.getElementById('pagamento').value = '';
+    document.getElementById('obsCliente').value = '';
+    document.getElementById('troco').value = '';
+    mostrarTroco(); // Esconde o campo de troco
 }
 
 async function salvarPedidoNoBanco(pedidoData) {
@@ -327,21 +374,26 @@ async function salvarPedidoNoBanco(pedidoData) {
     }
 }
 
-// ===== INICIALIZAÇÃO E EVENT LISTENERS =====
+// ===== INICIALIZAÇÃO E EVENT LISTENERS (Ajustados para os novos IDs) =====
 document.addEventListener('DOMContentLoaded', () => {
     carregarCardapio();
     renderCarrinho();
     
+    // CORRIGIDO: Novos IDs para os listeners
     document.getElementById('checkoutBtn')?.addEventListener('click', finalizarPedido);
-    document.getElementById('region')?.addEventListener('change', atualizarTaxa);
-    document.getElementById('cartToggle')?.addEventListener('click', toggleCart);
+    document.getElementById('clienteRegiao')?.addEventListener('change', atualizarTaxa);
+    document.getElementById('openCartBtn')?.addEventListener('click', toggleCart);
     document.getElementById('closeCartBtn')?.addEventListener('click', toggleCart);
-    document.getElementById('overlay')?.addEventListener('click', toggleCart);
+    
+    // NOVO: Listener para mostrar campo de troco
+    document.getElementById('pagamento')?.addEventListener('change', mostrarTroco);
 });
 
+// Tornar as funções globais para o onclick no carrinho renderizado
 window.adicionarAoCarrinho = adicionarAoCarrinho;
 window.removerDoCarrinho = removerDoCarrinho;
 window.alterarQuantidade = alterarQuantidade;
 window.atualizarTaxa = atualizarTaxa;
 window.finalizarPedido = finalizarPedido;
 window.toggleCart = toggleCart;
+window.mostrarTroco = mostrarTroco;
