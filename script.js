@@ -1,358 +1,347 @@
-/* ========== DADOS DO CARDÁPIO ========== */
-// Mantenha os seus dados do cardápio aqui
-const menuItems = [
-  // HAMBURGUERES
-  { id:1, name:"CLASSICO BLEND", price:24.50, desc:"Pão brioche, blend 120g, cheddar, picles, molho especial", cat:"Hambúrgueres" },
-  { id:2, name:"SALADA BLEND", price:23.50, desc:"Pão brioche, blend 120g, cheddar, tomate, alface americana, molho especial", cat:"Hambúrgueres" },
-  { id:3, name:"BACON BLEND 180g", price:29.50, desc:"Pão brioche, blend 180g, cheddar, bacon, molho especial", cat:"Hambúrgueres" },
-  { id:4, name:"BACON BLEND 120g", price:27.00, desc:"Pão brioche, blend 120g, cheddar, bacon, molho especial", cat:"Hambúrgueres" },
-  { id:5, name:"SMACH BLEND 180g", price:34.50, desc:"Pão brioche, blend 180g, cheddar, bacon, 1 ovo, cebola caramelizada, molho especial", cat:"Hambúrgueres" },
-  { id:6, name:"SMACH BLEND 120g", price:32.50, desc:"Pão brioche, blend 120g, cheddar, bacon, 1 ovo, cebola caramelizada, molho especial", cat:"Hambúrgueres" },
+let carrinho = JSON.parse(localStorage.getItem('carrinho')) || [];
+const TAXAS = {
+    "Jardim Canadá": 5.00,
+    "Vila da Serra": 10.00,
+    "Outras Regiões": 15.00,
+    "none": 0.00 
+};
 
-  // ACOMPANHAMENTOS
-  { id:7, name:"BATATA FRITA 200g", price:12.50, desc:"Batata frita crocante 200g", cat:"Acompanhamentos" },
-  { id:8, name:"BATATA FRITA 100g", price:7.80, desc:"Batata frita crocante 100g", cat:"Acompanhamentos" },
-  
-  // COMBOS
-  { id:9, name:"BACON BLEND 1 (Combo)", price:38.25, desc:"1 Bacon Blend, 1 Batata 100g, 1 Refrigerante 350ml", cat:"Combos" },
-  { id:10, name:"SMACH BLEND 1 (Combo)", price:42.50, desc:"1 Smach Blend, 1 Batata 100g, 1 Refrigerante 350ml", cat:"Combos" },
-  
-  // ADICIONAIS
-  { id:19, name:"CHEDDAR (Adicional)", price:3.00, desc:"Adicional de cheddar", cat:"Adicionais" },
-  { id:20, name:"BACON (Adicional)", price:4.00, desc:"Adicional de bacon", cat:"Adicionais" },
-  
-  // BEBIDAS
-  { id:25, name:"REFRIGERANTE 350ml", price:6.00, desc:"Coca-Cola / Coca-Cola Zero / Fanta", cat:"Bebidas" },
-  { id:26, name:"SUCO LATA", price:5.50, desc:"Suco de uva / laranja", cat:"Bebidas" }
-];
+function escaparStringHTML(str) {
+    if (typeof str !== 'string') return '';
+    return str.replace(/'/g, "\\'").replace(/"/g, '\\"');
+}
 
-/* Variáveis e Utilitários */
-let cart = {};
-const nameInput = document.getElementById('customerName');
-const phoneInput = document.getElementById('customerPhone');
-const addrInput = document.getElementById('customerAddress');
-const paymentInput = document.getElementById('customerPayment');
-const obsInput = document.getElementById('customerObs'); // Observações Gerais
-const regionSel = document.getElementById('region');
+// Carregar cardápio da API
+async function carregarCardapio() {
+    try {
+        const response = await fetch('/api/cardapio');
+        
+        if (!response.ok) {
+            throw new Error(`Erro ao buscar cardápio da API: ${response.status}`);
+        }
+        
+        const cardapio = await response.json();
+        
+        Object.keys(cardapio).forEach(categoria => {
+            const container = document.getElementById(`cat-${categoria}`); 
+            
+            if (container) {
+                container.innerHTML = cardapio[categoria].map(produto => {
+                    const precoNumerico = produto.preco || 0;
+                    const precoFormatado = precoNumerico.toFixed(2);
+                    const imagemUrl = produto.imagem || '';
+                    const nomeEscapado = escaparStringHTML(produto.nome); 
 
-// Variáveis de Controle do Carrinho
-const cartToggleBtn = document.getElementById('cartToggle');
-const cartEl = document.querySelector('.cart');
-const overlayEl = document.getElementById('overlay');
-const closeCartBtn = document.getElementById('closeCartBtn');
-const checkoutBtn = document.getElementById('checkoutBtn');
-
-// Variáveis de Controle do Modal de Personalização
-const itemModal = document.getElementById('itemModal');
-const modalQtySpan = document.getElementById('modalQty');
-const modalItemName = document.getElementById('modalItemName');
-const modalItemDesc = document.getElementById('modalItemDesc');
-const modalItemPrice = document.getElementById('modalItemPrice');
-const itemObsTextarea = document.getElementById('itemObs');
-const addToCartModalBtn = document.getElementById('addToCartModalBtn');
-
-let currentItem = null; // Armazena o item que está sendo personalizado
-let modalQty = 1; // Quantidade inicial no modal
-
-const money = v => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-
-
-/* ========== LÓGICA DO MENU E MODAL (Opcionais) ========== */
-
-function renderMenu() {
-  const categories = menuItems.reduce((acc, item) => {
-    acc[item.cat] = acc[item.cat] || [];
-    acc[item.cat].push(item);
-    return acc;
-  }, {});
-
-  Object.keys(categories).forEach(catName => {
-    const container = document.getElementById(`cat-${catName}`);
-    if (container) {
-      container.innerHTML = categories[catName].map(item => `
-        <div class="menu-item" data-id="${item.id}" onclick="openItemModal(${item.id})">
-          <div class="text">
-            <h4>${item.name}</h4>
-            <p>${item.desc}</p>
-          </div>
-          <div class="actions">
-            <span class="price">${money(item.price)}</span>
-            <button class="btn" style="pointer-events: none;">Ver opções</button> 
-          </div>
-        </div>
-      `).join('');
+                    // ESTRUTURA PARA GRADE DE 2/3 COLUNAS (ONDE O BOTÃO É O ÚNICO INTERAGÍVEL)
+                    return `
+                        <div class="menu-item">
+                            ${imagemUrl ? `<img src="${imagemUrl}" alt="${produto.nome}" />` : ''}
+                            
+                            <div class="menu-item-text">
+                                <div class="menu-item-header">
+                                    <h3>${produto.nome}</h3>
+                                    <span class="price">R$ ${precoFormatado}</span>
+                                </div>
+                                <p>${produto.descricao || ''}</p>
+                            </div>
+                            
+                            <div class="menu-item-footer">
+                                <button class="btn-adicionar" 
+                                        onclick="adicionarAoCarrinho('${categoria}', '${nomeEscapado}', ${precoNumerico}); event.stopPropagation();"> 
+                                    ➕ Adicionar
+                                </button> 
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+        });
+        
+        renderCarrinho();
+    } catch (error) {
+        console.log('⚠️ Erro ao carregar cardápio da API. Tentando fallback local.', error);
+        carregarCardapioLocal(); 
     }
-  });
 }
 
-function closeItemModal() {
-    itemModal.style.display = 'none';
-    overlayEl.classList.remove('active');
-    currentItem = null; // Limpa o item atual
+// Fallback para o menu.json local
+function carregarCardapioLocal() {
+    fetch('menu.json')
+        .then(response => {
+             if (!response.ok) {
+                 throw new Error('menu.json não encontrado ou erro de leitura.');
+             }
+             return response.json();
+        })
+        .then(cardapio => {
+            Object.keys(cardapio).forEach(categoria => {
+                const container = document.getElementById(`cat-${categoria}`);
+                if (container) {
+                    container.innerHTML = cardapio[categoria].map(produto => {
+                        const precoNumerico = produto.preco || 0;
+                        const precoFormatado = precoNumerico.toFixed(2);
+                        const imagemUrl = produto.imagem || '';
+                        const nomeEscapado = escaparStringHTML(produto.nome); 
+
+                        // ESTRUTURA PARA GRADE DE 2/3 COLUNAS
+                        return `
+                            <div class="menu-item">
+                                ${imagemUrl ? `<img src="${imagemUrl}" alt="${produto.nome}" />` : ''}
+                                
+                                <div class="menu-item-text">
+                                    <div class="menu-item-header">
+                                        <h3>${produto.nome}</h3>
+                                        <span class="price">R$ ${precoFormatado}</span>
+                                    </div>
+                                    <p>${produto.descricao || ''}</p>
+                                </div>
+                                
+                                <div class="menu-item-footer">
+                                    <button class="btn-adicionar" 
+                                            onclick="adicionarAoCarrinho('${categoria}', '${nomeEscapado}', ${precoNumerico}); event.stopPropagation();"> 
+                                        ➕ Adicionar
+                                    </button> 
+                                </div>
+                            </div>
+                        `;
+                    }).join('');
+                }
+            });
+            renderCarrinho();
+        })
+        .catch(err => console.error('❌ Erro fatal ao carregar cardápio local ou API:', err));
 }
 
-function openItemModal(itemId) {
-    currentItem = menuItems.find(m => m.id == itemId);
-
-    if (!currentItem) return;
-
-    // Preenche o modal
-    modalItemName.textContent = currentItem.name;
-    modalItemDesc.textContent = currentItem.desc;
-    modalItemPrice.textContent = money(currentItem.price);
-    itemObsTextarea.value = ''; // Limpa observações anteriores
-    modalQty = 1;
-    modalQtySpan.textContent = modalQty;
+// ===== FUNÇÕES DO CARRINHO =====
+function adicionarAoCarrinho(categoria, nome, preco) {
+    const clienteNome = document.getElementById('customerName')?.value;
     
-    // Abre o modal
-    itemModal.style.display = 'block';
-    overlayEl.classList.add('active');
-
-    // Fecha o carrinho, se estiver aberto (para mobile)
-    toggleCart(false);
+    // Apenas dá um aviso, mas permite adicionar
+    if (!clienteNome) {
+        alert('Por favor, preencha seu nome no carrinho antes de adicionar itens.');
+    }
+    
+    const itemExistente = carrinho.find(item => item.nome === nome);
+    
+    if (itemExistente) {
+        itemExistente.qtd++;
+    } else {
+        carrinho.push({ categoria, nome, preco: preco || 0, qtd: 1 });
+    }
+    
+    salvarCarrinho();
+    renderCarrinho();
+    
+    const btn = event.target.closest('.menu-item');
+    if (btn) {
+        btn.style.transform = 'scale(0.95)';
+        setTimeout(() => btn.style.transform = 'scale(1)', 150);
+    }
 }
 
+function removerDoCarrinho(index) {
+    carrinho.splice(index, 1);
+    salvarCarrinho();
+    renderCarrinho();
+}
 
-/* ========== LÓGICA DO CARRINHO ========== */
+function alterarQuantidade(index, delta) {
+    carrinho[index].qtd += delta;
+    
+    if (carrinho[index].qtd <= 0) {
+        removerDoCarrinho(index);
+    } else {
+        salvarCarrinho();
+        renderCarrinho();
+    }
+}
 
-function renderCart() {
-  const cartItemsEl = document.getElementById('cart-items');
-  const subtotalEl = document.getElementById('subtotal');
-  const feeEl = document.getElementById('fee');
-  const totalEl = document.getElementById('total');
-  
-  let subtotal = 0;
-  const cartItemKeys = Object.keys(cart);
+function salvarCarrinho() {
+    localStorage.setItem('carrinho', JSON.stringify(carrinho));
+}
 
-  if (cartItemKeys.length === 0) {
-    cartItemsEl.innerHTML = '<div class="empty-cart-message">Carrinho vazio</div>';
-    checkoutBtn.disabled = true;
-    cartToggleBtn.setAttribute('data-count', 0);
-  } else {
-    checkoutBtn.disabled = false;
-    // Contador para o botão flutuante
-    cartToggleBtn.setAttribute('data-count', cartItemKeys.reduce((sum, key) => sum + cart[key], 0));
+function renderCarrinho() {
+    const cartItems = document.getElementById('cart-items');
+    const subtotalDisplay = document.getElementById('subtotal');
+    const feeDisplay = document.getElementById('fee');
+    const totalDisplay = document.getElementById('total');
+    const cartCount = document.getElementById('cartToggle');
+    const checkoutBtn = document.getElementById('checkoutBtn');
+    
+    if (!cartItems) return;
+    
+    const totalItens = carrinho.reduce((acc, item) => acc + item.qtd, 0);
+    if (cartCount) cartCount.setAttribute('data-count', totalItens);
+    
+    cartItems.innerHTML = carrinho.map((item, index) => {
+        const totalItem = ((item.preco || 0) * item.qtd).toFixed(2);
 
-    cartItemsEl.innerHTML = cartItemKeys.map(key => {
-      // Separa o ID do item da observação (ex: "1_Sem picles")
-      const [itemId, obsText] = key.split('_'); 
-      const item = menuItems.find(m => m.id == itemId);
-      
-      const qty = cart[key];
-      const sub = item.price * qty;
-      subtotal += sub;
-      
-      // Monta a exibição da observação
-      const obsDisplay = obsText && obsText.trim() ? `<p class="item-obs-text">Obs: ${obsText.trim()}</p>` : '';
-
-      return `
-        <div class="cart-item">
-          <div class="qty-control">
-            <button data-id="${key}" data-action="dec">-</button>
-            <span>${qty}</span>
-            <button data-id="${key}" data-action="add">+</button>
-          </div>
-          <div class="details">
-            <p class="name">${item.name}</p>
-            ${obsDisplay}
-            <p class="price-line">${money(item.price)} x ${qty} = <strong>${money(sub)}</strong></p>
-          </div>
-          <button class="remove-btn" data-id="${key}" data-action="rem">✕</button>
-        </div>
-      `;
+        return `
+            <div class="cart-item">
+                <div class="item-info">
+                    <strong>${item.qtd}x ${item.nome}</strong>
+                    <span>R$ ${totalItem}</span>
+                </div>
+                <div class="item-controls">
+                    <button onclick="alterarQuantidade(${index}, -1)">−</button>
+                    <button onclick="alterarQuantidade(${index}, 1)">+</button>
+                    <button onclick="removerDoCarrinho(${index})" class="remove">🗑️</button>
+                </div>
+            </div>
+        `;
     }).join('');
-  }
 
-  // Taxa de entrega
-  const selectedOption = regionSel.options[regionSel.selectedIndex];
-  const fee = parseFloat(selectedOption.getAttribute('data-fee')) || 0;
-  
-  const total = subtotal + fee;
+    if (carrinho.length === 0) {
+        cartItems.innerHTML = '<div class="muted" style="text-align: center;">Carrinho vazio</div>';
+    }
+    
+    const subtotal = carrinho.reduce((acc, item) => acc + ((item.preco || 0) * item.qtd), 0);
+    
+    const regionSelect = document.getElementById('region');
+    const selectedOption = regionSelect ? regionSelect.options[regionSelect.selectedIndex] : null;
+    const taxa = selectedOption ? parseFloat(selectedOption.getAttribute('data-fee')) || 0 : 0;
+    
+    const totalComTaxa = subtotal + taxa;
+    
+    if (subtotalDisplay) subtotalDisplay.textContent = `R$ ${subtotal.toFixed(2)}`;
+    if (feeDisplay) feeDisplay.textContent = `R$ ${taxa.toFixed(2)}`;
+    if (totalDisplay) totalDisplay.textContent = `R$ ${totalComTaxa.toFixed(2)}`;
 
-  subtotalEl.textContent = money(subtotal);
-  feeEl.textContent = money(fee);
-  totalEl.textContent = money(total);
-  // Atualiza o valor no botão flutuante (ícone)
-  cartToggleBtn.innerHTML = `<i class="fas fa-shopping-cart"></i> ${money(total)}`;
+    if (checkoutBtn) {
+        checkoutBtn.disabled = carrinho.length === 0;
+    }
 }
 
-/**
- * Função para alternar o carrinho no modo mobile (ESSENCIAL)
- */
-function toggleCart(open) {
-  if(window.innerWidth > 1100) return; // Não faz nada no desktop
-
-  if(open) {
-    cartEl.classList.add('open');
-    overlayEl.classList.add('active');
-  } else {
-    cartEl.classList.remove('open');
-    overlayEl.classList.remove('active');
-  }
+function atualizarTaxa() {
+    renderCarrinho();
 }
 
-/* ========== EVENT LISTENERS ========== */
+function toggleCart() {
+    const cart = document.querySelector('.cart');
+    const overlay = document.getElementById('overlay');
+    cart.classList.toggle('show');
+    overlay.style.display = cart.classList.contains('show') ? 'block' : 'none';
+}
 
-// Listener de cliques gerais (Adicionar/Remover no carrinho)
-document.addEventListener('click', e => {
-  const target = e.target.closest('[data-id][data-action]');
-  if (target) {
-    const id = target.getAttribute('data-id'); 
-    const act = target.getAttribute('data-action');
+function finalizarPedido() {
+    const clienteNome = document.getElementById('customerName').value;
+    const clienteTelefone = document.getElementById('customerPhone').value;
+    const clienteEndereco = document.getElementById('customerAddress').value;
+    const clienteRegiaoSelect = document.getElementById('region');
+    const clienteRegiao = clienteRegiaoSelect.options[clienteRegiaoSelect.selectedIndex].text;
+    const pagamento = document.getElementById('customerPayment').value;
+    const obsCliente = document.getElementById('customerObs').value;
     
-    if (act === 'add') {
-      cart[id] = (cart[id] || 0) + 1;
-    } 
-    else if (act === 'dec') {
-      cart[id] = (cart[id] || 0) - 1;
-      if (cart[id] <= 0) {
-        delete cart[id];
-      }
+    const showMessage = (message, isError = true) => {
+        const msgDiv = document.createElement('div');
+        msgDiv.className = isError ? 'custom-message error' : 'custom-message success';
+        msgDiv.textContent = message;
+        
+        const cartContent = document.querySelector('.cart'); 
+        if (cartContent) cartContent.prepend(msgDiv);
+
+        setTimeout(() => msgDiv.remove(), 4000);
+    };
+
+    if (!carrinho || carrinho.length === 0) {
+        showMessage('Seu carrinho está vazio!', true);
+        return;
     }
-    else if(act === 'rem') {
-      delete cart[id];
+
+    if (!clienteNome || !clienteTelefone || !clienteEndereco || !pagamento) {
+        showMessage('Por favor, preencha todos os campos obrigatórios!', true);
+        return;
     }
-    renderCart();
-  }
-});
-
-/* Mudança de região recalcula */
-regionSel.addEventListener('change', renderCart);
-
-
-// ===============================================
-// LÓGICA DE CONTROLE DO MODAL
-// ===============================================
-
-// Controle de Quantidade no Modal
-document.getElementById('addModalQty').addEventListener('click', () => {
-    modalQty++;
-    modalQtySpan.textContent = modalQty;
-});
-document.getElementById('decModalQty').addEventListener('click', () => {
-    if (modalQty > 1) {
-        modalQty--;
-        modalQtySpan.textContent = modalQty;
-    }
-});
-
-// Adicionar ao Carrinho do Modal
-addToCartModalBtn.addEventListener('click', () => {
-    if (!currentItem || modalQty <= 0) return;
-
-    const obs = itemObsTextarea.value.trim().replace(/_/g, ' '); // Evita quebra na chave
-    // Chave única: ID_OBSERVACAO
-    const itemKey = `${currentItem.id}_${obs || 'SemObs'}`; 
     
-    // Adiciona a quantidade selecionada ao carrinho
-    cart[itemKey] = (cart[itemKey] || 0) + modalQty;
-
-    // Renderiza e fecha
-    renderCart();
-    closeItemModal();
-});
-
-
-// ===============================================
-// LÓGICA DE ABRIR/FECHAR O CARRINHO FLUTUANTE
-// ===============================================
-
-// Eventos de clique para abrir/fechar o carrinho mobile
-cartToggleBtn.addEventListener('click', () => {
-  const isOpen = cartEl.classList.contains('open');
-  toggleCart(!isOpen);
-});
-
-overlayEl.addEventListener('click', () => {
-  toggleCart(false); 
-  closeItemModal(); // Fecha o modal se o overlay for clicado
-});
-
-// O botão de fechar (X) dentro do carrinho:
-closeCartBtn.addEventListener('click', () => {
-  toggleCart(false);
-});
-
-
-/* checkout -> whatsapp */
-const WHATSAPP_NUMBER = '5531992128891';
-
-checkoutBtn.addEventListener('click', () => {
-  if(Object.keys(cart).length === 0) return alert('Carrinho vazio.');
-
-  const customerName = nameInput.value.trim();
-  const customerPhone = phoneInput.value.trim();
-  const customerAddress = addrInput.value.trim();
-  const customerPayment = paymentInput.value.trim();
-  const customerObs = obsInput.value.trim() || 'Nenhuma.'; // Observações gerais
-
-  if (!customerName || !customerPhone || !customerPayment) {
-    alert('Por favor, preencha nome, telefone e método de pagamento.');
-    return;
-  }
-  
-  const selectedOption = regionSel.options[regionSel.selectedIndex];
-  const selectedOptionText = selectedOption.text;
-  const isDelivery = regionSel.value !== 'none';
-  const fee = parseFloat(selectedOption.getAttribute('data-fee')) || 0;
-
-  if (isDelivery && !customerAddress) {
-    alert('Por favor, preencha o endereço completo para entrega.');
-    return;
-  }
-
-  // Monta as linhas do pedido (incluindo observações específicas)
-  let subtotal = 0;
-  const itemsLines = Object.keys(cart).map(key => {
-    const [itemId, obsTextEncoded] = key.split('_'); 
-    const item = menuItems.find(m => m.id==itemId);
-    const qty = cart[key];
-    const sub = item.price * qty;
-    subtotal += sub;
+    const subtotal = carrinho.reduce((acc, item) => acc + ((item.preco || 0) * item.qtd), 0);
     
-    let line = `${qty}x ${item.name}`;
-
-    // Adiciona a observação específica do item se existir
-    if (obsTextEncoded && obsTextEncoded !== 'SemObs') {
-      line += `\n    (Obs: ${obsTextEncoded.trim()})`;
+    const selectedOption = clienteRegiaoSelect.options[clienteRegiaoSelect.selectedIndex];
+    const taxa = parseFloat(selectedOption.getAttribute('data-fee')) || 0;
+    
+    const total = subtotal + taxa;
+    
+    let mensagem = `*NOVO PEDIDO - Artesanal Blend* 🍔\n\n`;
+    mensagem += `*Cliente:* ${clienteNome}\n`;
+    mensagem += `*Telefone:* ${clienteTelefone}\n`;
+    mensagem += `*Endereço:* ${clienteEndereco} (${clienteRegiao})\n\n`;
+    mensagem += `*ITENS DO PEDIDO:*\n`;
+    
+    carrinho.forEach(item => {
+        mensagem += `• ${item.qtd}x ${item.nome} (R$ ${((item.preco || 0) * item.qtd).toFixed(2)})\n`;
+    });
+    
+    mensagem += `\n*Subtotal:* R$ ${subtotal.toFixed(2)}\n`;
+    mensagem += `*Taxa de entrega:* R$ ${taxa.toFixed(2)}\n`;
+    mensagem += `*Total a pagar:* R$ ${total.toFixed(2)}\n\n`;
+    mensagem += `*FORMA DE PAGAMENTO:* ${pagamento}\n`;
+    
+    if (pagamento.includes('Dinheiro')) {
+        const troco = prompt('Você precisa de troco? Se sim, para quanto? Ex: 50.00');
+        if (troco) {
+             mensagem += `*Troco para:* R$ ${parseFloat(troco).toFixed(2)}\n`;
+        }
     }
-    line += ` — ${money(sub)}`;
-    return line;
-  });
-  
-  const totalGeral = subtotal + fee;
+    
+    if (obsCliente) {
+        mensagem += `\n*OBSERVAÇÕES:* ${obsCliente}\n`;
+    }
+    
+    mensagem += `\n_ Pedido gerado via sistema _`;
+    
+    const urlWhatsApp = `https://wa.me/5531992128891?text=${encodeURIComponent(mensagem)}`;
+    window.open(urlWhatsApp, '_blank');
+    
+    salvarPedidoNoBanco({
+        cliente: clienteNome,
+        telefone: clienteTelefone,
+        endereco: clienteEndereco,
+        regiao: clienteRegiao,
+        taxaEntrega: taxa,
+        itens: carrinho,
+        total: total,
+        formaPagamento: pagamento,
+        observacao: obsCliente
+    });
+    
+    carrinho = [];
+    salvarCarrinho();
+    renderCarrinho();
+    toggleCart();
+    
+    document.getElementById('customerName').value = '';
+    document.getElementById('customerPhone').value = '';
+    document.getElementById('customerAddress').value = '';
+    document.getElementById('customerPayment').value = '';
+    document.getElementById('customerObs').value = '';
+}
 
-  const lines = [];
-  lines.push(`🧾 *NOVO PEDIDO - Artesanal Blend* 🎯`);
-  lines.push('');
-  lines.push(`✅ *DADOS DO CLIENTE:*`);
-  lines.push(`Nome: ${customerName}`);
-  lines.push(`Telefone: ${customerPhone}`);
-  
-  lines.push(`Opção de Entrega: ${selectedOptionText}`); 
-  
-  if (isDelivery) {
-    lines.push(`Endereço: ${customerAddress}`);
-  } else {
-    lines.push(`Local de Retirada: Rua Coniston, 380 B2`);
-  }
-  
-  lines.push(`Pagamento: ${customerPayment}`);
-  lines.push(`Obs. Gerais: ${customerObs}`); 
-  lines.push('');
-  lines.push(`📦 *ITENS DO PEDIDO:*`);
-  lines.push(itemsLines.join('\n'));
-  lines.push('');
-  
-  lines.push(`🛵 *TAXA DE ENTREGA:* ${money(fee)}`); 
-  lines.push(`💰 *TOTAL GERAL:* ${money(totalGeral)}`);
+async function salvarPedidoNoBanco(pedidoData) {
+    try {
+        await fetch('/api/orders', { 
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(pedidoData)
+        });
+    } catch (error) {
+        console.log('⚠️ Erro ao salvar pedido no servidor (pode estar offline):', error);
+    }
+}
 
-  const text = encodeURIComponent(lines.join('\n'));
-  const url = `https://wa.me/${WHATSAPP_NUMBER}?text=${text}`;
-  window.open(url,'_blank');
+// ===== INICIALIZAÇÃO E EVENT LISTENERS =====
+document.addEventListener('DOMContentLoaded', () => {
+    carregarCardapio();
+    renderCarrinho();
+    
+    document.getElementById('checkoutBtn')?.addEventListener('click', finalizarPedido);
+    document.getElementById('region')?.addEventListener('change', atualizarTaxa);
+    document.getElementById('cartToggle')?.addEventListener('click', toggleCart);
+    document.getElementById('closeCartBtn')?.addEventListener('click', toggleCart);
+    document.getElementById('overlay')?.addEventListener('click', toggleCart);
 });
 
-
-/* ========== INICIALIZAÇÃO ========== */
-renderMenu();
-renderCart();
+window.adicionarAoCarrinho = adicionarAoCarrinho;
+window.removerDoCarrinho = removerDoCarrinho;
+window.alterarQuantidade = alterarQuantidade;
+window.atualizarTaxa = atualizarTaxa;
+window.finalizarPedido = finalizarPedido;
+window.toggleCart = toggleCart;
