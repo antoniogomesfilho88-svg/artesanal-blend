@@ -1,4 +1,4 @@
-// dashboard.js - versão corrigida
+// dashboard.js - versão separada
 class Dashboard {
   constructor() {
     this.produtos = [];
@@ -334,143 +334,381 @@ class Dashboard {
   }
 
   /* ================= PEDIDOS ================= */
-  abrirModalPedido(pedido = null) {
-    const modal = document.createElement('div');
-    modal.className = 'modal-overlay';
+  /* ================= PEDIDOS ================= */
+abrirModalPedido(pedido = null) {
+  const modal = document.createElement('div');
+  modal.className = 'modal-overlay';
 
-    const itens = pedido?.itens || [];
-    modal.innerHTML = `
-      <div class="modal">
-        <h3>${pedido ? 'Editar' : 'Novo'} Pedido</h3>
-        <form id="formPedido">
-          <input type="hidden" id="pedidoId" value="${pedido?._id || ''}">
-          <div class="form-row">
-            <div class="form-group">
-              <label>Cliente</label>
-              <input type="text" id="pedidoCliente" value="${pedido?.cliente || ''}" required>
-            </div>
-            <div class="form-group">
-              <label>Telefone</label>
-              <input type="text" id="pedidoTelefone" value="${pedido?.telefone || ''}">
-            </div>
+  const itens = pedido?.itens || [];
+  modal.innerHTML = `
+    <div class="modal">
+      <h3>${pedido ? 'Editar' : 'Novo'} Pedido</h3>
+      <form id="formPedido">
+        <input type="hidden" id="pedidoId" value="${pedido?._id || ''}">
+        <div class="form-row">
+          <div class="form-group">
+            <label>Cliente</label>
+            <input type="text" id="pedidoCliente" value="${pedido?.cliente || ''}" required>
           </div>
-          <div class="form-row">
-            <div class="form-group">
-              <label>Endereço</label>
-              <input type="text" id="pedidoEndereco" value="${pedido?.endereco || ''}">
-            </div>
-            <div class="form-group">
-              <label>Taxa de Entrega (R$)</label>
-              <input type="number" id="pedidoTaxaEntrega" step="0.01" value="${pedido?.taxaEntrega || '0.00'}">
-            </div>
+          <div class="form-group">
+            <label>Telefone</label>
+            <input type="text" id="pedidoTelefone" value="${pedido?.telefone || ''}">
           </div>
+        </div>
+        <div class="form-group">
+          <label>Endereço</label>
+          <input type="text" id="pedidoEndereco" value="${pedido?.endereco || ''}">
+        </div>
 
-          <div id="itensWrapper">
-            ${itens.map((it, idx) => `
-              <div class="form-row" data-item-index="${idx}">
-                <div class="form-group"><label>Item</label><input type="text" class="pedidoItemNome" value="${it.nome || ''}" required></div>
-                <div class="form-group"><label>Qtd</label><input type="number" class="pedidoItemQtd" value="${it.quantidade || 1}" min="1" required></div>
-                <div class="form-group"><label>Preço</label><input type="number" class="pedidoItemPreco" value="${it.preco || 0}" step="0.01"></div>
-              </div>
-            `).join('')}
-          </div>
-
-          <div style="display:flex;gap:.5rem;margin-top:.5rem">
-            <button type="button" class="btn secondary" id="adicionarItemBtn">➕ Adicionar Item</button>
-          </div>
-
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-top:1rem">
-            <div><strong>Total: R$ <span id="pedidoTotal">${(pedido?.total || 0).toFixed(2)}</span></strong></div>
-            <div style="display:flex;gap:.5rem">
-              <button type="submit" class="btn primary">Salvar Pedido</button>
-              <button type="button" class="btn secondary" id="btnCancelarPedido">Cancelar</button>
+        <div id="itensWrapper">
+          ${itens.map((it, idx) => `
+            <div class="form-row" data-item-index="${idx}">
+              <div class="form-group"><label>Item</label><input type="text" class="pedidoItemNome" value="${it.nome || ''}" required></div>
+              <div class="form-group"><label>Qtd</label><input type="number" class="pedidoItemQtd" value="${it.quantidade || 1}" min="1" required></div>
+              <div class="form-group"><label>Preço</label><input type="number" class="pedidoItemPreco" value="${it.preco || 0}" step="0.01"></div>
             </div>
+          `).join('')}
+        </div>
+
+        <div style="display:flex;gap:.5rem;margin-top:.5rem">
+          <button type="button" class="btn secondary" id="adicionarItemBtn">➕ Adicionar Item</button>
+        </div>
+
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:1rem">
+          <div><strong>Total: R$ <span id="pedidoTotal">${(pedido?.total || 0).toFixed(2)}</span></strong></div>
+          <div style="display:flex;gap:.5rem">
+            <button type="submit" class="btn primary">Salvar Pedido</button>
+            <button type="button" class="btn secondary" id="btnCancelarPedido">Cancelar</button>
           </div>
-        </form>
-      </div>
+        </div>
+      </form>
+    </div>
+  `;
+
+  document.body.appendChild(modal);
+
+  const itensWrapper = modal.querySelector('#itensWrapper');
+  const atualizarTotal = () => {
+    const qtds = Array.from(itensWrapper.querySelectorAll('.pedidoItemQtd')).map(i => parseInt(i.value) || 0);
+    const precos = Array.from(itensWrapper.querySelectorAll('.pedidoItemPreco')).map(i => parseFloat(i.value) || 0);
+    let total = 0;
+    for (let i = 0; i < qtds.length; i++) total += (qtds[i] || 0) * (precos[i] || 0);
+    modal.querySelector('#pedidoTotal').textContent = total.toFixed(2);
+  };
+
+  modal.querySelectorAll('.pedidoItemQtd, .pedidoItemPreco').forEach(el => el.addEventListener('input', atualizarTotal));
+
+  modal.querySelector('#adicionarItemBtn').addEventListener('click', () => {
+    const idx = itensWrapper.querySelectorAll('.form-row[data-item-index]').length;
+    const div = document.createElement('div');
+    div.className = 'form-row';
+    div.dataset.itemIndex = idx;
+    div.innerHTML = `
+      <div class="form-group"><label>Item</label><input type="text" class="pedidoItemNome" required></div>
+      <div class="form-group"><label>Qtd</label><input type="number" class="pedidoItemQtd" value="1" min="1" required></div>
+      <div class="form-group"><label>Preço</label><input type="number" class="pedidoItemPreco" value="0" step="0.01"></div>
     `;
+    itensWrapper.appendChild(div);
+    div.querySelectorAll('.pedidoItemQtd, .pedidoItemPreco').forEach(el => el.addEventListener('input', atualizarTotal));
+    atualizarTotal();
+  });
 
-    document.body.appendChild(modal);
+  modal.querySelector('#btnCancelarPedido').addEventListener('click', () => modal.remove());
 
-    const itensWrapper = modal.querySelector('#itensWrapper');
-    const atualizarTotal = () => {
-      const qtds = Array.from(itensWrapper.querySelectorAll('.pedidoItemQtd')).map(i => parseInt(i.value) || 0);
-      const precos = Array.from(itensWrapper.querySelectorAll('.pedidoItemPreco')).map(i => parseFloat(i.value) || 0);
-      const taxaEntrega = parseFloat(modal.querySelector('#pedidoTaxaEntrega').value) || 0;
-      
-      let subtotal = 0;
-      for (let i = 0; i < qtds.length; i++) subtotal += (qtds[i] || 0) * (precos[i] || 0);
-      
-      const total = subtotal + taxaEntrega;
-      modal.querySelector('#pedidoTotal').textContent = total.toFixed(2);
+  modal.querySelector('#formPedido').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const pedidoId = modal.querySelector('#pedidoId').value;
+    const cliente = modal.querySelector('#pedidoCliente').value;
+    const telefone = modal.querySelector('#pedidoTelefone').value;
+    const endereco = modal.querySelector('#pedidoEndereco').value;
+    const nomes = Array.from(modal.querySelectorAll('.pedidoItemNome')).map(i => i.value);
+    const qtds = Array.from(modal.querySelectorAll('.pedidoItemQtd')).map(i => parseInt(i.value) || 0);
+    const precos = Array.from(modal.querySelectorAll('.pedidoItemPreco')).map(i => parseFloat(i.value) || 0);
+    const itens = nomes.map((nome, i) => ({ nome, quantidade: qtds[i], preco: precos[i] })).filter(it => it.nome && it.quantidade > 0);
+    const total = itens.reduce((s, it) => s + (it.quantidade * (it.preco || 0)), 0);
+    
+    // PAYLOAD SIMPLIFICADO - compatível com a API atual
+    const payload = { 
+      cliente, 
+      telefone, 
+      endereco, 
+      itens, 
+      total, 
+      status: pedido?.status || 'pendente' 
     };
 
-    modal.querySelectorAll('.pedidoItemQtd, .pedidoItemPreco').forEach(el => el.addEventListener('input', atualizarTotal));
-    modal.querySelector('#pedidoTaxaEntrega').addEventListener('input', atualizarTotal);
-
-    modal.querySelector('#adicionarItemBtn').addEventListener('click', () => {
-      const idx = itensWrapper.querySelectorAll('.form-row[data-item-index]').length;
-      const div = document.createElement('div');
-      div.className = 'form-row';
-      div.dataset.itemIndex = idx;
-      div.innerHTML = `
-        <div class="form-group"><label>Item</label><input type="text" class="pedidoItemNome" required></div>
-        <div class="form-group"><label>Qtd</label><input type="number" class="pedidoItemQtd" value="1" min="1" required></div>
-        <div class="form-group"><label>Preço</label><input type="number" class="pedidoItemPreco" value="0" step="0.01"></div>
-      `;
-      itensWrapper.appendChild(div);
-      div.querySelectorAll('.pedidoItemQtd, .pedidoItemPreco').forEach(el => el.addEventListener('input', atualizarTotal));
-      atualizarTotal();
-    });
-
-    modal.querySelector('#btnCancelarPedido').addEventListener('click', () => modal.remove());
-
-    modal.querySelector('#formPedido').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const pedidoId = modal.querySelector('#pedidoId').value;
-      const cliente = modal.querySelector('#pedidoCliente').value;
-      const telefone = modal.querySelector('#pedidoTelefone').value;
-      const endereco = modal.querySelector('#pedidoEndereco').value;
-      const taxaEntrega = parseFloat(modal.querySelector('#pedidoTaxaEntrega').value) || 0;
+    try {
+      const url = pedidoId ? `/api/orders/${pedidoId}` : '/api/orders';
+      const method = pedidoId ? 'PUT' : 'POST';
+      const res = await fetch(url, { 
+        method, 
+        headers: { 'Content-Type': 'application/json' }, 
+        body: JSON.stringify(payload) 
+      });
       
-      const nomes = Array.from(modal.querySelectorAll('.pedidoItemNome')).map(i => i.value);
-      const qtds = Array.from(modal.querySelectorAll('.pedidoItemQtd')).map(i => parseInt(i.value) || 0);
-      const precos = Array.from(modal.querySelectorAll('.pedidoItemPreco')).map(i => parseFloat(i.value) || 0);
-      
-      const itens = nomes.map((nome, i) => ({ nome, quantidade: qtds[i], preco: precos[i] })).filter(it => it.nome && it.quantidade > 0);
-      const subtotal = itens.reduce((s, it) => s + (it.quantidade * (it.preco || 0)), 0);
-      const total = subtotal + taxaEntrega;
-      
-      // CORREÇÃO: Incluir taxaEntrega no payload
-      const payload = { 
-        cliente, 
-        telefone, 
-        endereco, 
-        taxaEntrega,
-        itens, 
-        total, 
-        status: pedido?.status || 'pendente' 
-      };
-
-      try {
-        const url = pedidoId ? `/api/orders/${pedidoId}` : '/api/orders';
-        const method = pedidoId ? 'PUT' : 'POST';
-        const res = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-        if (res.ok) {
-          await this.carregarDados();
-          this.renderPedidos();
-          document.querySelector('.modal-overlay')?.remove();
-          this.showToast('Pedido salvo', 'success');
-        } else {
-          const err = await res.json().catch(() => ({}));
-          this.showToast(err.error || 'Erro ao salvar pedido', 'error');
-        }
-      } catch (e) {
-        this.showToast('Erro de rede ao salvar pedido', 'error');
+      if (res.ok) {
+        await this.carregarDados();
+        this.renderPedidos();
+        document.querySelector('.modal-overlay')?.remove();
+        this.showToast('Pedido salvo', 'success');
+      } else {
+        const err = await res.json().catch(() => ({}));
+        this.showToast(err.error || 'Erro ao salvar pedido', 'error');
+        console.error('Erro API:', err);
       }
-    });
+    } catch (e) {
+      console.error('Erro rede:', e);
+      this.showToast('Erro de rede ao salvar pedido', 'error');
+    }
+  });
+}
+
+imprimirCupom(id) {
+  const pedido = this.pedidos.find(p => p._id === id);
+  if (!pedido) return this.showToast('Pedido não encontrado', 'error');
+
+  const janelaImpressao = window.open('', '_blank', 'width=380,height=700');
+  
+  if (!janelaImpressao) {
+    this.showToast('Permita pop-ups para imprimir o cupom', 'error');
+    return;
   }
 
+  const css = `
+    <style>
+      @media print {
+        body { 
+          width: 80mm !important;
+          max-width: 80mm !important;
+          margin: 3mm !important;
+          padding: 0 !important;
+          font-size: 13px !important;
+          font-weight: bold !important;
+        }
+        .logo { 
+          max-width: 120px !important;
+          height: auto !important;
+        }
+        .no-print { display: none !important; }
+      }
+      
+      body { 
+        width: 80mm;
+        max-width: 80mm;
+        font-family: 'Courier New', Courier, monospace; 
+        font-size: 16px;
+        font-weight: bold;
+        margin: 3mm;
+        padding: 0;
+        line-height: 1.2;
+        background: white;
+      }
+      .center { 
+        text-align: center;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+      }
+      .right { text-align: right; }
+      .left { text-align: left; }
+      .bold { 
+        font-weight: bold; 
+        font-size: 14px;
+      }
+      .line { 
+        border: none;
+        border-top: 2px dashed #000; 
+        margin: 5px 0;
+      }
+      table { 
+        width: 100%; 
+        border-collapse: collapse;
+      }
+      td { 
+        vertical-align: top; 
+        padding: 2px 0;
+        word-wrap: break-word;
+      }
+      .item-qty { width: 20%; text-align: center; font-weight: bold; }
+      .item-name { width: 50%; text-align: left; padding: 0 3px; font-weight: bold; }
+      .item-total { width: 30%; text-align: right; font-weight: bold; }
+      .logo-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        width: 100%;
+        margin: 0 auto 8px auto;
+      }
+      .logo { 
+        max-width: 100px;
+        height: auto; 
+        display: block;
+        margin: 0 auto;
+      }
+      .header { 
+        margin-bottom: 5px;
+        width: 100%;
+      }
+      .footer { margin-top: 5px; }
+      .medium { font-size: 12px; }
+      .break-word { word-break: break-word; }
+      .total-section {
+        margin-top: 8px;
+        padding-top: 5px;
+        border-top: 2px solid #000;
+      }
+      .item-row {
+        margin: 3px 0;
+        padding: 2px 0;
+      }
+    </style>
+  `;
+
+  const qrPix = `https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=PIX:+5531992128891`;
+
+  // Processar itens e totais
+  let subtotal = 0;
+  const itensHtml = pedido.itens.map(item => {
+    const quantidade = parseInt(item.quantidade) || 1;
+    const preco = parseFloat(item.preco) || 0;
+    const totalItem = quantidade * preco;
+    subtotal += totalItem;
+    
+    let nomeItem = item.nome || '';
+    if (nomeItem.length > 20) {
+      nomeItem = nomeItem.substring(0, 20) + '...';
+    }
+    
+    return `
+      <tr class="item-row">
+        <td class="item-qty">${quantidade}x</td>
+        <td class="item-name break-word">${nomeItem}</td>
+        <td class="item-total">R$ ${totalItem.toFixed(2)}</td>
+      </tr>
+    `;
+  }).join('');
+
+  // CALCULAR TAXA DE ENTREGA AUTOMATICAMENTE (se houver endereço)
+  const temEndereco = pedido.endereco && pedido.endereco.trim() !== '';
+  const taxaEntrega = temEndereco ? 5.00 : 0; // Taxa fixa de R$ 5,00 para entrega
+  const totalPedido = parseFloat(pedido.total) || (subtotal + taxaEntrega);
+
+  const html = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <title>Cupom #${pedido._id?.slice(-6) || 'N/A'}</title>
+      <meta charset="UTF-8">
+      ${css}
+    </head>
+    <body>
+      <!-- CABEÇALHO COM LOGO CENTRALIZADA -->
+      <div class="header center">
+        <div class="logo-container">
+          <img class="logo" src="${window.location.origin + '/images/logo.jpg'}" alt="Logo" onerror="this.style.display='none'">
+        </div>
+        <div class="bold" style="font-size: 16px; margin-bottom: 3px;">BURGUER ARTESANAL BLEND</div>
+        <div class="medium">CNPJ: 58.518.297/0001-61</div>
+        <div class="medium">Rua Coniston, 380 - Jd. Canadá</div>
+        <div class="medium">Nova Lima - MG</div>
+        <div class="medium">Tel: (31) 99212-8891</div>
+      </div>
+
+      <hr class="line">
+
+      <!-- DADOS DO PEDIDO -->
+      <div>
+        <div style="font-size: 14px;"><strong>PEDIDO #${pedido._id?.slice(-6) || 'N/A'}</strong></div>
+        <div class="medium">${new Date(pedido.data || pedido.createdAt || Date.now()).toLocaleString('pt-BR')}</div>
+        <div><strong>CLIENTE:</strong> ${pedido.cliente || 'CONSUMIDOR'}</div>
+        ${pedido.telefone ? `<div><strong>TEL:</strong> ${pedido.telefone}</div>` : ''}
+        ${pedido.endereco ? `<div class="break-word medium"><strong>ENDEREÇO:</strong> ${pedido.endereco}</div>` : ''}
+        ${temEndereco ? `<div><strong>ENTREGA:</strong> SIM (Taxa: R$ ${taxaEntrega.toFixed(2)})</div>` : '<div><strong>ENTREGA:</strong> RETIRADA NO LOCAL</div>'}
+      </div>
+
+      <hr class="line">
+
+      <!-- ITENS -->
+      <div style="margin: 5px 0;">
+        <div style="font-size: 14px; margin-bottom: 3px;"><strong>ITENS DO PEDIDO:</strong></div>
+        <table>
+          ${itensHtml}
+        </table>
+      </div>
+
+      <hr class="line">
+
+      <!-- TOTAIS -->
+      <div class="total-section">
+        <table>
+          <tr>
+            <td class="left"><strong>SUBTOTAL:</strong></td>
+            <td class="right"><strong>R$ ${subtotal.toFixed(2)}</strong></td>
+          </tr>
+          ${temEndereco ? `
+            <tr>
+              <td class="left"><strong>TAXA ENTREGA:</strong></td>
+              <td class="right"><strong>R$ ${taxaEntrega.toFixed(2)}</strong></td>
+            </tr>
+          ` : ''}
+          <tr>
+            <td class="left"><strong>TOTAL:</strong></td>
+            <td class="right" style="font-size: 14px;"><strong>R$ ${totalPedido.toFixed(2)}</strong></td>
+          </tr>
+          <tr>
+            <td class="left medium">Pagamento:</td>
+            <td class="right medium">${pedido.pagamento || 'NÃO INFORMADO'}</td>
+          </tr>
+          <tr>
+            <td class="left medium">Status:</td>
+            <td class="right medium">${(pedido.status || 'PENDENTE').toUpperCase()}</td>
+          </tr>
+        </table>
+      </div>
+
+      <hr class="line">
+
+      <!-- RODAPÉ -->
+      <div class="footer center">
+        <div class="bold" style="font-size: 14px; margin-bottom: 3px;">FORMA DE PAGAMENTO PIX</div>
+        <div class="medium">Chave: +55 31 99212-8891</div>
+        <div class="logo-container" style="margin: 5px auto;">
+          <img class="qr" src="${qrPix}" alt="QR Code PIX" onerror="this.style.display='none'" style="max-width: 80px; height: auto;">
+        </div>
+        <div class="medium"><strong>VALQUIRIA GOMES AROEIRA</strong></div>
+        <div class="medium">${new Date().toLocaleString('pt-BR')}</div>
+        <br>
+        <div class="bold" style="font-size: 14px;">*** OBRIGADO PELA PREFERÊNCIA! ***</div>
+      </div>
+
+      <script>
+        window.onload = function() {
+          setTimeout(function() {
+            window.print();
+          }, 800);
+        };
+
+        window.addEventListener('afterprint', function() {
+          setTimeout(function() {
+            window.close();
+          }, 500);
+        });
+      </script>
+    </body>
+    </html>
+  `;
+
+  try {
+    janelaImpressao.document.write(html);
+    janelaImpressao.document.close();
+    
+  } catch (error) {
+    console.error('Erro ao gerar cupom:', error);
+    this.showToast('Erro ao gerar cupom', 'error');
+    janelaImpressao.close();
+  }
+}
   /* ================= FINANCEIRO ================= */
   async updateFinanceiro() {
     try {
