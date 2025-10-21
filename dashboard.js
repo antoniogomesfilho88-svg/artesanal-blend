@@ -622,7 +622,7 @@ class Dashboard {
 
 
   // dispara a impressão e fecha a janela somente após o usuário finalizar
-  janela.onafterprint = () => {
+  janela.onafterprint = () {
     janela.close();
   };
   janela.print();
@@ -676,6 +676,7 @@ class Dashboard {
 document.addEventListener('DOMContentLoaded', () => {
   window.dashboard = new Dashboard();
 });
+
 
 
 
