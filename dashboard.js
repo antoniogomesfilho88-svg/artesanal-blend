@@ -1,657 +1,523 @@
-/* ========================================================================= */
-/* === CSS COMPLETO DO DASHBOARD INTEGRADO ================================ */
-/* ========================================================================= */
-
-:root {
-    --primary: #3498db;
-    --primary-dark: #2980b9;
-    --secondary: #2c3e50;
-    --success: #27ae60;
-    --warning: #f39c12;
-    --danger: #e74c3c;
-    --info: #17a2b8;
-    --light: #f8f9fa;
-    --dark: #343a40;
-    --gray: #6c757d;
-    --radius: 8px;
-    --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    --transition: all 0.3s ease;
-}
-
-/* Reset e Base */
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
-
-body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background-color: #f5f7fa;
-    color: var(--dark);
-    line-height: 1.6;
-}
-
-/* Container Principal */
-#dashboard {
-    padding: 20px;
-    max-width: 1400px;
-    margin: 0 auto;
-}
-
-/* Header do Dashboard */
-.dashboard-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 30px;
-    padding: 20px;
-    background: white;
-    border-radius: var(--radius);
-    box-shadow: var(--shadow);
-}
-
-.dashboard-header h2 {
-    color: var(--secondary);
-    font-size: 1.8rem;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-.dashboard-header h2 i {
-    color: var(--primary);
-}
-
-.header-controls {
-    display: flex;
-    gap: 15px;
-    align-items: center;
-}
-
-/* Filtros e Botões */
-.form-control {
-    padding: 8px 12px;
-    border: 1px solid #ddd;
-    border-radius: var(--radius);
-    font-size: 0.9rem;
-    min-width: 150px;
-}
-
-.btn {
-    padding: 8px 16px;
-    border: none;
-    border-radius: var(--radius);
-    font-size: 0.9rem;
-    cursor: pointer;
-    transition: var(--transition);
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    text-decoration: none;
-    font-weight: 500;
-}
-
-.btn:hover {
-    transform: translateY(-2px);
-    box-shadow: var(--shadow);
-}
-
-.btn-primary {
-    background: var(--primary);
-    color: white;
-}
-
-.btn-primary:hover {
-    background: var(--primary-dark);
-}
-
-.btn-success {
-    background: var(--success);
-    color: white;
-}
-
-.btn-warning {
-    background: var(--warning);
-    color: white;
-}
-
-.btn-info {
-    background: var(--info);
-    color: white;
-}
-
-.btn-danger {
-    background: var(--danger);
-    color: white;
-}
-
-.btn-sm {
-    padding: 6px 12px;
-    font-size: 0.8rem;
-}
-
-/* Grid de Cards */
-.card-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 20px;
-    margin-bottom: 30px;
-}
-
-.card-grid.secondary {
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-}
-
-/* Cards Principais */
-.card {
-    background: white;
-    border-radius: var(--radius);
-    padding: 20px;
-    box-shadow: var(--shadow);
-    transition: var(--transition);
-    border-left: 4px solid transparent;
-}
-
-.card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 8px 15px rgba(0, 0, 0, 0.15);
-}
-
-.card.success {
-    border-left-color: var(--success);
-}
-
-.card.info {
-    border-left-color: var(--info);
-}
-
-.card.warning {
-    border-left-color: var(--warning);
-}
-
-.card.primary {
-    border-left-color: var(--primary);
-}
-
-.card.danger {
-    border-left-color: var(--danger);
-}
-
-.card-icon {
-    font-size: 2rem;
-    margin-bottom: 15px;
-    opacity: 0.8;
-}
-
-.card.success .card-icon { color: var(--success); }
-.card.info .card-icon { color: var(--info); }
-.card.warning .card-icon { color: var(--warning); }
-.card.primary .card-icon { color: var(--primary); }
-.card.danger .card-icon { color: var(--danger); }
-
-.card-content {
-    flex: 1;
-}
-
-.card-title {
-    font-size: 0.9rem;
-    color: var(--gray);
-    font-weight: 600;
-    margin-bottom: 8px;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-
-.card-value {
-    font-size: 1.8rem;
-    font-weight: bold;
-    margin-bottom: 5px;
-    color: var(--secondary);
-}
-
-.card-subtitle {
-    font-size: 0.9rem;
-    color: var(--gray);
-    margin-bottom: 10px;
-}
-
-.card-trend {
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    font-size: 0.8rem;
-    font-weight: 600;
-}
-
-.card-trend.positive {
-    color: var(--success);
-}
-
-.card-trend.negative {
-    color: var(--danger);
-}
-
-.card-actions {
-    margin-top: 15px;
-    padding-top: 15px;
-    border-top: 1px solid #eee;
-}
-
-/* Container de Gráficos */
-.charts-container {
-    margin-bottom: 30px;
-}
-
-.chart-row {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 20px;
-    margin-bottom: 20px;
-}
-
-.chart-card {
-    background: white;
-    border-radius: var(--radius);
-    padding: 20px;
-    box-shadow: var(--shadow);
-}
-
-.chart-card h3 {
-    color: var(--secondary);
-    margin-bottom: 15px;
-    font-size: 1.1rem;
-    font-weight: 600;
-}
-
-/* Status dos Pedidos */
-.orders-status {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    margin-bottom: 20px;
-}
-
-.status-item {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 12px 15px;
-    background: var(--light);
-    border-radius: var(--radius);
-    transition: var(--transition);
-}
-
-.status-item:hover {
-    background: #e9ecef;
-}
-
-.status-dot {
-    width: 12px;
-    height: 12px;
-    border-radius: 50%;
-    flex-shrink: 0;
-}
-
-.status-dot.pending { background: var(--warning); }
-.status-dot.preparing { background: var(--info); }
-.status-dot.ready { background: var(--success); }
-.status-dot.delivered { background: var(--primary); }
-
-.status-label {
-    flex: 1;
-    font-weight: 500;
-    color: var(--dark);
-}
-
-.status-value {
-    font-weight: bold;
-    color: var(--secondary);
-    font-size: 1.1rem;
-}
-
-/* Estatísticas de Entrega */
-.delivery-stats {
-    background: var(--light);
-    padding: 20px;
-    border-radius: var(--radius);
-}
-
-.delivery-stats h4 {
-    margin-bottom: 15px;
-    color: var(--primary);
-    font-size: 1rem;
-    font-weight: 600;
-}
-
-.stat-item {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: 10px;
-    padding-bottom: 10px;
-    border-bottom: 1px solid #dee2e6;
-}
-
-.stat-item:last-child {
-    margin-bottom: 0;
-    padding-bottom: 0;
-    border-bottom: none;
-}
-
-/* Pedidos Recentes */
-.recent-orders {
-    margin-top: 30px;
-    background: white;
-    padding: 25px;
-    border-radius: var(--radius);
-    box-shadow: var(--shadow);
-}
-
-.section-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 20px;
-}
-
-.section-header h3 {
-    color: var(--secondary);
-    font-size: 1.3rem;
-}
-
-.orders-table {
-    background: var(--light);
-    border-radius: var(--radius);
-    overflow: hidden;
-}
-
-.order-row {
-    display: grid;
-    grid-template-columns: 80px 1fr 100px 100px 120px 100px;
-    gap: 15px;
-    padding: 15px;
-    border-bottom: 1px solid #dee2e6;
-    align-items: center;
-    transition: var(--transition);
-}
-
-.order-row:not(.header):hover {
-    background: white;
-}
-
-.order-row:last-child {
-    border-bottom: none;
-}
-
-.order-row.header {
-    background: var(--primary);
-    color: white;
-    font-weight: bold;
-    padding: 12px 15px;
-}
-
-.order-id {
-    font-weight: bold;
-    color: var(--primary);
-    font-family: 'Courier New', monospace;
-}
-
-.order-customer {
-    display: flex;
-    flex-direction: column;
-}
-
-.customer-name {
-    font-weight: 600;
-    color: var(--dark);
-}
-
-.customer-phone {
-    font-size: 0.8rem;
-    color: var(--gray);
-}
-
-.order-value {
-    font-weight: bold;
-    color: var(--success);
-}
-
-.order-type {
-    padding: 6px 12px;
-    border-radius: 20px;
-    font-size: 0.8rem;
-    font-weight: bold;
-    text-align: center;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-
-.type-delivery { 
-    background: #e3f2fd; 
-    color: var(--info); 
-}
-
-.type-pickup { 
-    background: #e8f5e8; 
-    color: var(--success); 
-}
-
-.order-status {
-    padding: 6px 12px;
-    border-radius: 20px;
-    font-size: 0.8rem;
-    font-weight: bold;
-    text-align: center;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-
-.status-pending { 
-    background: #fff3cd; 
-    color: #856404; 
-}
-
-.status-preparing { 
-    background: #d1ecf1; 
-    color: #0c5460; 
-}
-
-.status-ready { 
-    background: #d4edda; 
-    color: #155724; 
-}
-
-.status-delivered { 
-    background: #e2e3e5; 
-    color: #383d41; 
-}
-
-.order-time {
-    font-family: 'Courier New', monospace;
-    color: var(--gray);
-    font-size: 0.9rem;
-}
-
-/* Alertas */
-.alerts-container {
-    background: white;
-    padding: 25px;
-    border-radius: var(--radius);
-    box-shadow: var(--shadow);
-    margin-top: 30px;
-}
-
-.alerts-container h3 {
-    color: var(--secondary);
-    margin-bottom: 20px;
-    font-size: 1.3rem;
-}
-
-.alerts-list {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-}
-
-.alert-item {
-    display: flex;
-    align-items: center;
-    gap: 15px;
-    padding: 15px;
-    border-radius: var(--radius);
-    border-left: 4px solid transparent;
-    background: var(--light);
-    transition: var(--transition);
-}
-
-.alert-item:hover {
-    transform: translateX(5px);
-}
-
-.alert-item.danger {
-    border-left-color: var(--danger);
-    background: #fde8e8;
-}
-
-.alert-item.warning {
-    border-left-color: var(--warning);
-    background: #fff3cd;
-}
-
-.alert-item.info {
-    border-left-color: var(--info);
-    background: #d1ecf1;
-}
-
-.alert-item.success {
-    border-left-color: var(--success);
-    background: #d4edda;
-}
-
-.alert-icon {
-    font-size: 1.5rem;
-    width: 40px;
-    text-align: center;
-}
-
-.alert-item.danger .alert-icon { color: var(--danger); }
-.alert-item.warning .alert-icon { color: var(--warning); }
-.alert-item.info .alert-icon { color: var(--info); }
-.alert-item.success .alert-icon { color: var(--success); }
-
-.alert-content {
-    flex: 1;
-}
-
-.alert-title {
-    font-weight: 600;
-    margin-bottom: 5px;
-    color: var(--dark);
-}
-
-.alert-description {
-    font-size: 0.9rem;
-    color: var(--gray);
-}
-
-/* Responsividade */
-@media (max-width: 1200px) {
-    .chart-row {
-        grid-template-columns: 1fr;
+// dashboard.js
+class Dashboard {
+    constructor() {
+        this.produtos = [];
+        this.pedidos = [];
+        this.insumos = [];
+        this.init();
+    }
+
+    async init() {
+        await this.carregarDados();
+        this.setupEventListeners();
+        this.renderProdutos();
+        this.renderInsumos();
+        this.renderPedidos();
+        this.updateFinanceiro();
+    }
+
+    async carregarDados() {
+        try {
+            console.log('📥 Carregando dados da API...');
+            
+            // ROTAS CORRIGIDAS: /api/produtos -> /api/menu E /api/pedidos -> /api/orders
+            const [produtosRes, pedidosRes, insumosRes] = await Promise.all([
+                fetch('/api/menu').then(r => r.ok ? r.json() : []), 
+                fetch('/api/orders').then(r => r.ok ? r.json() : []),
+                fetch('/api/insumos').then(r => r.ok ? r.json() : [])
+            ]);
+
+            this.produtos = produtosRes || [];
+            this.pedidos = pedidosRes || [];
+            this.insumos = insumosRes || [];
+
+            console.log(`✅ Dados carregados: ${this.produtos.length} produtos, ${this.pedidos.length} pedidos, ${this.insumos.length} insumos`);
+
+        } catch (error) {
+            console.log('⚠️ Erro ao carregar dados:', error);
+            this.produtos = [];
+            this.pedidos = [];
+            this.insumos = [];
+        }
+    }
+
+    setupEventListeners() {
+        // Tabs
+        document.querySelectorAll('.tab-button').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+                
+                btn.classList.add('active');
+                document.getElementById(btn.dataset.tab).classList.add('active');
+            });
+        });
+
+        // Formulário de produto (Listener mantido no setup, mas a URL será corrigida em salvarProduto)
+        document.getElementById('formProduto')?.addEventListener('submit', (e) => {
+            e.preventDefault();
+            this.salvarProduto();
+        });
+
+        // Botão ver cardápio
+        document.getElementById('visualizarCardapio')?.addEventListener('click', () => {
+            window.open('/', '_blank');
+        });
+    }
+
+    // ===== PRODUTOS =====
+    abrirModalProduto(produto = null) {
+        const modalHTML = `
+            <div class="modal-overlay">
+                <div class="modal">
+                    <h3>${produto ? 'Editar' : 'Novo'} Produto</h3>
+                    <form id="formProduto">
+                        <input type="hidden" id="produtoId" value="${produto?._id || ''}">
+                        
+                        <div class="form-group">
+                            <label>Nome do Produto</label>
+                            <input type="text" id="produtoNome" value="${produto?.nome || ''}" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Categoria</label>
+                            <select id="produtoCategoria" required>
+                                <option value="">Selecione...</option>
+                                <option value="Hambúrgueres" ${produto?.categoria === 'Hambúrgueres' ? 'selected' : ''}>🍔 Hambúrgueres</option>
+                                <option value="Combos" ${produto?.categoria === 'Combos' ? 'selected' : ''}>🥡 Combos</option>
+                                <option value="Acompanhamentos" ${produto?.categoria === 'Acompanhamentos' ? 'selected' : ''}>🍟 Acompanhamentos</option>
+                                <option value="Adicionais" ${produto?.categoria === 'Adicionais' ? 'selected' : ''}>➕ Adicionais</option>
+                                <option value="Bebidas" ${produto?.categoria === 'Bebidas' ? 'selected' : ''}>🥤 Bebidas</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Preço (R$)</label>
+                            <input type="number" id="produtoPreco" step="0.01" value="${produto?.preco || ''}" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Descrição</label>
+                            <textarea id="produtoDescricao" rows="3">${produto?.descricao || ''}</textarea>
+                        </div>
+
+                        <div class="form-group">
+                            <label>URL da Imagem</label>
+                            <input type="text" id="produtoImagem" value="${produto?.imagem || ''}">
+                        </div>
+
+                        <div class="form-checkbox">
+                            <label>
+                                <input type="checkbox" id="produtoDisponivel" ${produto?.disponivel !== false ? 'checked' : ''}>
+                                Disponível no cardápio
+                            </label>
+                        </div>
+
+                        <div class="modal-actions">
+                            <button type="submit" class="btn primary">💾 Salvar</button>
+                            <button type="button" class="btn secondary" onclick="dashboard.fecharModal()">❌ Cancelar</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        `;
+
+        document.body.insertAdjacentHTML('beforeend', modalHTML);
+        
+        document.getElementById('formProduto').addEventListener('submit', (e) => {
+            e.preventDefault();
+            this.salvarProduto();
+        });
+    }
+
+    async salvarProduto() {
+        const formData = {
+            nome: document.getElementById('produtoNome').value,
+            categoria: document.getElementById('produtoCategoria').value,
+            preco: parseFloat(document.getElementById('produtoPreco').value),
+            descricao: document.getElementById('produtoDescricao').value,
+            imagem: document.getElementById('produtoImagem').value,
+            disponivel: document.getElementById('produtoDisponivel').checked
+        };
+
+        const produtoId = document.getElementById('produtoId').value;
+        
+        // ROTAS CORRIGIDAS: /api/produtos/:id -> /api/menu/item/:id E /api/produtos -> /api/menu/item
+        const url = produtoId ? `/api/menu/item/${produtoId}` : '/api/menu/item'; 
+        const method = produtoId ? 'PUT' : 'POST';
+
+        try {
+            const response = await fetch(url, {
+                method: method,
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(formData)
+            });
+
+            if (response.ok) {
+                await this.carregarDados();
+                this.renderProdutos();
+                this.fecharModal();
+                this.mostrarMensagem('Produto salvo com sucesso!');
+            } else {
+                 const errorData = await response.json();
+                 this.mostrarMensagem(`Erro ao salvar produto: ${errorData.error || response.statusText}`, 'erro');
+            }
+        } catch (error) {
+            this.mostrarMensagem('Erro de rede ao salvar produto', 'erro');
+        }
+    }
+
+    renderProdutos() {
+        const container = document.getElementById('produtosContainer');
+        const filtroCategoria = document.getElementById('filtroCategoria')?.value || '';
+        const filtroStatus = document.getElementById('filtroStatus')?.value || '';
+
+        let produtosFiltrados = this.produtos;
+
+        if (filtroCategoria) {
+            produtosFiltrados = produtosFiltrados.filter(p => p.categoria === filtroCategoria);
+        }
+
+        if (filtroStatus === 'disponivel') {
+            produtosFiltrados = produtosFiltrados.filter(p => p.disponivel);
+        } else if (filtroStatus === 'indisponivel') {
+            produtosFiltrados = produtosFiltrados.filter(p => !p.disponivel);
+        }
+
+        if (!produtosFiltrados || produtosFiltrados.length === 0) {
+            container.innerHTML = '<div class="empty-state">Nenhum produto encontrado</div>';
+            return;
+        }
+
+        container.innerHTML = produtosFiltrados.map(produto => `
+            <div class="produto-card ${!produto.disponivel ? 'indisponivel' : ''}">
+                <span class="categoria">${produto.categoria}</span>
+                <span class="status ${produto.disponivel ? 'disponivel' : 'indisponivel'}">
+                    ${produto.disponivel ? '✅' : '⏸️'}
+                </span>
+                
+                <h3>${produto.nome}</h3>
+                <div class="preco">R$ ${produto.preco?.toFixed(2) || '0.00'}</div>
+                <div class="descricao">${produto.descricao || ''}</div>
+                
+               ${produto.imagem ? `
+    <div style="margin: 1rem 0;">
+        <img src="../${produto.imagem}" alt="${produto.nome}" 
+             style="max-width: 100%; height: 150px; object-fit: cover; border-radius: 4px;">
+    </div>
+` : ''}
+                
+                <div class="card-actions">
+                    <button class="btn-editar" onclick="dashboard.abrirModalProduto(${JSON.stringify(produto).replace(/"/g, '&quot;')})">
+                        ✏️ Editar
+                    </button>
+                    <button class="btn-toggle" onclick="dashboard.toggleDisponibilidade('${produto._id}')"> 
+                        ${produto.disponivel ? '⏸️' : '▶️'} ${produto.disponivel ? 'Pausar' : 'Ativar'}
+                    </button>
+                    <button class="btn-excluir" onclick="dashboard.excluirProduto('${produto._id}')">
+                        🗑️ Excluir
+                    </button>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    filtrarProdutos() {
+        this.renderProdutos();
+    }
+
+    async toggleDisponibilidade(id) {
+        const produto = this.produtos.find(p => p._id === id);
+        if (!produto) return;
+
+        try {
+            // ROTA CORRIGIDA: /api/produtos/:id -> /api/menu/item/:id
+            const response = await fetch(`/api/menu/item/${id}`, { 
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ disponivel: !produto.disponivel })
+            });
+
+            if (response.ok) {
+                produto.disponivel = !produto.disponivel;
+                this.renderProdutos();
+                this.mostrarMensagem(`Produto ${produto.disponivel ? 'ativado' : 'pausado'} no cardápio!`);
+            } else {
+                 this.mostrarMensagem('Erro ao atualizar produto', 'erro');
+            }
+        } catch (error) {
+            this.mostrarMensagem('Erro de rede ao atualizar produto', 'erro');
+        }
+    }
+
+    async excluirProduto(id) {
+        if (!confirm('Tem certeza que deseja excluir este produto?')) return;
+
+        try {
+            // ROTA CORRIGIDA: /api/produtos/:id -> /api/menu/item/:id
+            const response = await fetch(`/api/menu/item/${id}`, { 
+                method: 'DELETE'
+            });
+
+            if (response.ok) {
+                this.produtos = this.produtos.filter(p => p._id !== id);
+                this.renderProdutos();
+                this.mostrarMensagem('Produto excluído com sucesso!');
+            } else {
+                 this.mostrarMensagem('Erro ao excluir produto', 'erro');
+            }
+        } catch (error) {
+            this.mostrarMensagem('Erro de rede ao excluir produto', 'erro');
+        }
+    }
+
+    // ===== INSUMOS (Rotas mantidas em português: /api/insumos) =====
+    abrirModalInsumo(insumo = null) {
+        const modalHTML = `
+            <div class="modal-overlay">
+                <div class="modal">
+                    <h3>${insumo ? 'Editar' : 'Novo'} Insumo</h3>
+                    <form id="formInsumo">
+                        <input type="hidden" id="insumoId" value="${insumo?._id || ''}">
+                        
+                        <div class="form-group">
+                            <label>Nome do Insumo</label>
+                            <input type="text" id="insumoNome" value="${insumo?.nome || ''}" required>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Quantidade</label>
+                                <input type="number" id="insumoQuantidade" value="${insumo?.quantidade || 0}" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label>Unidade</label>
+                                <select id="insumoUnidade" required>
+                                    <option value="g" ${insumo?.unidade === 'g' ? 'selected' : ''}>Gramas (g)</option>
+                                    <option value="ml" ${insumo?.unidade === 'ml' ? 'selected' : ''}>Mililitros (ml)</option>
+                                    <option value="un" ${insumo?.unidade === 'un' ? 'selected' : ''}>Unidades (un)</option>
+                                    <option value="kg" ${insumo?.unidade === 'kg' ? 'selected' : ''}>Quilogramas (kg)</option>
+                                    <option value="l" ${insumo?.unidade === 'l' ? 'selected' : ''}>Litros (l)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Preço Unitário (R$)</label>
+                            <input type="number" id="insumoPreco" step="0.01" value="${insumo?.preco || 0}" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Estoque Mínimo</label>
+                            <input type="number" id="insumoMinimo" value="${insumo?.minimo || 0}">
+                        </div>
+
+                        <div class="modal-actions">
+                            <button type="submit" class="btn primary">💾 Salvar</button>
+                            <button type="button" class="btn secondary" onclick="dashboard.fecharModal()">❌ Cancelar</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        `;
+        
+        document.body.insertAdjacentHTML('beforeend', modalHTML);
+        
+        document.getElementById('formInsumo').addEventListener('submit', (e) => {
+            e.preventDefault();
+            this.salvarInsumo();
+        });
+    }
+
+    async salvarInsumo() {
+        const formData = {
+            nome: document.getElementById('insumoNome').value,
+            quantidade: parseInt(document.getElementById('insumoQuantidade').value),
+            unidade: document.getElementById('insumoUnidade').value,
+            preco: parseFloat(document.getElementById('insumoPreco').value),
+            minimo: parseInt(document.getElementById('insumoMinimo').value) || 0
+        };
+
+        const insumoId = document.getElementById('insumoId').value;
+        const url = insumoId ? `/api/insumos/${insumoId}` : '/api/insumos';
+        const method = insumoId ? 'PUT' : 'POST';
+
+        try {
+            const response = await fetch(url, {
+                method: method,
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(formData)
+            });
+
+            if (response.ok) {
+                await this.carregarDados();
+                this.renderInsumos();
+                this.fecharModal();
+                this.mostrarMensagem('Insumo salvo com sucesso!');
+            } else {
+                 this.mostrarMensagem('Erro ao salvar insumo', 'erro');
+            }
+        } catch (error) {
+            this.mostrarMensagem('Erro de rede ao salvar insumo', 'erro');
+        }
+    }
+
+    renderInsumos() {
+        const container = document.getElementById('insumosContainer');
+        
+        if (!this.insumos || this.insumos.length === 0) {
+            container.innerHTML = '<div class="empty-state">Nenhum insumo cadastrado</div>';
+            return;
+        }
+
+        container.innerHTML = this.insumos.map(insumo => `
+            <div class="produto-card ${insumo.quantidade <= (insumo.minimo || 0) ? 'estoque-baixo' : ''}">
+                <h3>${insumo.nome}</h3>
+                <div class="insumo-info">
+                    <div class="quantidade ${insumo.quantidade <= (insumo.minimo || 0) ? 'alerta' : ''}">
+                        ${insumo.quantidade} ${insumo.unidade}
+                        ${insumo.minimo ? `<small>(mín: ${insumo.minimo} ${insumo.unidade})</small>` : ''}
+                    </div>
+                    <div class="preco">R$ ${insumo.preco?.toFixed(2) || '0.00'}/${insumo.unidade}</div>
+                </div>
+                <div class="card-actions">
+                    <button class="btn-editar" onclick="dashboard.abrirModalInsumo(${JSON.stringify(insumo).replace(/"/g, '&quot;')})">
+                        ✏️ Editar
+                    </button>
+                    <button class="btn-excluir" onclick="dashboard.excluirInsumo('${insumo._id}')">
+                        🗑️ Excluir
+                    </button>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    async excluirInsumo(id) {
+        if (!confirm('Tem certeza que deseja excluir este insumo?')) return;
+
+        try {
+            const response = await fetch(`/api/insumos/${id}`, {
+                method: 'DELETE'
+            });
+
+            if (response.ok) {
+                this.insumos = this.insumos.filter(i => i._id !== id);
+                this.renderInsumos();
+                this.mostrarMensagem('Insumo excluído com sucesso!');
+            } else {
+                this.mostrarMensagem('Erro ao excluir insumo', 'erro');
+            }
+        } catch (error) {
+            this.mostrarMensagem('Erro de rede ao excluir insumo', 'erro');
+        }
+    }
+
+    // ===== PEDIDOS (Rotas corrigidas para /api/orders) =====
+    async atualizarPedidos() {
+        await this.carregarDados();
+        this.renderPedidos();
+        this.mostrarMensagem('Pedidos atualizados!');
+    }
+
+    renderPedidos() {
+        const container = document.getElementById('pedidosContainer');
+        
+        if (!this.pedidos || this.pedidos.length === 0) {
+            container.innerHTML = '<div class="empty-state">Nenhum pedido recebido</div>';
+            return;
+        }
+
+        container.innerHTML = this.pedidos.map(pedido => `
+            <div class="produto-card">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem;">
+                    <div>
+                        <h3>Pedido #${pedido._id?.slice(-6) || 'N/A'}</h3>
+                        <p><strong>Cliente:</strong> ${pedido.cliente}</p>
+                        <p><strong>Telefone:</strong> ${pedido.telefone}</p>
+                        <p><strong>Endereço:</strong> ${pedido.endereco}</p>
+                    </div>
+                    <span class="status status-${pedido.status || 'pendente'}">
+                        ${this.formatarStatus(pedido.status)}
+                    </span>
+                </div>
+                
+                <div style="margin-bottom: 1rem;">
+                    <strong>Itens:</strong>
+                    ${(pedido.itens || []).map(item => `
+                        <div style="display: flex; justify-content: space-between; margin: 0.25rem 0;">
+                            <span>${item.quantidade}x ${item.nome}</span>
+                            <span>R$ ${((item.preco || 0) * (item.quantidade || 1)).toFixed(2)}</span>
+                        </div>
+                    `).join('')}
+                </div>
+                
+                <div style="border-top: 1px solid var(--border); padding-top: 1rem;">
+                    <div style="display: flex; justify-content: space-between;">
+                        <strong>Total: R$ ${pedido.total?.toFixed(2) || '0.00'}</strong>
+                        <span>${new Date(pedido.createdAt || pedido.criadoEm).toLocaleString()}</span>
+                    </div>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    formatarStatus(status) {
+        const statusMap = {
+            'pendente': '⏳ Pendente',
+            'preparando': '👨‍🍳 Preparando',
+            'pronto': '✅ Pronto',
+            'entregue': '🚗 Entregue',
+            'cancelado': '❌ Cancelado'
+        };
+        return statusMap[status] || status;
+    }
+
+    // ===== FINANCEIRO (Rota corrigida para /api/stats) =====
+    async updateFinanceiro() {
+        try {
+            // ROTA CORRIGIDA: /api/financeiro -> /api/stats
+            const response = await fetch('/api/stats'); 
+            if (response.ok) {
+                const financeiro = await response.json();
+                this.atualizarUIFinanceiro(financeiro);
+            } else {
+                console.log('Erro ao carregar dados financeiros: Status', response.status);
+            }
+        } catch (error) {
+            console.log('Erro de rede ao carregar dados financeiros:', error);
+        }
+    }
+
+    atualizarUIFinanceiro({ vendas, gastos, lucro }) {
+        const totalVendas = document.getElementById('totalVendas');
+        const totalCustos = document.getElementById('totalCustos');
+        const lucroElement = document.getElementById('lucro');
+
+        if (totalVendas) totalVendas.textContent = `R$ ${vendas?.toFixed(2) || '0.00'}`;
+        if (totalCustos) totalCustos.textContent = `R$ ${gastos?.toFixed(2) || '0.00'}`;
+        if (lucroElement) lucroElement.textContent = `R$ ${lucro?.toFixed(2) || '0.00'}`;
+    }
+
+    // ===== UTILITÁRIOS =====
+    fecharModal() {
+        const modal = document.querySelector('.modal-overlay');
+        if (modal) modal.remove();
+    }
+
+    mostrarMensagem(mensagem, tipo = 'sucesso') {
+        // Implementação simples - pode ser melhorada com notificações
+        console.log(`${tipo.toUpperCase()}: ${mensagem}`);
+        alert(mensagem); // Substitua por um sistema de notificações mais elaborado
+    }
+
+    imprimirPedidos() {
+        window.print();
     }
 }
 
-@media (max-width: 768px) {
-    #dashboard {
-        padding: 15px;
-    }
-    
-    .dashboard-header {
-        flex-direction: column;
-        gap: 15px;
-        text-align: center;
-    }
-    
-    .header-controls {
-        flex-direction: column;
-        width: 100%;
-    }
-    
-    .form-control, .btn {
-        width: 100%;
-        justify-content: center;
-    }
-    
-    .card-grid {
-        grid-template-columns: 1fr;
-    }
-    
-    .order-row {
-        grid-template-columns: 1fr;
-        gap: 10px;
-        text-align: center;
-        padding: 15px 10px;
-    }
-    
-    .order-row.header {
-        display: none;
-    }
-    
-    .order-customer {
-        align-items: center;
-    }
-    
-    .stat-item {
-        flex-direction: column;
-        text-align: center;
-        gap: 5px;
-    }
-}
+// Inicializar dashboard quando a página carregar
+document.addEventListener('DOMContentLoaded', () => {
+    window.dashboard = new Dashboard();
+});
 
-@media (max-width: 480px) {
-    .dashboard-header h2 {
-        font-size: 1.4rem;
-    }
-    
-    .card-value {
-        font-size: 1.5rem;
-    }
-    
-    .chart-card {
-        padding: 15px;
-    }
-}
-
-/* Animações */
-@keyframes fadeIn {
-    from {
-        opacity: 0;
-        transform: translateY(20px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-.card, .chart-card, .recent-orders, .alerts-container {
-    animation: fadeIn 0.6s ease-out;
-}
-
-/* Scroll personalizado */
-::-webkit-scrollbar {
-    width: 8px;
-}
-
-::-webkit-scrollbar-track {
-    background: #f1f1f1;
-}
-
-::-webkit-scrollbar-thumb {
-    background: var(--primary);
-    border-radius: 4px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-    background: var(--primary-dark);
-}
