@@ -606,8 +606,7 @@ class Dashboard {
     </body>
   `;
 
-  janela.document.write(html);
-  janela.document.close();
+  janela.document.write(html)
   janela.focus();
   janela.print();
   janela.close();
@@ -661,6 +660,7 @@ class Dashboard {
 document.addEventListener('DOMContentLoaded', () => {
   window.dashboard = new Dashboard();
 });
+
 
 
 
