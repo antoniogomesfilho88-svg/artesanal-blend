@@ -641,7 +641,18 @@ imprimirCupom(id) {
     `;
   }).join('');
 
-  const totalPedido = parseFloat(pedido.total) || subtotal;
+  // CORREÇÃO: Calcular taxa de entrega automaticamente
+  const temEndereco = pedido.endereco && pedido.endereco.trim() !== '' && pedido.endereco !== 'Retirada no local';
+  const taxaEntrega = temEndereco ? 5.00 : 0;
+
+  // CORREÇÃO: Garantir que o total inclui a taxa de entrega
+  let totalCalculado = subtotal + taxaEntrega;
+
+  // Se o pedido já tem um total salvo, usa ele, senão usa o calculado
+  const totalPedido = parseFloat(pedido.total) || totalCalculado;
+
+  // CORREÇÃO: Se o total salvo não incluir a taxa, ajusta
+  const totalFinal = Math.max(totalPedido, totalCalculado);
 
   const html = `
     <!DOCTYPE html>
@@ -694,13 +705,19 @@ imprimirCupom(id) {
             <td class="left"><strong>SUBTOTAL:</strong></td>
             <td class="right"><strong>R$ ${subtotal.toFixed(2)}</strong></td>
           </tr>
+          ${temEndereco ? `
+            <tr>
+              <td class="left"><strong>TAXA ENTREGA:</strong></td>
+              <td class="right"><strong>R$ ${taxaEntrega.toFixed(2)}</strong></td>
+            </tr>
+          ` : ''}
           <tr>
             <td class="left"><strong>TOTAL:</strong></td>
-            <td class="right" style="font-size: 14px;"><strong>R$ ${totalPedido.toFixed(2)}</strong></td>
+            <td class="right" style="font-size: 14px;"><strong>R$ ${totalFinal.toFixed(2)}</strong></td>
           </tr>
           <tr>
-            <td class="left medium">Pagamento:</td>
-            <td class="right medium">${pedido.pagamento || 'NÃO INFORMADO'}</td>
+            <td class="left medium">Entrega:</td>
+            <td class="right medium">${temEndereco ? '🚗 ENTREGA' : '🏪 RETIRADA'}</td>
           </tr>
           <tr>
             <td class="left medium">Status:</td>
@@ -798,6 +815,7 @@ imprimirCupom(id) {
 document.addEventListener('DOMContentLoaded', () => {
   window.dashboard = new Dashboard();
 });
+
 
 
 
