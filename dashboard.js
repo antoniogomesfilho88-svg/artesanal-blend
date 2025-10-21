@@ -518,7 +518,7 @@ class Dashboard {
     }
   }
 
-  imprimirCupom(id) {
+imprimirCupom(id) {
   const pedido = this.pedidos.find(p => p._id === id);
   if (!pedido) return this.showToast('Pedido não encontrado', 'error');
 
@@ -641,53 +641,7 @@ class Dashboard {
     `;
   }).join('');
 
-  // CORREÇÃO: Usar as taxas reais do seu sistema
-  const TAXAS = {
-    "Jardim Canadá": 6.00,
-    "Retiro das Pedras": 10.00,
-    "Serra do Manacás": 10.00,
-    "Vale do Sol": 12.00,
-    "Alphaville": 15.00,
-    "none": 0.00
-  };
-
-  // Determinar a taxa de entrega baseada no endereço
-  let taxaEntrega = 0;
-  let bairroEntrega = 'Retirada';
-  
-  if (pedido.endereco && pedido.endereco.trim() !== '' && pedido.endereco !== 'Retirada no local') {
-    // Tentar encontrar o bairro no endereço
-    const enderecoLower = pedido.endereco.toLowerCase();
-    if (enderecoLower.includes('jardim canadá') || enderecoLower.includes('jd canadá')) {
-      taxaEntrega = 6.00;
-      bairroEntrega = 'Jardim Canadá';
-    } else if (enderecoLower.includes('retiro das pedras')) {
-      taxaEntrega = 10.00;
-      bairroEntrega = 'Retiro das Pedras';
-    } else if (enderecoLower.includes('serra do manacás') || enderecoLower.includes('serra dos manacás')) {
-      taxaEntrega = 10.00;
-      bairroEntrega = 'Serra do Manacás';
-    } else if (enderecoLower.includes('vale do sol')) {
-      taxaEntrega = 12.00;
-      bairroEntrega = 'Vale do Sol';
-    } else if (enderecoLower.includes('alphaville')) {
-      taxaEntrega = 15.00;
-      bairroEntrega = 'Alphaville';
-    } else {
-      // Taxa padrão para outros endereços
-      taxaEntrega = 8.00;
-      bairroEntrega = 'Outro bairro';
-    }
-  }
-
-  // CORREÇÃO: Garantir que o total inclui a taxa de entrega
-  let totalCalculado = subtotal + taxaEntrega;
-
-  // Se o pedido já tem um total salvo, usa ele, senão usa o calculado
-  const totalPedido = parseFloat(pedido.total) || totalCalculado;
-
-  // CORREÇÃO: Se o total salvo não incluir a taxa, ajusta
-  const totalFinal = Math.max(totalPedido, totalCalculado);
+  const totalPedido = parseFloat(pedido.total) || subtotal;
 
   const html = `
     <!DOCTYPE html>
@@ -740,19 +694,13 @@ class Dashboard {
             <td class="left"><strong>SUBTOTAL:</strong></td>
             <td class="right"><strong>R$ ${subtotal.toFixed(2)}</strong></td>
           </tr>
-          ${taxaEntrega > 0 ? `
-            <tr>
-              <td class="left"><strong>TAXA ENTREGA (${bairroEntrega}):</strong></td>
-              <td class="right"><strong>R$ ${taxaEntrega.toFixed(2)}</strong></td>
-            </tr>
-          ` : ''}
           <tr>
             <td class="left"><strong>TOTAL:</strong></td>
-            <td class="right" style="font-size: 14px;"><strong>R$ ${totalFinal.toFixed(2)}</strong></td>
+            <td class="right" style="font-size: 14px;"><strong>R$ ${totalPedido.toFixed(2)}</strong></td>
           </tr>
           <tr>
-            <td class="left medium">Entrega:</td>
-            <td class="right medium">${taxaEntrega > 0 ? '🚗 ENTREGA' : '🏪 RETIRADA'}</td>
+            <td class="left medium">Pagamento:</td>
+            <td class="right medium">${pedido.pagamento || 'NÃO INFORMADO'}</td>
           </tr>
           <tr>
             <td class="left medium">Status:</td>
@@ -850,8 +798,6 @@ class Dashboard {
 document.addEventListener('DOMContentLoaded', () => {
   window.dashboard = new Dashboard();
 });
-
-
 
 
 
