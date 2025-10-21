@@ -518,38 +518,37 @@ class Dashboard {
     }
   }
 
-  imprimirCupom(id) { 
+ imprimirCupom(id) {
+  // 1️⃣ Buscar o pedido pelo _id
+  const pedido = this.pedidos.find(p => p._id === id);
+  if (!pedido) return this.showToast('Pedido não encontrado', 'error');
+
+  // 2️⃣ Criar a janela do cupom
   const janela = window.open('', '_blank', 'width=400,height=600');
 
   const css = `
     <style>
-      body {
-        width: 384px; /* 58mm padrão */
-        font-family: monospace;
-        font-size: 12px;
-        margin: 0;
-        padding: 0;
-      }
-      .center { text-align: center; }
-      .line { border-bottom: 1px dashed #000; margin: 4px 0; }
-      .right { text-align: right; }
-      .bold { font-weight: bold; }
-      table { width: 100%; border-collapse: collapse; }
-      td { vertical-align: top; padding: 2px 0; }
-      .item-name { max-width: 220px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-      .item-qty, .item-total { width: 60px; text-align: right; }
-      .qr { margin-top: 6px; max-width: 120px; }
+      body { width: 384px; font-family: monospace; font-size:12px; margin:0; padding:0; }
+      .center { text-align:center; }
+      .line { border-bottom:1px dashed #000; margin:4px 0; }
+      .right { text-align:right; }
+      .bold { font-weight:bold; }
+      table { width:100%; border-collapse:collapse; }
+      td { vertical-align:top; padding:2px 0; }
+      .item-name { max-width:220px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+      .item-qty, .item-total { width:60px; text-align:right; }
+      .qr { margin-top:6px; max-width:120px; }
     </style>
   `;
 
-  // Gera QR Code usando API gratuita (pode ser trocado por qualquer biblioteca QR local)
   const qrPix = `https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=PIX:+5531992128891`;
 
+  // 3️⃣ HTML do cupom
   const html = `
     ${css}
     <body>
       <div class="center">
-        <img src="images/logo.jpg" style="max-width: 120px; height: auto;" />
+        <img src="images/logo.jpg" style="max-width:120px;height:auto;" />
         <div class="bold">BURGUER ARTESANAL BLEND</div>
         <div>CNPJ: 58.518.297/0001-61</div>
         <div>Rua Coniston, 380 - Jd. Canadá, Nova Lima - MG</div>
@@ -558,7 +557,7 @@ class Dashboard {
       </div>
 
       <div>
-        <div>Venda #${pedido.id}</div>
+        <div>Venda #${pedido._id}</div>
         <div>${pedido.data}</div>
         <div>Cliente: ${pedido.cliente}</div>
         <hr class="line" />
@@ -567,9 +566,9 @@ class Dashboard {
       <table>
         ${pedido.itens.map(item => `
           <tr>
-            <td class="item-qty">${item.qtd}x</td>
+            <td class="item-qty">${item.quantidade}x</td>
             <td class="item-name">${item.nome}</td>
-            <td class="item-total">R$ ${item.total.toFixed(2)}</td>
+            <td class="item-total">R$ ${(item.quantidade*item.preco).toFixed(2)}</td>
           </tr>
         `).join('')}
       </table>
@@ -579,7 +578,7 @@ class Dashboard {
       <table>
         <tr>
           <td>Subtotal</td>
-          <td class="right">R$ ${pedido.subtotal.toFixed(2)}</td>
+          <td class="right">R$ ${pedido.itens.reduce((sum,i)=>sum+(i.quantidade*i.preco),0).toFixed(2)}</td>
         </tr>
         <tr class="bold">
           <td>TOTAL</td>
@@ -587,7 +586,7 @@ class Dashboard {
         </tr>
         <tr>
           <td>Pagamento:</td>
-          <td class="right">${pedido.pagamento}</td>
+          <td class="right">${pedido.pagamento || '—'}</td>
         </tr>
         <tr>
           <td>Status:</td>
@@ -613,6 +612,7 @@ class Dashboard {
   janela.print();
   janela.close();
 }
+
 
   /* ================= FINANCEIRO ================= */
   async updateFinanceiro() {
@@ -661,6 +661,7 @@ class Dashboard {
 document.addEventListener('DOMContentLoaded', () => {
   window.dashboard = new Dashboard();
 });
+
 
 
 
