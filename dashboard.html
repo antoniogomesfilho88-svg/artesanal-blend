@@ -6,7 +6,7 @@
   <title>Dashboard - Artesanal Blend</title>
   <link rel="stylesheet" href="dashboard.css" />
   <style>
-    /* Tela de login simples */
+    /* Tela de login */
     #loginOverlay {
       position: fixed;
       inset: 0;
@@ -77,7 +77,7 @@
 </head>
 
 <body>
-  <!-- 🔐 Login Overlay -->
+  <!-- 🔐 Login -->
   <div id="loginOverlay">
     <div id="loginBox">
       <img src="images/logo.jpg" alt="Logo Artesanal Blend">
@@ -89,7 +89,7 @@
     </div>
   </div>
 
-  <!-- 🔧 Conteúdo original do dashboard (sem mudanças) -->
+  <!-- 🔧 Dashboard original -->
   <header class="dashboard-header">
     <div class="header-content">
       <img src="images/logo.jpg" alt="Logo" class="logo" />
@@ -106,33 +106,46 @@
   </div>
 
   <main class="dashboard-content">
-    <!-- tudo igual como antes -->
+    <!-- seu conteúdo original continua igual -->
   </main>
 
   <div id="toast-container" aria-live="polite"></div>
   <script src="dashboard.js"></script>
 
-  <!-- Script de login local -->
+  <!-- 🔑 Script do login com backend -->
   <script>
+    const loginOverlay = document.getElementById('loginOverlay');
     const loginBtn = document.getElementById('loginBtn');
     const loginError = document.getElementById('loginError');
-    const loginOverlay = document.getElementById('loginOverlay');
 
-    loginBtn.addEventListener('click', () => {
-      const user = document.getElementById('username').value.trim();
-      const pass = document.getElementById('password').value.trim();
+    async function fazerLogin() {
+      const username = document.getElementById('username').value.trim();
+      const password = document.getElementById('password').value.trim();
 
-      // Usuário e senha fixos locais (você pode trocar por /api/login)
-      if (user === 'admin' && pass === '123456') {
-        localStorage.setItem('auth', 'true');
-        loginOverlay.style.display = 'none';
-      } else {
-        loginError.textContent = 'Usuário ou senha incorretos.';
+      try {
+        const res = await fetch('/api/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password })
+        });
+
+        const data = await res.json();
+
+        if (res.ok) {
+          localStorage.setItem('token', data.token);
+          loginOverlay.style.display = 'none';
+        } else {
+          loginError.textContent = data.error || 'Usuário ou senha incorretos.';
+        }
+      } catch (error) {
+        loginError.textContent = 'Erro ao conectar ao servidor.';
       }
-    });
+    }
 
-    // Se já estiver logado, pula o login
-    if (localStorage.getItem('auth') === 'true') {
+    loginBtn.addEventListener('click', fazerLogin);
+
+    // Se já tiver token salvo, pula o login
+    if (localStorage.getItem('token')) {
       loginOverlay.style.display = 'none';
     }
   </script>
