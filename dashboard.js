@@ -537,7 +537,7 @@ imprimirCupom(id) {
           max-width: 80mm !important;
           margin: 3mm !important;
           padding: 0 !important;
-          font-size: 13px !important;
+          font-size: 16px !important;
           font-weight: bold !important;
         }
         .no-print { display: none !important; }
@@ -592,7 +592,7 @@ imprimirCupom(id) {
         margin: 0 auto 5px auto;
       }
       .logo { 
-        max-width: 60px; 
+        max-width: 120px; 
         height: auto; 
         display: block;
         margin: 0 auto;
@@ -798,6 +798,7 @@ imprimirCupom(id) {
 document.addEventListener('DOMContentLoaded', () => {
   window.dashboard = new Dashboard();
 });
+
 
 
 
