@@ -688,27 +688,32 @@ imprimirCupom(id) {
       <hr class="line">
 
       <!-- TOTAIS -->
-      <div class="total-section">
-        <table>
-          <tr>
-            <td class="left"><strong>SUBTOTAL:</strong></td>
-            <td class="right"><strong>R$ ${subtotal.toFixed(2)}</strong></td>
-          </tr>
-          <tr>
-            <td class="left"><strong>TOTAL:</strong></td>
-            <td class="right" style="font-size: 14px;"><strong>R$ ${totalPedido.toFixed(2)}</strong></td>
-          </tr>
-          <tr>
-            <td class="left medium">Pagamento:</td>
-            <td class="right medium">${pedido.pagamento || 'NÃO INFORMADO'}</td>
-          </tr>
-          <tr>
-            <td class="left medium">Status:</td>
-            <td class="right medium">${(pedido.status || 'PENDENTE').toUpperCase()}</td>
-          </tr>
-        </table>
-      </div>
-
+       <div class="total-section">
+  <table>
+    <tr>
+      <td class="left"><strong>SUBTOTAL:</strong></td>
+      <td class="right"><strong>R$ ${subtotal.toFixed(2)}</strong></td>
+    </tr>
+    ${pedido.taxaEntrega > 0 ? `
+      <tr>
+        <td class="left"><strong>TAXA ENTREGA:</strong></td>
+        <td class="right"><strong>R$ ${pedido.taxaEntrega.toFixed(2)}</strong></td>
+      </tr>
+    ` : ''}
+    <tr>
+      <td class="left"><strong>TOTAL:</strong></td>
+      <td class="right" style="font-size: 14px;"><strong>R$ ${totalPedido.toFixed(2)}</strong></td>
+    </tr>
+    <tr>
+      <td class="left medium">Pagamento:</td>
+      <td class="right medium">${pedido.pagamento || 'NÃO INFORMADO'}</td>
+    </tr>
+    <tr>
+      <td class="left medium">Status:</td>
+      <td class="right medium">${(pedido.status || 'PENDENTE').toUpperCase()}</td>
+    </tr>
+  </table>
+</div>
       <hr class="line">
 
       <!-- RODAPÉ -->
@@ -798,6 +803,7 @@ imprimirCupom(id) {
 document.addEventListener('DOMContentLoaded', () => {
   window.dashboard = new Dashboard();
 });
+
 
 
 
