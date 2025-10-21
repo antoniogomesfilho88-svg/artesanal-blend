@@ -531,14 +531,15 @@ class Dashboard {
     return;
   }
 
-  // Calcula tamanho da fonte dependendo do número de itens
-  const fontSize = pedido.itens.length > 10 ? '10px' : '12px';
+  // CORREÇÃO: Caminho absoluto para a logo
+  const logoPath = window.location.origin + '/images/logo.jpg';
+  
   const css = `
     <style>
       body { 
         width: 384px; 
-        font-family: monospace; 
-        font-size: ${fontSize}; 
+        font-family: 'Courier New', monospace; 
+        font-size: 12px; 
         margin: 0; 
         padding: 8px;
         line-height: 1.2;
@@ -549,18 +550,27 @@ class Dashboard {
       .bold { font-weight: bold; }
       table { width: 100%; border-collapse: collapse; }
       td { vertical-align: top; padding: 2px 0; }
-      .item-name { max-width: 220px; }
-      .item-qty, .item-total { width: 60px; text-align: right; }
-      .qr { margin-top: 6px; max-width: 120px; }
+      .item-qty { width: 40px; text-align: center; }
+      .item-name { text-align: left; padding: 0 4px; }
+      .item-price { width: 60px; text-align: right; }
+      .item-total { width: 70px; text-align: right; }
+      .qr { margin-top: 6px; max-width: 120px; display: block; margin-left: auto; margin-right: auto; }
       hr { border: none; border-top: 1px dashed #000; margin: 8px 0; }
+      .logo { max-width: 120px; height: auto; display: block; margin: 0 auto 8px auto; }
+      .total-row { border-top: 1px solid #000; }
     </style>
   `;
 
   const qrPix = `https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=PIX:+5531992128891`;
 
-  // Calcula subtotal
-  const subtotal = pedido.itens.reduce((sum, item) => 
-    sum + ((item.quantidade || 0) * (item.preco || 0)), 0);
+  // CORREÇÃO: Calcular totais corretamente
+  const subtotal = pedido.itens.reduce((sum, item) => {
+    const quantidade = parseInt(item.quantidade) || 0;
+    const preco = parseFloat(item.preco) || 0;
+    return sum + (quantidade * preco);
+  }, 0);
+
+  const totalPedido = parseFloat(pedido.total) || subtotal;
 
   const html = `
     <!DOCTYPE html>
@@ -571,6 +581,8 @@ class Dashboard {
     </head>
     <body>
       <div class="center">
+        <!-- CORREÇÃO: Logo com fallback -->
+        <img class="logo" src="${logoPath}" alt="Logo" onerror="this.style.display='none'" />
         <div class="bold">BURGUER ARTESANAL BLEND</div>
         <div>CNPJ: 58.518.297/0001-61</div>
         <div>Rua Coniston, 380 - Jd. Canadá, Nova Lima - MG</div>
@@ -579,11 +591,11 @@ class Dashboard {
       </div>
 
       <div>
-        <div><strong>Venda #${pedido._id?.slice(-6) || 'N/A'}</strong></div>
-        <div>${new Date(pedido.data || pedido.createdAt || Date.now()).toLocaleString('pt-BR')}</div>
-        <div><strong>Cliente:</strong> ${pedido.cliente || 'Consumidor'}</div>
-        ${pedido.telefone ? `<div><strong>Telefone:</strong> ${pedido.telefone}</div>` : ''}
-        ${pedido.endereco ? `<div><strong>Endereço:</strong> ${pedido.endereco}</div>` : ''}
+        <div><strong>VENDA #${pedido._id?.slice(-6) || 'N/A'}</strong></div>
+        <div><strong>DATA:</strong> ${new Date(pedido.data || pedido.createdAt || Date.now()).toLocaleString('pt-BR')}</div>
+        <div><strong>CLIENTE:</strong> ${pedido.cliente || 'CONSUMIDOR'}</div>
+        ${pedido.telefone ? `<div><strong>TEL:</strong> ${pedido.telefone}</div>` : ''}
+        ${pedido.endereco ? `<div><strong>ENDEREÇO:</strong> ${pedido.endereco}</div>` : ''}
         <hr class="line" />
       </div>
 
@@ -591,14 +603,18 @@ class Dashboard {
         <tr>
           <td class="bold item-qty">QTD</td>
           <td class="bold item-name">ITEM</td>
+          <td class="bold item-price">UN.</td>
           <td class="bold item-total">TOTAL</td>
         </tr>
         ${pedido.itens.map(item => {
-          const totalItem = (item.quantidade || 0) * (item.preco || 0);
+          const quantidade = parseInt(item.quantidade) || 0;
+          const preco = parseFloat(item.preco) || 0;
+          const totalItem = quantidade * preco;
           return `
             <tr>
-              <td class="item-qty">${item.quantidade || 0}</td>
+              <td class="item-qty">${quantidade}</td>
               <td class="item-name">${item.nome || ''}</td>
+              <td class="item-price">R$ ${preco.toFixed(2)}</td>
               <td class="item-total">R$ ${totalItem.toFixed(2)}</td>
             </tr>
           `;
@@ -608,13 +624,13 @@ class Dashboard {
       <hr class="line" />
 
       <table>
-        <tr>
-          <td>Subtotal:</td>
-          <td class="right">R$ ${subtotal.toFixed(2)}</td>
+        <tr class="total-row">
+          <td><strong>SUBTOTAL:</strong></td>
+          <td class="right"><strong>R$ ${subtotal.toFixed(2)}</strong></td>
         </tr>
-        <tr class="bold">
-          <td>TOTAL:</td>
-          <td class="right">R$ ${(pedido.total || subtotal).toFixed(2)}</td>
+        <tr class="total-row">
+          <td><strong>TOTAL:</strong></td>
+          <td class="right"><strong>R$ ${totalPedido.toFixed(2)}</strong></td>
         </tr>
         <tr>
           <td>Pagamento:</td>
@@ -622,7 +638,7 @@ class Dashboard {
         </tr>
         <tr>
           <td>Status:</td>
-          <td class="right">${this.formatarStatus(pedido.status).replace(/[⏳👨‍🍳✅🚗❌]/g, '')}</td>
+          <td class="right">${pedido.status || 'Pendente'}</td>
         </tr>
       </table>
 
@@ -635,8 +651,17 @@ class Dashboard {
         <div><strong>VALQUIRIA GOMES AROEIRA</strong></div>
         <div>${new Date().toLocaleString('pt-BR')}</div>
         <br>
-        <div>*** OBRIGADO PELA PREFERÊNCIA! ***</div>
+        <div class="bold">*** OBRIGADO PELA PREFERÊNCIA! ***</div>
       </div>
+
+      <script>
+        // Imprime automaticamente após carregar
+        window.onload = function() {
+          setTimeout(function() {
+            window.print();
+          }, 500);
+        };
+      </script>
     </body>
     </html>
   `;
@@ -644,16 +669,7 @@ class Dashboard {
   try {
     janelaImpressao.document.write(html);
     janelaImpressao.document.close();
-    
-    // Aguarda o carregamento antes de imprimir
-    setTimeout(() => {
-      janelaImpressao.focus();
-      janelaImpressao.print();
-      
-      // Fecha a janela após impressão (opcional)
-      // setTimeout(() => janelaImpressao.close(), 1000);
-      
-    }, 500);
+    janelaImpressao.focus();
     
   } catch (error) {
     console.error('Erro ao gerar cupom:', error);
@@ -709,5 +725,6 @@ class Dashboard {
 document.addEventListener('DOMContentLoaded', () => {
   window.dashboard = new Dashboard();
 });
+
 
 
