@@ -518,7 +518,7 @@ class Dashboard {
     }
   }
 
-  function imprimirCupom(pedido) {
+  function imprimirCupom(pedido) 
   const janela = window.open('', '_blank', 'width=400,height=600');
 
   const css = `
@@ -661,4 +661,5 @@ class Dashboard {
 document.addEventListener('DOMContentLoaded', () => {
   window.dashboard = new Dashboard();
 });
+
 
