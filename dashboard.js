@@ -524,22 +524,27 @@ class Dashboard {
 
   const janela = window.open('', '_blank', 'width=400,height=600');
 
+  // calcula tamanho da fonte dependendo do número de itens
+  const fontSize = pedido.itens.length > 10 ? '10px' : '12px';
   const css = `
     <style>
-      body { width: 384px; font-family: monospace; font-size:12px; margin:0; padding:0; }
+      body { width: 384px; font-family: monospace; font-size: ${fontSize}; margin:0; padding:0; }
       .center { text-align:center; }
       .line { border-bottom:1px dashed #000; margin:4px 0; }
       .right { text-align:right; }
       .bold { font-weight:bold; }
       table { width:100%; border-collapse:collapse; }
-      td { vertical-align:top; padding:2px 0; }
-      .item-name { max-width:220px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+      td { vertical-align:top; padding:2px 0; word-wrap: break-word; }
+      .item-name { max-width:220px; white-space: nowrap; overflow:hidden; text-overflow:ellipsis; }
       .item-qty, .item-total { width:60px; text-align:right; }
       .qr { margin-top:6px; max-width:120px; }
     </style>
   `;
 
   const qrPix = `https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=PIX:+5531992128891`;
+
+  // calcula subtotal
+  const subtotal = pedido.itens.reduce((sum, item) => sum + ((item.quantidade || 0) * (item.preco || 0)), 0);
 
   const html = `
     ${css}
@@ -555,19 +560,22 @@ class Dashboard {
 
       <div>
         <div>Venda #${pedido._id}</div>
-        <div>${pedido.data}</div>
-        <div>Cliente: ${pedido.cliente}</div>
+        <div>${pedido.data || pedido.createdAt || ''}</div>
+        <div>Cliente: ${pedido.cliente || ''}</div>
         <hr class="line" />
       </div>
 
       <table>
-        ${pedido.itens.map(item => `
-          <tr>
-            <td class="item-qty">${item.quantidade}x</td>
-            <td class="item-name">${item.nome}</td>
-            <td class="item-total">R$ ${(item.quantidade*item.preco).toFixed(2)}</td>
-          </tr>
-        `).join('')}
+        ${pedido.itens.map(item => {
+          const totalItem = (item.quantidade || 0) * (item.preco || 0);
+          return `
+            <tr>
+              <td class="item-qty">${item.quantidade || 0}x</td>
+              <td class="item-name">${item.nome || ''}</td>
+              <td class="item-total">R$ ${totalItem.toFixed(2)}</td>
+            </tr>
+          `;
+        }).join('')}
       </table>
 
       <hr class="line" />
@@ -575,11 +583,11 @@ class Dashboard {
       <table>
         <tr>
           <td>Subtotal</td>
-          <td class="right">R$ ${pedido.itens.reduce((sum,i)=>sum+(i.quantidade*i.preco),0).toFixed(2)}</td>
+          <td class="right">R$ ${subtotal.toFixed(2)}</td>
         </tr>
         <tr class="bold">
           <td>TOTAL</td>
-          <td class="right">R$ ${pedido.total.toFixed(2)}</td>
+          <td class="right">R$ ${pedido.total?.toFixed(2) || '0.00'}</td>
         </tr>
         <tr>
           <td>Pagamento:</td>
@@ -587,7 +595,7 @@ class Dashboard {
         </tr>
         <tr>
           <td>Status:</td>
-          <td class="right">${pedido.status}</td>
+          <td class="right">${pedido.status || '—'}</td>
         </tr>
       </table>
 
@@ -597,7 +605,7 @@ class Dashboard {
         <div>PIX: +55 31 99212-8891</div>
         <img class="qr" src="${qrPix}" alt="QR Code PIX" />
         <div>VALQUIRIA GOMES AROEIRA</div>
-        <div>${pedido.data}</div>
+        <div>${pedido.data || pedido.createdAt || ''}</div>
         <div>* Obrigado pela preferência! *</div>
       </div>
     </body>
@@ -606,6 +614,12 @@ class Dashboard {
   janela.document.write(html);
   janela.document.close();
   janela.focus();
+
+  // dispara a impressão e fecha a janela somente após o usuário finalizar
+  janela.onafterprint = () => janela.close();
+  janela.print();
+}
+
 
   // dispara a impressão e fecha a janela somente após o usuário finalizar
   janela.onafterprint = () => {
@@ -662,6 +676,7 @@ class Dashboard {
 document.addEventListener('DOMContentLoaded', () => {
   window.dashboard = new Dashboard();
 });
+
 
 
 
