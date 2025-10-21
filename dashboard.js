@@ -554,7 +554,13 @@ imprimirCupom(id) {
         line-height: 1.2;
         background: white;
       }
-      .center { text-align: center; }
+      .center { 
+        text-align: center;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+      }
       .right { text-align: right; }
       .left { text-align: left; }
       .bold { 
@@ -578,13 +584,23 @@ imprimirCupom(id) {
       .item-qty { width: 20%; text-align: center; font-weight: bold; }
       .item-name { width: 50%; text-align: left; padding: 0 3px; font-weight: bold; }
       .item-total { width: 30%; text-align: right; font-weight: bold; }
+      .logo-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        width: 100%;
+        margin: 0 auto 5px auto;
+      }
       .logo { 
         max-width: 60px; 
         height: auto; 
-        display: block; 
-        margin: 0 auto 5px auto;
+        display: block;
+        margin: 0 auto;
       }
-      .header { margin-bottom: 5px; }
+      .header { 
+        margin-bottom: 5px;
+        width: 100%;
+      }
       .footer { margin-top: 5px; }
       .medium { font-size: 12px; }
       .break-word { word-break: break-word; }
@@ -636,8 +652,11 @@ imprimirCupom(id) {
       ${css}
     </head>
     <body>
-      <!-- CABEÇALHO -->
-      <div class="center header">
+      <!-- CABEÇALHO COM LOGO CENTRALIZADA -->
+      <div class="header center">
+        <div class="logo-container">
+          <img class="logo" src="${window.location.origin + '/images/logo.jpg'}" alt="Logo" onerror="this.style.display='none'">
+        </div>
         <div class="bold" style="font-size: 16px; margin-bottom: 3px;">BURGUER ARTESANAL BLEND</div>
         <div class="medium">CNPJ: 58.518.297/0001-61</div>
         <div class="medium">Rua Coniston, 380 - Jd. Canadá</div>
@@ -693,10 +712,12 @@ imprimirCupom(id) {
       <hr class="line">
 
       <!-- RODAPÉ -->
-      <div class="center footer">
+      <div class="footer center">
         <div class="bold" style="font-size: 14px; margin-bottom: 3px;">FORMA DE PAGAMENTO PIX</div>
         <div class="medium">Chave: +55 31 99212-8891</div>
-        <img class="qr" src="${qrPix}" alt="QR Code PIX" onerror="this.style.display='none'" style="max-width: 80px; height: auto; margin: 5px auto;">
+        <div class="logo-container" style="margin: 5px auto;">
+          <img class="qr" src="${qrPix}" alt="QR Code PIX" onerror="this.style.display='none'" style="max-width: 80px; height: auto;">
+        </div>
         <div class="medium"><strong>VALQUIRIA GOMES AROEIRA</strong></div>
         <div class="medium">${new Date().toLocaleString('pt-BR')}</div>
         <br>
@@ -710,7 +731,6 @@ imprimirCupom(id) {
           }, 800);
         };
 
-        // Forçar fonte mais forte para impressão
         window.addEventListener('afterprint', function() {
           setTimeout(function() {
             window.close();
@@ -731,7 +751,6 @@ imprimirCupom(id) {
     janelaImpressao.close();
   }
 }
-
   /* ================= FINANCEIRO ================= */
   async updateFinanceiro() {
     try {
@@ -779,6 +798,7 @@ imprimirCupom(id) {
 document.addEventListener('DOMContentLoaded', () => {
   window.dashboard = new Dashboard();
 });
+
 
 
 
