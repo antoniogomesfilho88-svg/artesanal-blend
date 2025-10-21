@@ -706,7 +706,7 @@ imprimirCupom(id) {
     </tr>
     <tr>
       <td class="left medium">Pagamento:</td>
-      <td class="right medium">${pedido.pagamento || 'NÃO INFORMADO'}</td>
+  <td class="right medium">${pedido.formaPagamento || pedido.pagamento || 'NÃO INFORMADO'}</td>
     </tr>
     <tr>
       <td class="left medium">Status:</td>
@@ -803,6 +803,7 @@ imprimirCupom(id) {
 document.addEventListener('DOMContentLoaded', () => {
   window.dashboard = new Dashboard();
 });
+
 
 
 
