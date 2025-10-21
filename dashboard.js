@@ -606,12 +606,14 @@ class Dashboard {
     </body>
   `;
 
-  janela.document.write(html)
-  janela.focus();
-  janela.print();
-  janela.close();
-}
+  janela.document.write(html);
+janela.document.close();
+janela.focus();
 
+// dispara a impressão e fecha a janela somente após o usuário finalizar
+janela.onafterprint = () => {
+  janela.close();
+};
 
   /* ================= FINANCEIRO ================= */
   async updateFinanceiro() {
@@ -660,6 +662,7 @@ class Dashboard {
 document.addEventListener('DOMContentLoaded', () => {
   window.dashboard = new Dashboard();
 });
+
 
 
 
