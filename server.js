@@ -1,4 +1,14 @@
 // server.js
+import jwt from "jsonwebtoken";
+import bcrypt from "bcryptjs";
+
+const SECRET_KEY = process.env.JWT_SECRET || "segredo-artesanal-blend";
+
+const admin = {
+  username: "admin",
+  passwordHash: bcrypt.hashSync("123456", 10), // senha padrão
+};
+
 
 import express from 'express';
 import mongoose from 'mongoose';
@@ -263,3 +273,4 @@ app.listen(PORT, () => {
     console.log(`📱 Cardápio: https://artesanal-blend.onrender.com`);
     console.log(`📊 Dashboard: https://artesanal-blend.onrender.com/dashboard`);
 });
+
