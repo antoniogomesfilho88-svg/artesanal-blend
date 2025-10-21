@@ -518,36 +518,98 @@ class Dashboard {
     }
   }
 
-  imprimirCupom(id) {
-    const pedido = this.pedidos.find(p => p._id === id);
-    if (!pedido) { this.showToast('Pedido não encontrado', 'error'); return; }
+ imprimirCupom(id) {
+  const pedido = this.pedidos.find(p => p._id === id);
+  if (!pedido) return this.showToast('Pedido não encontrado', 'error');
 
-    const w = window.open('', '_blank', 'width=400,height=700');
-    // monta HTML do cupom (térmico-friendly)
-    const itensHtml = (pedido.itens || []).map(it => {
-      const lineTotal = ((it.preco || 0) * (it.quantidade || 1)).toFixed(2);
-      return `<tr><td style="padding:6px 0">${it.quantidade} x ${it.nome}</td><td style="text-align:right;padding:6px 0">R$ ${lineTotal}</td></tr>`;
-    }).join('');
-    const html = `<!doctype html><html><head><meta charset="utf-8"><title>Cupom Fiscal</title>
-      <style>
-        body{font-family:monospace;padding:12px;color:#000}
-        h2{text-align:center;margin:4px 0}
-        table{width:100%;border-collapse:collapse}
-        td{font-size:13px}
-        .total{font-weight:bold;font-size:1.05rem;padding-top:8px}
-      </style>
-    </head><body>
-      <h2>Artesanal Blend</h2>
-      <p>Pedido: ${pedido._id}</p>
-      <p>Cliente: ${pedido.cliente || '-'}</p>
-      <p>Telefone: ${pedido.telefone || '-'}</p>
-      <p>Endereço: ${pedido.endereco || '-'}</p>
-      <hr>
-      <table>${itensHtml}
-      <tr><td class="total">Total</td><td class="total" style="text-align:right">R$ ${(pedido.total || 0).toFixed(2)}</td></tr>
+  const janela = window.open('', '_blank', 'width=400,height=600');
+
+  // calcula tamanho da fonte dependendo do número de itens
+  const fontSize = pedido.itens.length > 10 ? '10px' : '12px';
+  const css = `
+    <style>
+      body { width: 384px; font-family: monospace; font-size: ${fontSize}; margin:0; padding:0; }
+      .center { text-align:center; }
+      .line { border-bottom:1px dashed #000; margin:4px 0; }
+      .right { text-align:right; }
+      .bold { font-weight:bold; }
+      table { width:100%; border-collapse:collapse; }
+      td { vertical-align:top; padding:2px 0; word-wrap: break-word; }
+      .item-name { max-width:220px; white-space: nowrap; overflow:hidden; text-overflow:ellipsis; }
+      .item-qty, .item-total { width:60px; text-align:right; }
+      .qr { margin-top:6px; max-width:120px; }
+    </style>
+  `;
+
+  const qrPix = `https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=PIX:+5531992128891`;
+
+  // calcula subtotal
+  const subtotal = pedido.itens.reduce((sum, item) => sum + ((item.quantidade || 0) * (item.preco || 0)), 0);
+
+  const html = `
+    ${css}
+    <body>
+      <div class="center">
+        <img src="images/logo.jpg" style="max-width:120px;height:auto;" />
+        <div class="bold">BURGUER ARTESANAL BLEND</div>
+        <div>CNPJ: 58.518.297/0001-61</div>
+        <div>Rua Coniston, 380 - Jd. Canadá, Nova Lima - MG</div>
+        <div>Tel: (31) 99212-8891</div>
+        <hr class="line" />
+      </div>
+
+      <div>
+        <div>Venda #${pedido._id}</div>
+        <div>${pedido.data || pedido.createdAt || ''}</div>
+        <div>Cliente: ${pedido.cliente || ''}</div>
+        <hr class="line" />
+      </div>
+
+      <table>
+        ${pedido.itens.map(item => {
+          const totalItem = (item.quantidade || 0) * (item.preco || 0);
+          return `
+            <tr>
+              <td class="item-qty">${item.quantidade || 0}x</td>
+              <td class="item-name">${item.nome || ''}</td>
+              <td class="item-total">R$ ${totalItem.toFixed(2)}</td>
+            </tr>
+          `;
+        }).join('')}
       </table>
-      <p style="text-align:center;margin-top:12px">Obrigado pela preferência!</p>
-    </body></html>`;
+
+      <hr class="line" />
+
+      <table>
+        <tr>
+          <td>Subtotal</td>
+          <td class="right">R$ ${subtotal.toFixed(2)}</td>
+        </tr>
+        <tr class="bold">
+          <td>TOTAL</td>
+          <td class="right">R$ ${pedido.total?.toFixed(2) || '0.00'}</td>
+        </tr>
+        <tr>
+          <td>Pagamento:</td>
+          <td class="right">${pedido.pagamento || '—'}</td>
+        </tr>
+        <tr>
+          <td>Status:</td>
+          <td class="right">${pedido.status || '—'}</td>
+        </tr>
+      </table>
+
+      <hr class="line" />
+
+      <div class="center">
+        <div>PIX: +55 31 99212-8891</div>
+        <img class="qr" src="${qrPix}" alt="QR Code PIX" />
+        <div>VALQUIRIA GOMES AROEIRA</div>
+        <div>${pedido.data || pedido.createdAt || ''}</div>
+        <div>* Obrigado pela preferência! *</div>
+      </div>
+    </body>
+  `;
     w.document.write(html);
     w.document.close();
     w.focus();
@@ -601,3 +663,4 @@ class Dashboard {
 document.addEventListener('DOMContentLoaded', () => {
   window.dashboard = new Dashboard();
 });
+
