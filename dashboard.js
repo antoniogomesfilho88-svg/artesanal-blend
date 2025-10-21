@@ -616,12 +616,6 @@ class Dashboard {
   janela.focus();
 
   // dispara a impressão e fecha a janela somente após o usuário finalizar
-  janela.onafterprint = () => janela.close();
-  janela.print();
-}
-
-
-  // dispara a impressão e fecha a janela somente após o usuário finalizar
   janela.onafterprint = () {
     janela.close();
   };
@@ -676,6 +670,7 @@ class Dashboard {
 document.addEventListener('DOMContentLoaded', () => {
   window.dashboard = new Dashboard();
 });
+
 
 
 
