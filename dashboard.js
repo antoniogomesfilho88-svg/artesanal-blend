@@ -519,11 +519,9 @@ class Dashboard {
   }
 
  imprimirCupom(id) {
-  // 1️⃣ Buscar o pedido pelo _id
   const pedido = this.pedidos.find(p => p._id === id);
   if (!pedido) return this.showToast('Pedido não encontrado', 'error');
 
-  // 2️⃣ Criar a janela do cupom
   const janela = window.open('', '_blank', 'width=400,height=600');
 
   const css = `
@@ -543,7 +541,6 @@ class Dashboard {
 
   const qrPix = `https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=PIX:+5531992128891`;
 
-  // 3️⃣ HTML do cupom
   const html = `
     ${css}
     <body>
@@ -607,13 +604,16 @@ class Dashboard {
   `;
 
   janela.document.write(html);
-janela.document.close();
-janela.focus();
+  janela.document.close();
+  janela.focus();
 
-// dispara a impressão e fecha a janela somente após o usuário finalizar
-janela.onafterprint = () => {
-  janela.close();
-};
+  // dispara a impressão e fecha a janela somente após o usuário finalizar
+  janela.onafterprint = () => {
+    janela.close();
+  };
+  janela.print();
+}
+
 
   /* ================= FINANCEIRO ================= */
   async updateFinanceiro() {
@@ -662,6 +662,7 @@ janela.onafterprint = () => {
 document.addEventListener('DOMContentLoaded', () => {
   window.dashboard = new Dashboard();
 });
+
 
 
 
