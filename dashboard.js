@@ -57,173 +57,127 @@ class Dashboard {
   }
 
   /* ================= PRODUTOS ================= */
-  abrirModalProduto(produto = null) {
-    const modal = document.createElement('div');
-    modal.className = 'modal-overlay';
-    modal.innerHTML = `
-      <div class="modal">
-        <h3>${produto ? 'Editar' : 'Novo'} Produto</h3>
-        <form id="formProduto">
-          <input type="hidden" id="produtoId" value="${produto?._id || ''}">
-          <div class="form-group">
-            <label>Nome do Produto</label>
-            <input type="text" id="produtoNome" value="${produto?.nome || ''}" required>
-          </div>
+ abrirModalPedido(pedido = null) {
+  const modal = document.createElement('div');
+  modal.className = 'modal-overlay';
 
+  const itens = pedido?.itens || [];
+  modal.innerHTML = `
+    <div class="modal">
+      <h3>${pedido ? 'Editar' : 'Novo'} Pedido</h3>
+      <form id="formPedido">
+        <input type="hidden" id="pedidoId" value="${pedido?._id || ''}">
+        <div class="form-row">
           <div class="form-group">
-            <label>Categoria</label>
-            <select id="produtoCategoria" required>
-              <option value="">Selecione...</option>
-              <option value="Hambúrgueres" ${produto?.categoria === 'Hambúrgueres' ? 'selected' : ''}>Hambúrgueres</option>
-              <option value="Combos" ${produto?.categoria === 'Combos' ? 'selected' : ''}>Combos</option>
-              <option value="Acompanhamentos" ${produto?.categoria === 'Acompanhamentos' ? 'selected' : ''}>Acompanhamentos</option>
-              <option value="Adicionais" ${produto?.categoria === 'Adicionais' ? 'selected' : ''}>Adicionais</option>
-              <option value="Bebidas" ${produto?.categoria === 'Bebidas' ? 'selected' : ''}>Bebidas</option>
-            </select>
+            <label>Cliente</label>
+            <input type="text" id="pedidoCliente" value="${pedido?.cliente || ''}" required>
           </div>
+          <div class="form-group">
+            <label>Telefone</label>
+            <input type="text" id="pedidoTelefone" value="${pedido?.telefone || ''}">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Endereço</label>
+            <input type="text" id="pedidoEndereco" value="${pedido?.endereco || ''}">
+          </div>
+          <div class="form-group">
+            <label>Taxa de Entrega (R$)</label>
+            <input type="number" id="pedidoTaxaEntrega" step="0.01" value="${pedido?.taxaEntrega || '0.00'}">
+          </div>
+        </div>
 
-          <div class="form-row">
-            <div class="form-group">
-              <label>Preço (R$)</label>
-              <input type="number" id="produtoPreco" step="0.01" value="${produto?.preco ?? ''}" required>
+        <div id="itensWrapper">
+          ${itens.map((it, idx) => `
+            <div class="form-row" data-item-index="${idx}">
+              <div class="form-group"><label>Item</label><input type="text" class="pedidoItemNome" value="${it.nome || ''}" required></div>
+              <div class="form-group"><label>Qtd</label><input type="number" class="pedidoItemQtd" value="${it.quantidade || 1}" min="1" required></div>
+              <div class="form-group"><label>Preço</label><input type="number" class="pedidoItemPreco" value="${it.preco || 0}" step="0.01"></div>
             </div>
-            <div class="form-group">
-              <label>URL da Imagem (ex: images/nome.jpg ou https://...)</label>
-              <input type="text" id="produtoImagem" value="${produto?.imagem || ''}">
-            </div>
+          `).join('')}
+        </div>
+
+        <div style="display:flex;gap:.5rem;margin-top:.5rem">
+          <button type="button" class="btn secondary" id="adicionarItemBtn">➕ Adicionar Item</button>
+        </div>
+
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:1rem">
+          <div><strong>Total: R$ <span id="pedidoTotal">${(pedido?.total || 0).toFixed(2)}</span></strong></div>
+          <div style="display:flex;gap:.5rem">
+            <button type="submit" class="btn primary">Salvar Pedido</button>
+            <button type="button" class="btn secondary" id="btnCancelarPedido">Cancelar</button>
           </div>
+        </div>
+      </form>
+    </div>
+  `;
 
-          <div class="form-group">
-            <label>Descrição</label>
-            <textarea id="produtoDescricao" rows="3">${produto?.descricao || ''}</textarea>
-          </div>
+  document.body.appendChild(modal);
 
-          <div style="display:flex;gap:.5rem;align-items:center;margin-top:.5rem">
-            <label><input type="checkbox" id="produtoDisponivel" ${produto?.disponivel !== false ? 'checked' : ''}> Disponível</label>
-          </div>
+  const itensWrapper = modal.querySelector('#itensWrapper');
+  const atualizarTotal = () => {
+    const qtds = Array.from(itensWrapper.querySelectorAll('.pedidoItemQtd')).map(i => parseInt(i.value) || 0);
+    const precos = Array.from(itensWrapper.querySelectorAll('.pedidoItemPreco')).map(i => parseFloat(i.value) || 0);
+    const taxaEntrega = parseFloat(modal.querySelector('#pedidoTaxaEntrega').value) || 0;
+    
+    let subtotal = 0;
+    for (let i = 0; i < qtds.length; i++) subtotal += (qtds[i] || 0) * (precos[i] || 0);
+    
+    const total = subtotal + taxaEntrega;
+    modal.querySelector('#pedidoTotal').textContent = total.toFixed(2);
+  };
 
-          <div style="display:flex;gap:.5rem;margin-top:1rem;justify-content:flex-end">
-            <button type="submit" class="btn primary">Salvar</button>
-            <button type="button" class="btn secondary" id="btnCancelarProduto">Cancelar</button>
-          </div>
-        </form>
-      </div>
-    `;
-    document.body.appendChild(modal);
+  modal.querySelectorAll('.pedidoItemQtd, .pedidoItemPreco').forEach(el => el.addEventListener('input', atualizarTotal));
+  modal.querySelector('#pedidoTaxaEntrega').addEventListener('input', atualizarTotal);
 
-    modal.querySelector('#btnCancelarProduto').addEventListener('click', () => modal.remove());
+  // ... resto do código do modal ...
 
-    modal.querySelector('#formProduto').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      await this.salvarProduto();
-    });
-  }
-
-  async salvarProduto() {
-    const formData = {
-      nome: document.getElementById('produtoNome').value,
-      categoria: document.getElementById('produtoCategoria').value,
-      preco: parseFloat(document.getElementById('produtoPreco').value) || 0,
-      descricao: document.getElementById('produtoDescricao').value,
-      imagem: document.getElementById('produtoImagem').value,
-      disponivel: document.getElementById('produtoDisponivel').checked
+  modal.querySelector('#formPedido').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const pedidoId = modal.querySelector('#pedidoId').value;
+    const cliente = modal.querySelector('#pedidoCliente').value;
+    const telefone = modal.querySelector('#pedidoTelefone').value;
+    const endereco = modal.querySelector('#pedidoEndereco').value;
+    const taxaEntrega = parseFloat(modal.querySelector('#pedidoTaxaEntrega').value) || 0;
+    
+    const nomes = Array.from(modal.querySelectorAll('.pedidoItemNome')).map(i => i.value);
+    const qtds = Array.from(modal.querySelectorAll('.pedidoItemQtd')).map(i => parseInt(i.value) || 0);
+    const precos = Array.from(modal.querySelectorAll('.pedidoItemPreco')).map(i => parseFloat(i.value) || 0);
+    
+    const itens = nomes.map((nome, i) => ({ nome, quantidade: qtds[i], preco: precos[i] })).filter(it => it.nome && it.quantidade > 0);
+    const subtotal = itens.reduce((s, it) => s + (it.quantidade * (it.preco || 0)), 0);
+    const total = subtotal + taxaEntrega;
+    
+    // CORREÇÃO: Incluir taxaEntrega no payload
+    const payload = { 
+      cliente, 
+      telefone, 
+      endereco, 
+      taxaEntrega,  // ⬅️ ADICIONEI AQUI
+      itens, 
+      total, 
+      status: pedido?.status || 'pendente' 
     };
 
-    const produtoId = document.getElementById('produtoId').value;
-    const url = produtoId ? `/api/menu/item/${produtoId}` : '/api/menu/item';
-    const method = produtoId ? 'PUT' : 'POST';
-
     try {
-      const res = await fetch(url, {
-        method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData)
-      });
+      const url = pedidoId ? `/api/orders/${pedidoId}` : '/api/orders';
+      const method = pedidoId ? 'PUT' : 'POST';
+      const res = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
       if (res.ok) {
         await this.carregarDados();
-        this.renderProdutos();
+        this.renderPedidos();
         document.querySelector('.modal-overlay')?.remove();
-        this.showToast('Produto salvo', 'success');
+        this.showToast('Pedido salvo', 'success');
       } else {
         const err = await res.json().catch(() => ({}));
-        this.showToast(err.error || 'Erro ao salvar produto', 'error');
+        this.showToast(err.error || 'Erro ao salvar pedido', 'error');
       }
     } catch (e) {
-      this.showToast('Erro de rede ao salvar produto', 'error');
+      this.showToast('Erro de rede ao salvar pedido', 'error');
     }
-  }
-
-  renderProdutos() {
-    const container = document.getElementById('produtosContainer');
-    const categoria = document.getElementById('filtroCategoria')?.value || '';
-    const status = document.getElementById('filtroStatus')?.value || '';
-    const busca = document.getElementById('buscaProdutos')?.value?.toLowerCase() || '';
-
-    let produtosFiltrados = (this.produtos || []).slice();
-
-    if (categoria) produtosFiltrados = produtosFiltrados.filter(p => p.categoria === categoria);
-    if (status === 'disponivel') produtosFiltrados = produtosFiltrados.filter(p => p.disponivel);
-    else if (status === 'indisponivel') produtosFiltrados = produtosFiltrados.filter(p => !p.disponivel);
-    if (busca) produtosFiltrados = produtosFiltrados.filter(p => (p.nome || '').toLowerCase().includes(busca) || (p.descricao || '').toLowerCase().includes(busca));
-
-    if (!produtosFiltrados.length) {
-      container.innerHTML = '<div class="empty-state">Nenhum produto encontrado</div>';
-      return;
-    }
-
-    container.innerHTML = produtosFiltrados.map(prod => `
-      <article class="produto-card ${!prod.disponivel ? 'indisponivel' : ''}">
-        <span class="categoria">${prod.categoria || ''}</span>
-        <span class="status">${prod.disponivel ? '✅' : '⏸️'}</span>
-        <h3>${prod.nome}</h3>
-        <div class="preco">R$ ${(prod.preco || 0).toFixed(2)}</div>
-        <div class="descricao">${prod.descricao || ''}</div>
-        ${prod.imagem ? `<div style="margin:0.75rem 0"><img src="${this._formatImageSrc(prod.imagem)}" alt="${prod.nome}" style="width:100%;height:140px;object-fit:cover;border-radius:8px"></div>` : ''}
-        <div class="card-actions">
-          <button class="btn-editar" onclick='dashboard.abrirModalProduto(${JSON.stringify(prod).replace(/\"/g,'&quot;')})'>Editar</button>
-          <button class="btn-toggle" onclick="dashboard.toggleDisponibilidade('${prod._id}')">${prod.disponivel ? 'Pausar' : 'Ativar'}</button>
-          <button class="btn-excluir" onclick="dashboard.excluirProduto('${prod._id}')">Excluir</button>
-        </div>
-      </article>
-    `).join('');
-  }
-
-  filtrarProdutos() { this.renderProdutos(); }
-
-  async toggleDisponibilidade(id) {
-    const produto = this.produtos.find(p => p._id === id);
-    if (!produto) return;
-    try {
-      const res = await fetch(`/api/menu/item/${id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ disponivel: !produto.disponivel })
-      });
-      if (res.ok) {
-        produto.disponivel = !produto.disponivel;
-        this.renderProdutos();
-        this.showToast('Disponibilidade atualizada', 'success');
-      } else {
-        this.showToast('Erro ao atualizar produto', 'error');
-      }
-    } catch (e) {
-      this.showToast('Erro de rede', 'error');
-    }
-  }
-
-  async excluirProduto(id) {
-    if (!confirm('Tem certeza que deseja excluir este produto?')) return;
-    try {
-      const res = await fetch(`/api/menu/item/${id}`, { method: 'DELETE' });
-      if (res.ok) {
-        this.produtos = this.produtos.filter(p => p._id !== id);
-        this.renderProdutos();
-        this.showToast('Produto excluído', 'success');
-      } else this.showToast('Erro ao excluir produto', 'error');
-    } catch (e) {
-      this.showToast('Erro de rede', 'error');
-    }
-  }
+  });
+}
 
   /* ================= INSUMOS ================= */
   abrirModalInsumo(insumo = null) {
@@ -537,8 +491,12 @@ imprimirCupom(id) {
           max-width: 80mm !important;
           margin: 3mm !important;
           padding: 0 !important;
-          font-size: 16px !important;
+          font-size: 13px !important;
           font-weight: bold !important;
+        }
+        .logo { 
+          max-width: 120px !important;
+          height: auto !important;
         }
         .no-print { display: none !important; }
       }
@@ -547,7 +505,7 @@ imprimirCupom(id) {
         width: 80mm;
         max-width: 80mm;
         font-family: 'Courier New', Courier, monospace; 
-        font-size: 13px;
+        font-size: 16px;
         font-weight: bold;
         margin: 3mm;
         padding: 0;
@@ -589,10 +547,10 @@ imprimirCupom(id) {
         justify-content: center;
         align-items: center;
         width: 100%;
-        margin: 0 auto 5px auto;
+        margin: 0 auto 8px auto;
       }
       .logo { 
-        max-width: 120px; 
+        max-width: 100px;
         height: auto; 
         display: block;
         margin: 0 auto;
@@ -626,7 +584,6 @@ imprimirCupom(id) {
     const totalItem = quantidade * preco;
     subtotal += totalItem;
     
-    // Limitar nome do item
     let nomeItem = item.nome || '';
     if (nomeItem.length > 20) {
       nomeItem = nomeItem.substring(0, 20) + '...';
@@ -641,7 +598,8 @@ imprimirCupom(id) {
     `;
   }).join('');
 
-  const totalPedido = parseFloat(pedido.total) || subtotal;
+  const taxaEntrega = parseFloat(pedido.taxaEntrega) || 0;
+  const totalPedido = parseFloat(pedido.total) || (subtotal + taxaEntrega);
 
   const html = `
     <!DOCTYPE html>
@@ -672,7 +630,8 @@ imprimirCupom(id) {
         <div class="medium">${new Date(pedido.data || pedido.createdAt || Date.now()).toLocaleString('pt-BR')}</div>
         <div><strong>CLIENTE:</strong> ${pedido.cliente || 'CONSUMIDOR'}</div>
         ${pedido.telefone ? `<div><strong>TEL:</strong> ${pedido.telefone}</div>` : ''}
-        ${pedido.endereco ? `<div class="break-word medium"><strong>END:</strong> ${pedido.endereco}</div>` : ''}
+        ${pedido.endereco ? `<div class="break-word medium"><strong>ENDEREÇO:</strong> ${pedido.endereco}</div>` : ''}
+        ${taxaEntrega > 0 ? `<div><strong>ENTREGA:</strong> ${pedido.endereco ? 'SIM' : 'NÃO'} ${pedido.endereco ? `(Taxa: R$ ${taxaEntrega.toFixed(2)})` : ''}</div>` : ''}
       </div>
 
       <hr class="line">
@@ -694,6 +653,12 @@ imprimirCupom(id) {
             <td class="left"><strong>SUBTOTAL:</strong></td>
             <td class="right"><strong>R$ ${subtotal.toFixed(2)}</strong></td>
           </tr>
+          ${taxaEntrega > 0 ? `
+            <tr>
+              <td class="left"><strong>TAXA ENTREGA:</strong></td>
+              <td class="right"><strong>R$ ${taxaEntrega.toFixed(2)}</strong></td>
+            </tr>
+          ` : ''}
           <tr>
             <td class="left"><strong>TOTAL:</strong></td>
             <td class="right" style="font-size: 14px;"><strong>R$ ${totalPedido.toFixed(2)}</strong></td>
@@ -798,6 +763,7 @@ imprimirCupom(id) {
 document.addEventListener('DOMContentLoaded', () => {
   window.dashboard = new Dashboard();
 });
+
 
 
 
