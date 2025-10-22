@@ -37,32 +37,46 @@ class Dashboard {
   }
 
   async carregarDados() {
-    try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        window.location.href = '/login';
-        return;
+  try {
+    this.showToast('Carregando dados...', 'info', 900);
+
+    const [produtosRes, pedidosRes, insumosRes] = await Promise.all([
+      this.fetchAutenticado(`${this.baseURL}/api/menu`),
+      this.fetchAutenticado(`${this.baseURL}/api/orders`),
+      this.fetchAutenticado(`${this.baseURL}/api/insumos`)
+    ]);
+
+    // Verifica se a resposta é JSON válida
+    const validar = async (res) => {
+      const tipo = res.headers.get('content-type') || '';
+      if (!res.ok || !tipo.includes('application/json')) {
+        const texto = await res.text();
+        console.error('❌ Erro inesperado:', texto.slice(0, 200));
+        throw new Error(`Resposta inválida da API (${res.status})`);
       }
+      return res.json();
+    };
 
-      const [produtosRes, pedidosRes, insumosRes] = await Promise.all([
-        this.fetchAutenticado(`${this.baseURL}/api/menu`).then(r => r.json()),
-        this.fetchAutenticado(`${this.baseURL}/api/orders`).then(r => r.json()),
-        this.fetchAutenticado(`${this.baseURL}/api/insumos`).then(r => r.json())
-      ]);
+    const [produtos, pedidos, insumos] = await Promise.all([
+      validar(produtosRes),
+      validar(pedidosRes),
+      validar(insumosRes)
+    ]);
 
-      this.produtos = produtosRes || [];
-      this.pedidos = pedidosRes || [];
-      this.insumos = insumosRes || [];
+    this.produtos = produtos || [];
+    this.pedidos = pedidos || [];
+    this.insumos = insumos || [];
 
-      console.log('✅ Dados carregados:', this.produtos.length, this.pedidos.length, this.insumos.length);
-    } catch (err) {
-      console.error('⚠️ Erro ao carregar dados:', err);
-      this.produtos = [];
-      this.pedidos = [];
-      this.insumos = [];
-      this.showToast('Erro ao carregar dados', 'error');
-    }
+    console.log('✅ Dados carregados:', this.produtos.length, 'produtos,', this.pedidos.length, 'pedidos,', this.insumos.length, 'insumos');
+  } catch (err) {
+    console.error('⚠️ Erro ao carregar dados:', err);
+    this.produtos = [];
+    this.pedidos = [];
+    this.insumos = [];
+    this.showToast('Erro ao carregar dados', 'error');
   }
+}
+
 
   // ===================== EVENTOS =====================
   setupEventListeners() {
@@ -284,3 +298,4 @@ class Dashboard {
 document.addEventListener('DOMContentLoaded', () => {
   window.dashboard = new Dashboard();
 });
+
