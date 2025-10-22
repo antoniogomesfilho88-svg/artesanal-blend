@@ -80,35 +80,73 @@
       <div id="insumosContainer"></div>
     </section>
 
-    <!-- Financeiro -->
-    <section id="financeiroTab" class="tab-content">
-      <div class="section-header">
-        <h2>Relatório Financeiro</h2>
-        <div class="actions">
-          <button class="btn secondary" onclick="dashboard.updateFinanceiro()">🔄 Atualizar</button>
-        </div>
+    <!-- ===================== FINANCEIRO ===================== -->
+<section id="financeiroTab" class="tab-content">
+  <div class="section-header">
+    <h2>📊 Relatório Financeiro</h2>
+    <div class="actions">
+      <select id="filtroPeriodo" class="input-select">
+        <option value="hoje">Hoje</option>
+        <option value="semana">Esta Semana</option>
+        <option value="mes" selected>Este Mês</option>
+        <option value="personalizado">Personalizado</option>
+      </select>
+      <input type="date" id="dataInicio" style="display:none">
+      <input type="date" id="dataFim" style="display:none">
+      <button class="btn secondary" id="btnExportPDF">📄 PDF</button>
+      <button class="btn secondary" id="btnExportExcel">📊 Excel</button>
+      <button class="btn primary" id="btnAtualizarFinanceiro">🔄 Atualizar</button>
+    </div>
+  </div>
+
+  <div class="financeiro-grid">
+    <div class="finance-card vendas">
+      <i class="fas fa-chart-line icon"></i>
+      <div>
+        <h3>Total Vendas</h3>
+        <p id="totalVendas">R$ 0,00</p>
       </div>
+    </div>
 
-      <div class="financeiro-cards">
-        <div class="finance-card">
-          <h3>Total Vendas</h3>
-          <p id="totalVendas">R$ 0,00</p>
-        </div>
-        <div class="finance-card">
-          <h3>Total Custos</h3>
-          <p id="totalCustos">R$ 0,00</p>
-        </div>
-        <div class="finance-card">
-          <h3>Lucro</h3>
-          <p id="lucro">R$ 0,00</p>
-        </div>
+    <div class="finance-card custos">
+      <i class="fas fa-coins icon"></i>
+      <div>
+        <h3>Total Custos</h3>
+        <p id="totalCustos">R$ 0,00</p>
       </div>
-    </section>
-  </main>
+    </div>
 
-  <div id="toast-container" aria-live="polite"></div>
+    <div class="finance-card lucro">
+      <i class="fas fa-wallet icon"></i>
+      <div>
+        <h3>Lucro</h3>
+        <p id="lucro">R$ 0,00</p>
+      </div>
+    </div>
 
-  <script src="dashboard.js"></script>
-</body>
-</html>
+    <div class="finance-card margem">
+      <i class="fas fa-percentage icon"></i>
+      <div>
+        <h3>Margem de Lucro</h3>
+        <p id="margemLucro">0%</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="financeiro-extra">
+    <div class="grafico-card">
+      <canvas id="graficoFinanceiro"></canvas>
+    </div>
+
+    <div class="stats-card">
+      <h3>📈 Estatísticas</h3>
+      <ul id="financeiroStats">
+        <li><strong>Pedidos:</strong> <span id="totalPedidos">0</span></li>
+        <li><strong>Ticket Médio:</strong> <span id="ticketMedio">R$ 0,00</span></li>
+        <li><strong>Melhor Dia:</strong> <span id="melhorDia">-</span></li>
+      </ul>
+    </div>
+  </div>
+</section>
+
 
