@@ -1,53 +1,52 @@
 /* ================= FINANCEIRO PROFISSIONAL ================= */
+
+// Dados do Financeiro
 dashboard.financeiroData = {
-  // Dados de exemplo para demonstração
-  totalVendas: 125430.50,
-  totalCustos: 78420.30,
-  lucro: 47010.20,
-  variacaoVendas: 12.5,
-  variacaoCustos: 8.2,
-  variacaoLucro: 15.3,
-  margemLucro: 37.5,
+  totalVendas: 0,
+  totalCustos: 0,
+  lucro: 0,
+  variacaoVendas: 0,
+  variacaoCustos: 0,
+  variacaoLucro: 0,
+  margemLucro: 0,
   
   stats: {
-    ticketMedio: 245.80,
-    vendasMes: 42,
-    custoMedio: 186.70,
-    clientesAtendidos: 128,
-    pedidosCancelados: 3,
-    tempoMedioPreparo: '18 min'
+    ticketMedio: 0,
+    vendasMes: 0,
+    custoMedio: 0,
+    clientesAtendidos: 0,
+    pedidosCancelados: 0,
+    tempoMedioPreparo: '0 min'
   },
   
   vendasMensais: [
-    { mes: 'Jan', vendas: 8500, custos: 6200 },
-    { mes: 'Fev', vendas: 9200, custos: 6800 },
-    { mes: 'Mar', vendas: 10200, custos: 7500 },
-    { mes: 'Abr', vendas: 11500, custos: 8200 },
-    { mes: 'Mai', vendas: 12300, custos: 8800 },
-    { mes: 'Jun', vendas: 13200, custos: 9200 }
+    { mes: 'Jan', vendas: 0, custos: 0 },
+    { mes: 'Fev', vendas: 0, custos: 0 },
+    { mes: 'Mar', vendas: 0, custos: 0 },
+    { mes: 'Abr', vendas: 0, custos: 0 },
+    { mes: 'Mai', vendas: 0, custos: 0 },
+    { mes: 'Jun', vendas: 0, custos: 0 }
   ]
 };
 
 // Inicialização do Financeiro
 dashboard.initFinanceiro = function() {
+  this.configurarFiltrosFinanceiro();
   this.renderFinanceiro();
   this.renderStats();
   this.renderGrafico();
   this.renderUltimosPedidos();
   this.renderFluxoCaixa();
-  this.configurarFiltros();
 };
 
 // Configuração dos filtros
-dashboard.configurarFiltros = function() {
+dashboard.configurarFiltrosFinanceiro = function() {
   const filtroPeriodo = document.getElementById('filtroPeriodo');
   const periodoPersonalizado = document.getElementById('periodoPersonalizado');
   
-  if (filtroPeriodo) {
+  if (filtroPeriodo && periodoPersonalizado) {
     filtroPeriodo.addEventListener('change', function() {
-      if (periodoPersonalizado) {
-        periodoPersonalizado.style.display = this.value === 'personalizado' ? 'flex' : 'none';
-      }
+      periodoPersonalizado.style.display = this.value === 'personalizado' ? 'flex' : 'none';
       dashboard.filtrarFinanceiro();
     });
   }
@@ -90,7 +89,7 @@ dashboard.updateFinanceiro = function() {
       const totalVendas = pedidosEntregues.reduce((sum, p) => sum + (parseFloat(p.total) || 0), 0);
       
       // Atualiza dados (simulação de custos baseada em 60% das vendas)
-      const custosPercentual = 0.6; // 60% de custos (ajustável)
+      const custosPercentual = 0.6;
       this.financeiroData.totalVendas = totalVendas;
       this.financeiroData.totalCustos = totalVendas * custosPercentual;
       this.financeiroData.lucro = totalVendas - this.financeiroData.totalCustos;
@@ -143,7 +142,7 @@ dashboard.renderFinanceiro = function() {
     margemLucroEl.className = data.margemLucro >= 0 ? 'positive' : 'negative';
   }
   
-  // Variações (elementos opcionais)
+  // Variações
   const variacaoVendasEl = document.getElementById('variacaoVendas');
   const variacaoCustosEl = document.getElementById('variacaoCustos');
   const variacaoLucroEl = document.getElementById('variacaoLucro');
@@ -369,23 +368,6 @@ dashboard.gerarFluxoCaixa = function() {
     });
   });
   
-  // Adiciona algumas saídas simuladas (custos)
-  if (fluxo.length > 0) {
-    const custoDiario = saldo * 0.6 / fluxo.length; // 60% dos custos distribuídos
-    fluxo.forEach(item => {
-      if (item.entrada > 0) {
-        saldo -= custoDiario;
-        fluxo.push({
-          data: item.data,
-          descricao: 'Custos operacionais',
-          entrada: 0,
-          saida: custoDiario,
-          saldo: saldo
-        });
-      }
-    });
-  }
-  
   return fluxo.sort((a, b) => new Date(a.data.split('/').reverse().join('-')) - new Date(b.data.split('/').reverse().join('-')));
 };
 
@@ -432,17 +414,6 @@ dashboard.formatarMoeda = function(valor) {
     style: 'currency',
     currency: 'BRL'
   }).format(valor || 0);
-};
-
-dashboard.formatarStatus = function(status) {
-  const statusMap = {
-    'entregue': 'Entregue',
-    'pronto': 'Pronto',
-    'preparando': 'Preparando',
-    'pendente': 'Pendente',
-    'cancelado': 'Cancelado'
-  };
-  return statusMap[status] || status;
 };
 
 // Inicialização automática quando a aba financeiro for ativada
