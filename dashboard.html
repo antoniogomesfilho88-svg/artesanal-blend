@@ -64,7 +64,7 @@
   </head>
 
   <body>
-    <!-- ================== TELA DE LOGIN ================== -->
+    <!-- ================== LOGIN ================== -->
     <div id="loginOverlay">
       <div id="loginBox">
         <h2>Login - Artesanal Blend</h2>
@@ -75,7 +75,7 @@
       </div>
     </div>
 
-    <!-- ================== DASHBOARD PRINCIPAL ================== -->
+    <!-- ================== DASHBOARD ================== -->
     <header class="dashboard-header">
       <div class="header-content">
         <img src="images/logo.jpg" alt="Logo" class="logo" />
@@ -88,30 +88,83 @@
     </header>
 
     <div class="tabs">
-      <button class="tab-button active" data-tab="produtosTab">
-        Produtos
-      </button>
+      <button class="tab-button active" data-tab="produtosTab">Produtos</button>
       <button class="tab-button" data-tab="pedidosTab">Pedidos</button>
       <button class="tab-button" data-tab="insumosTab">Insumos</button>
       <button class="tab-button" data-tab="financeiroTab">Financeiro</button>
     </div>
 
     <main class="dashboard-content">
-      <!-- (Conteúdo principal do painel, como cards e tabelas) -->
+      <!-- =================== PRODUTOS =================== -->
+      <div id="produtosTab" class="tab-content active">
+        <div class="section-header">
+          <h2>Produtos</h2>
+          <div class="actions">
+            <button class="btn primary" id="btnAddProduto">
+              + Adicionar Produto
+            </button>
+          </div>
+        </div>
+        <div id="produtosContainer" class="produtos-grid"></div>
+      </div>
+
+      <!-- =================== PEDIDOS =================== -->
+      <div id="pedidosTab" class="tab-content">
+        <div class="section-header">
+          <h2>Pedidos</h2>
+        </div>
+        <div id="pedidosContainer" class="produtos-grid"></div>
+      </div>
+
+      <!-- =================== INSUMOS =================== -->
+      <div id="insumosTab" class="tab-content">
+        <div class="section-header">
+          <h2>Insumos</h2>
+          <div class="actions">
+            <button class="btn primary" id="btnAddInsumo">
+              + Adicionar Insumo
+            </button>
+          </div>
+        </div>
+        <div id="insumosContainer" class="produtos-grid"></div>
+      </div>
+
+      <!-- =================== FINANCEIRO =================== -->
+      <div id="financeiroTab" class="tab-content">
+        <div class="section-header">
+          <h2>Financeiro</h2>
+        </div>
+
+        <div class="financeiro-cards">
+          <div class="finance-card">
+            <h3>Total de Vendas</h3>
+            <p id="totalVendas">R$ 0,00</p>
+          </div>
+          <div class="finance-card">
+            <h3>Custos</h3>
+            <p id="totalCustos">R$ 0,00</p>
+          </div>
+          <div class="finance-card">
+            <h3>Lucro</h3>
+            <p id="lucro">R$ 0,00</p>
+          </div>
+          <div class="finance-card">
+            <h3>Margem</h3>
+            <p id="margemLucro">0%</p>
+          </div>
+        </div>
+      </div>
     </main>
 
     <div id="toast-container" aria-live="polite"></div>
 
-    <!-- ================== SCRIPT DE LOGIN INTEGRADO ================== -->
+    <!-- ================== LOGIN SCRIPT ================== -->
     <script>
       const overlay = document.getElementById("loginOverlay");
       const btnLogin = document.getElementById("btnLogin");
       const erroDiv = document.getElementById("loginErro");
 
-      // Se já houver token salvo, oculta a tela de login
-      if (localStorage.getItem("token")) {
-        overlay.classList.add("hidden");
-      }
+      if (localStorage.getItem("token")) overlay.classList.add("hidden");
 
       btnLogin.addEventListener("click", async () => {
         const email = document.getElementById("email").value.trim();
@@ -134,7 +187,7 @@
           if (res.ok && data.token) {
             localStorage.setItem("token", data.token);
             overlay.classList.add("hidden");
-            location.reload(); // Recarrega o painel autenticado
+            location.reload();
           } else {
             erroDiv.textContent = data.error || "E-mail ou senha incorretos.";
           }
@@ -143,7 +196,6 @@
         }
       });
 
-      // Botão de logout — apaga o token e recarrega a página
       document.getElementById("btnLogout")?.addEventListener("click", () => {
         if (confirm("Deseja realmente sair do painel?")) {
           localStorage.removeItem("token");
@@ -152,7 +204,7 @@
       });
     </script>
 
-    <!-- ================== SCRIPT PRINCIPAL DO DASHBOARD ================== -->
+    <!-- ================== SCRIPT PRINCIPAL ================== -->
     <script src="dashboard.js"></script>
   </body>
 </html>
