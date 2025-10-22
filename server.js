@@ -24,21 +24,21 @@ const PORT = process.env.PORT || 3000;
 const JWT_SECRET = process.env.JWT_SECRET || "blend-secret";
 
 // ===============================
-// 🌐 Conexão com MongoDB Atlas
+// 🌐 Conexão MongoDB Atlas
 // ===============================
 mongoose
   .connect(process.env.MONGO_URI, {
     useNewUrlParser: true,
-    useUnifiedTopology: true
+    useUnifiedTopology: true,
   })
   .then(() => console.log("✅ MongoDB conectado com sucesso"))
   .catch((err) => console.error("❌ Erro ao conectar MongoDB:", err));
 
 // ===============================
-// 👤 Rotas de autenticação e usuários
+// 👤 Autenticação e Usuários
 // ===============================
 
-// Cria usuário admin se não existir
+// Cria usuário admin automaticamente se não existir
 async function criarAdmin() {
   const adminExiste = await User.findOne({ email: "admin@blend.com" });
   if (!adminExiste) {
@@ -46,7 +46,7 @@ async function criarAdmin() {
       nome: "Administrador",
       email: "admin@blend.com",
       senhaHash: await bcrypt.hash(process.env.ADMIN_PASSWORD || "123456", 10),
-      cargo: "admin"
+      cargo: "admin",
     });
     await admin.save();
     console.log("✅ Usuário admin criado: admin@blend.com / 123456");
@@ -83,55 +83,81 @@ app.post("/api/auth/login", async (req, res) => {
     );
     res.json({ token });
   } catch (err) {
-    console.error(err);
+    console.error("❌ Erro no login:", err);
     res.status(500).json({ error: "Erro interno no login" });
   }
 });
 
-// Cadastrar novo colaborador (somente admin)
+// Registrar colaborador (somente admin)
 app.post("/api/auth/register", autenticarToken, async (req, res) => {
   try {
     if (req.user.cargo !== "admin")
-      return res.status(403).json({ error: "Apenas admins podem cadastrar usuários" });
+      return res
+        .status(403)
+        .json({ error: "Apenas administradores podem cadastrar usuários" });
 
     const { nome, email, senha, cargo } = req.body;
-    const jaExiste = await User.findOne({ email });
-    if (jaExiste) return res.status(400).json({ error: "E-mail já cadastrado" });
+    const existe = await User.findOne({ email });
+    if (existe) return res.status(400).json({ error: "E-mail já cadastrado" });
 
     const senhaHash = await bcrypt.hash(senha, 10);
     const novo = new User({ nome, email, senhaHash, cargo });
     await novo.save();
+
     res.json({ message: "Usuário cadastrado com sucesso" });
   } catch (err) {
-    console.error(err);
+    console.error("❌ Erro ao registrar:", err);
     res.status(500).json({ error: "Erro ao cadastrar usuário" });
   }
 });
 
-// Listar colaboradores (admin)
+// Listar usuários (somente admin)
 app.get("/api/users", autenticarToken, async (req, res) => {
   try {
     if (req.user.cargo !== "admin")
-      return res.status(403).json({ error: "Apenas admins podem listar usuários" });
+      return res
+        .status(403)
+        .json({ error: "Apenas administradores podem listar usuários" });
 
     const users = await User.find({}, "-senhaHash");
     res.json(users);
   } catch (err) {
+    console.error("❌ Erro ao listar usuários:", err);
     res.status(500).json({ error: "Erro ao listar usuários" });
   }
 });
 
 // ===============================
-// 💰 Exemplo simples de rota financeira
+// 💰 API Financeiro e Dados
 // ===============================
-app.get("/api/stats", autenticarToken, async (req, res) => {
-  try {
-    const vendas = 10000; // exemplo fictício
-    const gastos = 6000;
-    res.json({ vendas, gastos, lucro: vendas - gastos });
-  } catch (error) {
-    res.status(500).json({ error: "Erro ao calcular financeiro." });
-  }
+app.get("/api/stats", autenticarToken, (req, res) => {
+  const vendas = 12890;
+  const gastos = 7890;
+  res.json({ vendas, gastos, lucro: vendas - gastos });
+});
+
+// ===============================
+// 📦 APIs de exemplo (substituir pelo Mongo real depois)
+// ===============================
+app.get("/api/menu", autenticarToken, (req, res) => {
+  res.json([
+    { id: 1, nome: "Burger Artesanal", preco: 29.9, disponivel: true },
+    { id: 2, nome: "Combo Duplo", preco: 45.5, disponivel: true },
+  ]);
+});
+
+app.get("/api/orders", autenticarToken, (req, res) => {
+  res.json([
+    { id: 1, cliente: "João", total: 59.9, status: "entregue" },
+    { id: 2, cliente: "Maria", total: 35.0, status: "pendente" },
+  ]);
+});
+
+app.get("/api/insumos", autenticarToken, (req, res) => {
+  res.json([
+    { id: 1, nome: "Carne 120g", quantidade: 10, preco: 12.5 },
+    { id: 2, nome: "Queijo Cheddar", quantidade: 5, preco: 8.9 },
+  ]);
 });
 
 // ===============================
@@ -139,18 +165,24 @@ app.get("/api/stats", autenticarToken, async (req, res) => {
 // ===============================
 app.use(express.static(__dirname));
 
-// Página inicial → Login
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "login.html"));
 });
 
+app.get("/dashboard", (req, res) => {
+  res.sendFile(path.join(__dirname, "dashboard.html"));
+});
+
+// ⚠️ Rota genérica (última)
+app.get("*", (req, res) => {
+  res.status(404).json({ error: "Rota não encontrada" });
+});
 
 // ===============================
 // 🚀 Start Server
 // ===============================
 app.listen(PORT, () => {
   console.log(`🚀 Servidor rodando na porta ${PORT}`);
-  console.log(`📱 Cardápio: http://localhost:${PORT}`);
+  console.log(`📱 Login: http://localhost:${PORT}`);
   console.log(`📊 Dashboard: http://localhost:${PORT}/dashboard`);
 });
-
