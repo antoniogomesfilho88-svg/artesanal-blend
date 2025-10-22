@@ -66,7 +66,7 @@ async function criarAdmin() {
 }
 criarAdmin();
 
-/ ===============================
+// ===============================
 // 🔐 Autenticação (login)
 // ===============================
 
@@ -343,4 +343,5 @@ app.listen(PORT, () => {
   console.log(`📱 Cardápio: https://artesanal-blend.onrender.com`);
   console.log(`📊 Dashboard: https://artesanal-blend.onrender.com/dashboard`);
 });
+
 
