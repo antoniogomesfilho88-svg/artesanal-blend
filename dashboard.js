@@ -762,53 +762,143 @@ imprimirCupom(id) {
     janelaImpressao.close();
   }
 }
-  /* ================= FINANCEIRO ================= */
-  async updateFinanceiro() {
-    try {
-      const res = await fetch('/api/stats');
-      if (res.ok) {
-        const financeiro = await res.json();
-        this.atualizarUIFinanceiro(financeiro);
-      }
-    } catch (e) {
-      console.error('Erro financeiro', e);
-    }
-  }
+  
+/* ================= FINANCEIRO ================= */
+async updateFinanceiro() {
+  const container = document.getElementById('financeiroContainer');
+  if (!container) return;
 
-  atualizarUIFinanceiro({ vendas = 0, gastos = 0, lucro = 0 } = {}) {
-    document.getElementById('totalVendas').textContent = `R$ ${Number(vendas).toFixed(2)}`;
-    document.getElementById('totalCustos').textContent = `R$ ${Number(gastos).toFixed(2)}`;
-    document.getElementById('lucro').textContent = `R$ ${Number(lucro).toFixed(2)}`;
-  }
+  // Mostra loading enquanto busca os dados
+  container.innerHTML = `
+    <div class="financeiro-loading">
+      <span>Carregando informações financeiras...</span>
+    </div>
+  `;
 
-  /* ================= UTILITÁRIOS ================= */
-  showToast(mensagem, tipo = 'success', timeout = 2500) {
-    const container = document.getElementById('toast-container');
-    const t = document.createElement('div');
-    t.className = `toast ${tipo === 'error' ? 'error' : tipo === 'info' ? 'info' : 'success'}`;
-    t.textContent = mensagem;
-    container.appendChild(t);
-    setTimeout(() => { t.style.opacity = '0'; setTimeout(() => t.remove(), 400); }, timeout);
-  }
+  try {
+    const token = localStorage.getItem('token'); // token JWT
+    const res = await fetch('/api/stats', {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
 
-  _formatImageSrc(src) {
-    // Se já for URL absoluta, retorna direto. Caso seja caminho relativo (ex: images/...), mantém relativo.
-    if (!src) return '';
-    try {
-      const u = new URL(src);
-      return src; // URL absoluta
-    } catch (e) {
-      // caminho relativo, torna relativo ao root (serve se você usa /images/ ou images/)
-      if (src.startsWith('/')) return src;
-      return src; // manter como veio (ex: images/...)
-    }
+    if (!res.ok) throw new Error(`Erro ao buscar dados: ${res.status}`);
+
+    const financeiro = await res.json();
+    this.atualizarUIFinanceiro(financeiro);
+
+  } catch (error) {
+    console.error('Erro financeiro', error);
+    container.innerHTML = `
+      <div class="financeiro-erro">
+        ⚠️ Não foi possível carregar os dados financeiros.
+      </div>
+    `;
+    this.showToast('Erro ao atualizar financeiro', 'error');
   }
 }
 
-// inicia
-document.addEventListener('DOMContentLoaded', () => {
-  window.dashboard = new Dashboard();
-});
+atualizarUIFinanceiro({ vendas = 0, gastos = 0, lucro = 0 } = {}) {
+  // Atualiza os valores do UI
+  const totalVendasEl = document.getElementById('totalVendas');
+  const totalCustosEl = document.getElementById('totalCustos');
+  const lucroEl = document.getElementById('lucro');
+
+  if (!totalVendasEl || !totalCustosEl || !lucroEl) return;
+
+  // Formatação profissional com separador de milhar e duas casas decimais
+  const formatarReal = (valor) => {
+    return valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+  };
+
+  totalVendasEl.textContent = formatarReal(Number(vendas));
+  totalCustosEl.textContent = formatarReal(Number(gastos));
+  lucroEl.textContent = formatarReal(Number(lucro));
+
+  // Adiciona cores para lucro/prejuízo
+  lucroEl.style.color = lucro >= 0 ? '#28a745' : '#dc3545';
+}
+
+/* ================= UTILITÁRIOS ================= */
+
+/**
+ * Exibe uma notificação (toast) no canto da tela.
+ * @param {string} mensagem - Texto do toast
+ * @param {'success'|'error'|'info'} tipo - Tipo de notificação
+ * @param {number} timeout - Tempo em ms para desaparecer
+ */
+showToast(mensagem, tipo = 'success', timeout = 3000) {
+  const containerId = 'toast-container';
+  let container = document.getElementById(containerId);
+
+  // Cria container se não existir
+  if (!container) {
+    container = document.createElement('div');
+    container.id = containerId;
+    container.style.position = 'fixed';
+    container.style.top = '1rem';
+    container.style.right = '1rem';
+    container.style.zIndex = 9999;
+    container.style.display = 'flex';
+    container.style.flexDirection = 'column';
+    container.style.gap = '0.5rem';
+    document.body.appendChild(container);
+  }
+
+  // Cria toast
+  const toast = document.createElement('div');
+  toast.className = `toast ${tipo}`;
+  toast.textContent = mensagem;
+
+  // Estilos base
+  toast.style.padding = '0.75rem 1.25rem';
+  toast.style.borderRadius = '8px';
+  toast.style.color = '#fff';
+  toast.style.fontWeight = '500';
+  toast.style.boxShadow = '0 2px 10px rgba(0,0,0,0.15)';
+  toast.style.opacity = '0';
+  toast.style.transform = 'translateX(100%)';
+  toast.style.transition = 'all 0.4s ease';
+
+  // Cores por tipo
+  const cores = {
+    success: '#28a745',
+    error: '#dc3545',
+    info: '#17a2b8'
+  };
+  toast.style.backgroundColor = cores[tipo] || cores.success;
+
+  container.appendChild(toast);
+
+  // Aparece
+  requestAnimationFrame(() => {
+    toast.style.opacity = '1';
+    toast.style.transform = 'translateX(0)';
+  });
+
+  // Remove após timeout
+  setTimeout(() => {
+    toast.style.opacity = '0';
+    toast.style.transform = 'translateX(100%)';
+    setTimeout(() => toast.remove(), 400);
+  }, timeout);
+}
+
+/**
+ * Formata caminho de imagem (mantém URLs absolutas e relativas)
+ * @param {string} src - Caminho ou URL da imagem
+ * @returns {string} - Caminho ajustado
+ */
+_formatImageSrc(src) {
+  if (!src) return '';
+  try {
+    const u = new URL(src);
+    return src; // URL absoluta
+  } catch (e) {
+    // caminho relativo
+    if (src.startsWith('/')) return src;
+    return src; // mantém como veio (ex: images/...)
+  }
+}
 
 
 
