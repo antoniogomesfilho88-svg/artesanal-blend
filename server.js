@@ -1,172 +1,265 @@
-// ===============================
-// 📦 Dependências
-// ===============================
-import express from "express";
-import jwt from "jsonwebtoken";
-import bcrypt from "bcryptjs";
-import cors from "cors";
-import mongoose from "mongoose";
-import path from "path";
-import { fileURLToPath } from "url";
-import User from "./models/User.js";
+// server.js
 
+import express from 'express';
+import mongoose from 'mongoose';
+import cors from 'cors';
+import bodyParser from 'body-parser';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
-// ===============================
-// ⚙️ Configuração base
-// ===============================
+// Configuração para compatibilidade de módulos ES
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
 const app = express();
+const PORT = process.env.PORT || 10000;
 
+// ===== Middleware =====
 app.use(cors());
-app.use(express.json());
-
-const PORT = process.env.PORT || 3000;
-const JWT_SECRET = process.env.JWT_SECRET || "blend-secret";
-
-// ===============================
-// 🌐 Conexão MongoDB Atlas
-// ===============================
-mongoose
-  .connect(process.env.MONGO_URI, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-  })
-  .then(() => console.log("✅ MongoDB conectado com sucesso"))
-  .catch((err) => console.error("❌ Erro ao conectar MongoDB:", err));
-
-// ===============================
-// 👤 Cria admin se não existir
-// ===============================
-async function criarAdmin() {
-  const adminExiste = await User.findOne({ email: "admin@blend.com" });
-  if (!adminExiste) {
-    const admin = new User({
-      nome: "Administrador",
-      email: "admin@blend.com",
-      senhaHash: await bcrypt.hash(process.env.ADMIN_PASSWORD || "123456", 10),
-      cargo: "admin",
-    });
-    await admin.save();
-    console.log("✅ Usuário admin criado: admin@blend.com / 123456");
-  }
-}
-criarAdmin();
-
-// ===============================
-// 🔐 Middleware de autenticação
-// ===============================
-function autenticarToken(req, res, next) {
-  const token = req.headers.authorization?.split(" ")[1];
-  if (!token) return res.status(401).json({ error: "Acesso negado" });
-
-  jwt.verify(token, JWT_SECRET, (err, user) => {
-    if (err) return res.status(403).json({ error: "Token inválido" });
-    req.user = user;
-    next();
-  });
-}
-
-// ===============================
-// 🔑 Rotas de autenticação
-// ===============================
-app.post("/api/auth/login", async (req, res) => {
-  try {
-    const { email, senha } = req.body;
-    const user = await User.findOne({ email });
-    if (!user) return res.status(401).json({ error: "Usuário não encontrado" });
-
-    const senhaValida = await bcrypt.compare(senha, user.senhaHash);
-    if (!senhaValida) return res.status(401).json({ error: "Senha incorreta" });
-
-    const token = jwt.sign(
-      { id: user._id, nome: user.nome, email: user.email, cargo: user.cargo },
-      JWT_SECRET,
-      { expiresIn: "8h" }
-    );
-    res.json({ token });
-  } catch (err) {
-    console.error("❌ Erro no login:", err);
-    res.status(500).json({ error: "Erro interno no login" });
-  }
-});
-
-// Registrar colaborador (somente admin)
-app.post("/api/auth/register", autenticarToken, async (req, res) => {
-  try {
-    if (req.user.cargo !== "admin")
-      return res
-        .status(403)
-        .json({ error: "Apenas administradores podem cadastrar usuários" });
-
-    const { nome, email, senha, cargo } = req.body;
-    const existe = await User.findOne({ email });
-    if (existe) return res.status(400).json({ error: "E-mail já cadastrado" });
-
-    const senhaHash = await bcrypt.hash(senha, 10);
-    const novo = new User({ nome, email, senhaHash, cargo });
-    await novo.save();
-
-    res.json({ message: "Usuário cadastrado com sucesso" });
-  } catch (err) {
-    console.error("❌ Erro ao registrar:", err);
-    res.status(500).json({ error: "Erro ao cadastrar usuário" });
-  }
-});
-
-// ===============================
-// 💰 Rotas simuladas (menu, pedidos, insumos)
-// ===============================
-app.get("/api/menu", autenticarToken, (req, res) => {
-  res.json([
-    { id: 1, nome: "Burger Artesanal", preco: 29.9, disponivel: true },
-    { id: 2, nome: "Combo Duplo", preco: 45.5, disponivel: true },
-  ]);
-});
-
-app.get("/api/orders", autenticarToken, (req, res) => {
-  res.json([
-    { id: 1, cliente: "João", total: 59.9, status: "entregue" },
-    { id: 2, cliente: "Maria", total: 35.0, status: "pendente" },
-  ]);
-});
-
-app.get("/api/insumos", autenticarToken, (req, res) => {
-  res.json([
-    { id: 1, nome: "Carne 120g", quantidade: 10, preco: 12.5 },
-    { id: 2, nome: "Queijo Cheddar", quantidade: 5, preco: 8.9 },
-  ]);
-});
-
-app.get("/api/stats", autenticarToken, (req, res) => {
-  const vendas = 12890;
-  const gastos = 7890;
-  res.json({ vendas, gastos, lucro: vendas - gastos });
-});
-
-// ===============================
-// 🗂️ Servir arquivos estáticos direto da raiz
-// ===============================
+app.use(bodyParser.json());
+// Servir arquivos estáticos (index.html, dashboard.html, JS, CSS)
 app.use(express.static(__dirname));
 
-// Página inicial → Dashboard
-app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "dashboard.html"));
+// ===== MongoDB Connection (Simplificada e Dependente da Variável de Ambiente) =====
+// O fallback para 'localhost' foi removido.
+const MONGO_URI = process.env.MONGO_URI; 
+
+if (MONGO_URI) {
+    mongoose.connect(MONGO_URI)
+        .then(() => console.log('✅ MongoDB conectado'))
+        .catch(err => console.error('⚠️ Erro ao conectar MongoDB:', err.message));
+} else {
+    // Se a MONGO_URI não estiver definida, o servidor não tentará conectar, 
+    // mas também não terá persistência de dados.
+    console.error('❌ ERRO: Variável MONGO_URI não está definida. A persistência de dados não funcionará.');
+}
+
+
+// ===== Schemas (Adaptado do seu último código) =====
+const ProdutoSchema = new mongoose.Schema({
+    nome: String,
+    preco: Number,
+    descricao: String,
+    imagem: String,
+    // Campos adicionais dos modelos anteriores (para segurança):
+    categoria: String, 
+    disponivel: { type: Boolean, default: true },
+    ingredientes: [String],
+    tempoPreparo: Number
+}, { timestamps: true });
+
+const InsumoSchema = new mongoose.Schema({
+    nome: String,
+    quantidade: Number,
+    unidade: String,
+    preco: Number,
+    minimo: Number, // Adaptado do seu último código (uso foi substituído por minimo)
+}, { timestamps: true });
+
+const PedidoSchema = new mongoose.Schema({
+    cliente: String,
+    telefone: String,
+    endereco: String,
+    regiao: String,
+    taxaEntrega: Number,
+    itens: [{ nome: String, quantidade: Number, preco: Number, categoria: String }], // Adaptado para 'quantidade'
+    total: Number,
+    formaPagamento: String,
+    troco: Number,
+    observacao: String,
+    status: { type: String, default: 'pending' },
+    criadoEm: { type: Date, default: Date.now }
+}, { timestamps: true });
+
+const Produto = mongoose.model('Produto', ProdutoSchema);
+const Insumo = mongoose.model('Insumo', InsumoSchema);
+const Pedido = mongoose.model('Pedido', PedidoSchema);
+
+
+// ===== Rotas do Cardápio Público =====
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'index.html'));
 });
 
-// ⚠️ Fallback — sempre o último
-app.use((req, res) => {
-  res.status(404).json({ error: "Rota não encontrada" });
+// API para o cardápio (Formatação por categoria)
+app.get('/api/cardapio', async (req, res) => {
+    try {
+        const produtos = await Produto.find({ disponivel: true });
+        
+        const cardapioFormatado = {
+            "Hambúrgueres": produtos.filter(p => p.categoria === 'Hambúrgueres'),
+            "Combos": produtos.filter(p => p.categoria === 'Combos'),
+            "Acompanhamentos": produtos.filter(p => p.categoria === 'Acompanhamentos'),
+            "Adicionais": produtos.filter(p => p.categoria === 'Adicionais'),
+            "Bebidas": produtos.filter(p => p.categoria === 'Bebidas')
+        };
+        res.json(cardapioFormatado);
+    } catch (error) {
+        console.error('Erro ao carregar cardápio:', error);
+        res.status(500).json({ error: 'Erro ao carregar cardápio.' });
+    }
 });
 
 
-// ===============================
-// 🚀 Inicialização do servidor
-// ===============================
+// ===== Rotas do Dashboard (UNIFICADAS: Português -> Inglês) =====
+
+app.get('/dashboard', (req, res) => {
+    res.sendFile(path.join(__dirname, 'dashboard.html'));
+});
+
+// GET /api/menu (Lista todos os produtos para o Dashboard)
+app.get('/api/menu', async (req, res) => {
+    try {
+        const produtos = await Produto.find().sort({ categoria: 1, nome: 1 });
+        // Mapeia _id para id para compatibilidade com o frontend
+        const produtosFormatados = produtos.map(p => ({
+            ...p._doc,
+            id: p._id
+        }));
+        res.json(produtosFormatados);
+    } catch (error) {
+        res.status(500).json({ error: 'Erro ao listar menu.' });
+    }
+});
+
+// POST /api/menu/item (Criar Produto - ROTA CORRETA DO DASHBOARD)
+app.post('/api/menu/item', async (req, res) => {
+    try {
+        const produto = new Produto(req.body);
+        const produtoSalvo = await produto.save();
+        res.status(201).json({ 
+            success: true, 
+            produto: { ...produtoSalvo._doc, id: produtoSalvo._id } 
+        });
+    } catch (error) {
+        console.error('Erro ao criar item do menu:', error.message);
+        res.status(500).json({ error: 'Erro ao criar produto.' });
+    }
+});
+
+// PUT /api/menu/item/:id (Editar Produto - ROTA CORRETA DO DASHBOARD)
+app.put('/api/menu/item/:id', async (req, res) => {
+    try {
+        const id = req.params.id;
+        const produto = await Produto.findByIdAndUpdate(id, req.body, { new: true });
+        if (!produto) return res.status(404).json({ error: 'Produto não encontrado.' });
+        res.json({ success: true, produto: { ...produto._doc, id: produto._id } });
+    } catch (error) {
+        res.status(500).json({ error: 'Erro ao atualizar produto.' });
+    }
+});
+
+// DELETE /api/menu/item/:id (Excluir Produto - ROTA CORRETA DO DASHBOARD)
+app.delete('/api/menu/item/:id', async (req, res) => {
+    try {
+        const result = await Produto.findByIdAndDelete(req.params.id);
+        if (!result) return res.status(404).json({ error: 'Produto não encontrado.' });
+        res.json({ success: true });
+    } catch (error) {
+        res.status(500).json({ error: 'Erro ao excluir produto.' });
+    }
+});
+
+
+// ===== Insumos (Supplies) Routes (Mantido em Português) =====
+app.get('/api/insumos', async (req, res) => {
+    try {
+        const insumos = await Insumo.find();
+        res.json(insumos);
+    } catch (error) {
+        res.status(500).json({ error: 'Erro ao listar insumos.' });
+    }
+});
+
+app.post('/api/insumos', async (req, res) => {
+    try {
+        const insumo = new Insumo(req.body);
+        await insumo.save();
+        res.status(201).json({ success: true });
+    } catch (error) {
+        res.status(500).json({ error: 'Erro ao criar insumo.' });
+    }
+});
+
+app.put('/api/insumos/:id', async (req, res) => {
+    try {
+        await Insumo.findByIdAndUpdate(req.params.id, req.body);
+        res.json({ success: true });
+    } catch (error) {
+        res.status(500).json({ error: 'Erro ao atualizar insumo.' });
+    }
+});
+
+app.delete('/api/insumos/:id', async (req, res) => {
+    try {
+        await Insumo.findByIdAndDelete(req.params.id);
+        res.json({ success: true });
+    } catch (error) {
+        res.status(500).json({ error: 'Erro ao excluir insumo.' });
+    }
+});
+
+
+// ===== Pedidos (Orders) Routes - UNIFICADAS com o Dashboard =====
+app.get('/api/orders', async (req, res) => { // Renomeada de /api/pedidos
+    try {
+        const pedidos = await Pedido.find().sort({ criadoEm: -1 });
+        res.json(pedidos);
+    } catch (error) {
+        res.status(500).json({ error: 'Erro ao listar pedidos (orders).' });
+    }
+});
+
+app.post('/api/orders', async (req, res) => { // Renomeada de /api/pedidos
+    try {
+        const pedido = new Pedido(req.body);
+        await pedido.save();
+        res.status(201).json({ success: true });
+    } catch (error) {
+        res.status(500).json({ error: 'Erro ao criar pedido (order).' });
+    }
+});
+
+app.put('/api/orders/:id', async (req, res) => { // Renomeada de /api/pedidos/:id
+    try {
+        await Pedido.findByIdAndUpdate(req.params.id, req.body);
+        res.json({ success: true });
+    } catch (error) {
+        res.status(500).json({ error: 'Erro ao atualizar pedido (order).' });
+    }
+});
+
+app.delete('/api/orders/:id', async (req, res) => { // Renomeada de /api/pedidos/:id
+    try {
+        await Pedido.findByIdAndDelete(req.params.id);
+        res.json({ success: true });
+    } catch (error) {
+        res.status(500).json({ error: 'Erro ao excluir pedido (order).' });
+    }
+});
+
+// ===== Financeiro (Stats) Route - UNIFICADA com o Dashboard =====
+app.get('/api/stats', async (req, res) => { // Renomeada de /api/financeiro
+    try {
+        const pedidos = await Pedido.find();
+        const insumos = await Insumo.find();
+
+        const vendas = pedidos.reduce((acc, p) => acc + (p.total || 0), 0);
+        // Assumindo que o gasto é o custo total dos insumos atuais (preco * quantidade)
+        const gastos = insumos.reduce((acc, i) => acc + (i.preco * i.quantidade), 0); 
+        const lucro = vendas - gastos;
+
+        res.json({ vendas, gastos, lucro });
+    } catch (error) {
+        res.status(500).json({ error: 'Erro ao calcular financeiro/stats.' });
+    }
+});
+
+
+// ===== Servidor =====
 app.listen(PORT, () => {
-  console.log(`🚀 Servidor rodando na porta ${PORT}`);
-  console.log(`📊 Dashboard: http://localhost:${PORT}`);
+    console.log(`🚀 Servidor rodando na porta ${PORT}`);
+    // Log dos URLs para facilitar o debug no Render
+    console.log(`📱 Cardápio: https://artesanal-blend.onrender.com`);
+    console.log(`📊 Dashboard: https://artesanal-blend.onrender.com/dashboard`);
 });
-
-
-
