@@ -799,230 +799,148 @@ imprimirCupom(id) {
   }
 
   async updateFinanceiro() {
-    const btn = document.querySelector('#financeiroTab .btn.secondary');
-    if (btn) {
-      btn.innerHTML = '⏳ Atualizando...';
-      btn.disabled = true;
-    }
-
-    try {
-      // Calcula com dados locais dos pedidos
-      this.calcularFinanceiroLocal();
-      this.renderStats();
-      this.renderGrafico();
-      this.renderUltimosPedidos();
-      this.renderFluxoCaixa();
-      
-      if (btn) {
-        btn.innerHTML = '🔄 Atualizar';
-        btn.disabled = false;
-      }
-      
-      this.showToast('Dados financeiros atualizados!', 'success');
-    } catch (error) {
-      console.error('Erro no financeiro:', error);
-      this.showToast('Erro ao carregar dados financeiros', 'error');
-    }
+  const btn = document.querySelector('#financeiroTab .btn.secondary');
+  if (btn) {
+    btn.innerHTML = '⏳ Atualizando...';
+    btn.disabled = true;
   }
 
-  calcularFinanceiroLocal() {
-    const pedidosEntregues = this.pedidos.filter(p => p.status === 'entregue');
-    const totalVendas = pedidosEntregues.reduce((sum, p) => sum + (parseFloat(p.total) || 0), 0);
+  try {
+    // 1. Primeiro calcula os dados
+    this.calcularFinanceiroLocal();
     
-    // Dados simulados para demonstração
-    this.financeiroData = {
-      totalVendas: totalVendas,
-      totalCustos: totalVendas * 0.6, // 60% de custos
-      lucro: totalVendas - (totalVendas * 0.6),
-      variacaoVendas: 12.5,
-      variacaoCustos: 8.2,
-      variacaoLucro: 15.3,
-      margemLucro: totalVendas > 0 ? ((totalVendas - (totalVendas * 0.6)) / totalVendas * 100).toFixed(1) : 0,
-      
-      stats: {
-        ticketMedio: pedidosEntregues.length > 0 ? totalVendas / pedidosEntregues.length : 0,
-        vendasMes: pedidosEntregues.length,
-        custoMedio: pedidosEntregues.length > 0 ? (totalVendas * 0.6) / pedidosEntregues.length : 0,
-        clientesAtendidos: new Set(pedidosEntregues.map(p => p.cliente)).size,
-        pedidosCancelados: this.pedidos.filter(p => p.status === 'cancelado').length,
-        tempoMedioPreparo: '18 min'
-      },
-      
-      vendasMensais: [
-        { mes: 'Jan', vendas: totalVendas * 0.1, custos: totalVendas * 0.06 },
-        { mes: 'Fev', vendas: totalVendas * 0.15, custos: totalVendas * 0.09 },
-        { mes: 'Mar', vendas: totalVendas * 0.12, custos: totalVendas * 0.072 },
-        { mes: 'Abr', vendas: totalVendas * 0.18, custos: totalVendas * 0.108 },
-        { mes: 'Mai', vendas: totalVendas * 0.22, custos: totalVendas * 0.132 },
-        { mes: 'Jun', vendas: totalVendas * 0.23, custos: totalVendas * 0.138 }
-      ]
-    };
-
+    // 2. Depois renderiza na ordem correta
     this.renderFinanceiro();
+    this.renderStats();
+    this.renderGrafico();
+    this.renderUltimosPedidos();
+    this.renderFluxoCaixa();
+    
+    if (btn) {
+      btn.innerHTML = '🔄 Atualizar';
+      btn.disabled = false;
+    }
+    
+    this.showToast('Dados financeiros atualizados!', 'success');
+  } catch (error) {
+    console.error('Erro no financeiro:', error);
+    this.showToast('Erro ao carregar dados financeiros', 'error');
+  }
+}
+
+calcularFinanceiroLocal() {
+  const pedidosEntregues = this.pedidos.filter(p => p.status === 'entregue');
+  const totalVendas = pedidosEntregues.reduce((sum, p) => sum + (parseFloat(p.total) || 0), 0);
+  
+  // Garantir que temos dados para o gráfico
+  const vendasBase = totalVendas > 0 ? totalVendas : 1000; // Fallback se não houver vendas
+  
+  this.financeiroData = {
+    totalVendas: totalVendas,
+    totalCustos: totalVendas * 0.6,
+    lucro: totalVendas - (totalVendas * 0.6),
+    variacaoVendas: 12.5,
+    variacaoCustos: 8.2,
+    variacaoLucro: 15.3,
+    margemLucro: totalVendas > 0 ? ((totalVendas - (totalVendas * 0.6)) / totalVendas * 100).toFixed(1) : 0,
+    
+    stats: {
+      ticketMedio: pedidosEntregues.length > 0 ? totalVendas / pedidosEntregues.length : 0,
+      vendasMes: pedidosEntregues.length,
+      custoMedio: pedidosEntregues.length > 0 ? (totalVendas * 0.6) / pedidosEntregues.length : 0,
+      clientesAtendidos: new Set(pedidosEntregues.map(p => p.cliente)).size,
+      pedidosCancelados: this.pedidos.filter(p => p.status === 'cancelado').length,
+      tempoMedioPreparo: '18 min'
+    },
+    
+    vendasMensais: [
+      { mes: 'Jan', vendas: vendasBase * 0.1, custos: vendasBase * 0.06 },
+      { mes: 'Fev', vendas: vendasBase * 0.15, custos: vendasBase * 0.09 },
+      { mes: 'Mar', vendas: vendasBase * 0.12, custos: vendasBase * 0.072 },
+      { mes: 'Abr', vendas: vendasBase * 0.18, custos: vendasBase * 0.108 },
+      { mes: 'Mai', vendas: vendasBase * 0.22, custos: vendasBase * 0.132 },
+      { mes: 'Jun', vendas: vendasBase * 0.23, custos: vendasBase * 0.138 }
+    ]
+  };
+}
+
+renderGrafico() {
+  const container = document.getElementById('graficoPedidos');
+  if (!container) {
+    console.error('Container do gráfico não encontrado');
+    return;
+  }
+  
+  const dados = this.financeiroData.vendasMensais;
+  
+  // Verificar se temos dados válidos
+  if (!dados || dados.length === 0) {
+    container.innerHTML = '<div class="empty-state">Sem dados para exibir</div>';
+    return;
+  }
+  
+  const maxVendas = Math.max(...dados.map(d => d.vendas)) || 100; // Fallback mínimo
+  
+  console.log('Renderizando gráfico com dados:', dados);
+  console.log('Max vendas:', maxVendas);
+  
+  let html = '';
+  dados.forEach(item => {
+    const alturaVendas = (item.vendas / maxVendas) * 100;
+    const alturaCustos = (item.custos / maxVendas) * 100;
+    
+    console.log(`Mês: ${item.mes}, Vendas: ${item.vendas}, Altura: ${alturaVendas}%`);
+    
+    html += `
+      <div class="barra-container">
+        <div class="barra-valor">${this.formatarMoeda(item.vendas)}</div>
+        <div class="barra" style="height: ${alturaVendas}%; background: linear-gradient(to top, var(--primary), var(--primary-light))"></div>
+        <div class="barra" style="height: ${alturaCustos}%; background: linear-gradient(to top, var(--danger), #ff6b6b); margin-top: 2px"></div>
+        <div class="barra-label">${item.mes}</div>
+      </div>
+    `;
+  });
+  
+  container.innerHTML = html;
+  console.log('Gráfico renderizado com sucesso');
+}
+
+// Adicione também um fallback para quando não há dados
+renderUltimosPedidos() {
+  const container = document.getElementById('ultimosPedidos');
+  if (!container) {
+    console.error('Container de últimos pedidos não encontrado');
+    return;
+  }
+  
+  const ultimosPedidos = [...this.pedidos]
+    .sort((a, b) => new Date(b.createdAt || b.data) - new Date(a.createdAt || a.data))
+    .slice(0, 5);
+
+  if (ultimosPedidos.length === 0) {
+    container.innerHTML = '<p class="empty-state">Nenhum pedido recente</p>';
+    return;
   }
 
-  renderFinanceiro() {
-    const data = this.financeiroData;
-    
-    const totalVendasEl = document.getElementById('totalVendas');
-    const totalCustosEl = document.getElementById('totalCustos');
-    const lucroEl = document.getElementById('lucro');
-    const margemLucroEl = document.getElementById('margemLucro');
-    
-    if (totalVendasEl) totalVendasEl.textContent = this.formatarMoeda(data.totalVendas);
-    if (totalCustosEl) totalCustosEl.textContent = this.formatarMoeda(data.totalCustos);
-    if (lucroEl) {
-      lucroEl.textContent = this.formatarMoeda(data.lucro);
-      lucroEl.className = data.lucro >= 0 ? 'positive' : 'negative';
-    }
-    if (margemLucroEl) {
-      margemLucroEl.textContent = data.margemLucro + '%';
-      margemLucroEl.className = data.margemLucro >= 0 ? 'positive' : 'negative';
-    }
-    
-    const variacaoVendasEl = document.getElementById('variacaoVendas');
-    const variacaoCustosEl = document.getElementById('variacaoCustos');
-    const variacaoLucroEl = document.getElementById('variacaoLucro');
-    
-    if (variacaoVendasEl) {
-      variacaoVendasEl.textContent = `${data.variacaoVendas >= 0 ? '+' : ''}${data.variacaoVendas}%`;
-      variacaoVendasEl.className = data.variacaoVendas >= 0 ? 'positive' : 'negative';
-    }
-    
-    if (variacaoCustosEl) {
-      variacaoCustosEl.textContent = `${data.variacaoCustos >= 0 ? '+' : ''}${data.variacaoCustos}%`;
-      variacaoCustosEl.className = data.variacaoCustos >= 0 ? 'positive' : 'negative';
-    }
-    
-    if (variacaoLucroEl) {
-      variacaoLucroEl.textContent = `${data.variacaoLucro >= 0 ? '+' : ''}${data.variacaoLucro}%`;
-      variacaoLucroEl.className = data.variacaoLucro >= 0 ? 'positive' : 'negative';
-    }
-  }
-
-  renderStats() {
-    const container = document.getElementById('financeiroStats');
-    if (!container) return;
-    
-    const stats = this.financeiroData.stats;
-    
-    container.innerHTML = `
-      <div class="stats-cards">
-        <div class="stat-card">
-          <div class="stat-icon">🎫</div>
-          <div class="stat-info">
-            <h4>Ticket Médio</h4>
-            <p class="stat-value">${this.formatarMoeda(stats.ticketMedio)}</p>
-            <small>Por pedido</small>
-          </div>
+  let html = '';
+  ultimosPedidos.forEach(pedido => {
+    html += `
+      <div class="pedido-resumo">
+        <div class="pedido-info">
+          <strong>${pedido._id?.slice(-6) || 'N/A'}</strong>
+          <span class="cliente">${pedido.cliente || 'Cliente'}</span>
+          <small>${new Date(pedido.createdAt || pedido.data).toLocaleDateString('pt-BR')}</small>
         </div>
-        
-        <div class="stat-card">
-          <div class="stat-icon">📈</div>
-          <div class="stat-info">
-            <h4>Vendas/Mês</h4>
-            <p class="stat-value">${stats.vendasMes}</p>
-            <small>Pedidos realizados</small>
-          </div>
-        </div>
-        
-        <div class="stat-card">
-          <div class="stat-icon">👥</div>
-          <div class="stat-info">
-            <h4>Clientes Únicos</h4>
-            <p class="stat-value">${stats.clientesAtendidos}</p>
-            <small>Atendidos</small>
-          </div>
-        </div>
-        
-        <div class="stat-card">
-          <div class="stat-icon">⏱️</div>
-          <div class="stat-info">
-            <h4>Tempo Médio</h4>
-            <p class="stat-value">${stats.tempoMedioPreparo}</p>
-            <small>Preparação</small>
-          </div>
-        </div>
-        
-        <div class="stat-card">
-          <div class="stat-icon">📊</div>
-          <div class="stat-info">
-            <h4>Custo Médio</h4>
-            <p class="stat-value">${this.formatarMoeda(stats.custoMedio)}</p>
-            <small>Por pedido</small>
-          </div>
-        </div>
-        
-        <div class="stat-card">
-          <div class="stat-icon">❌</div>
-          <div class="stat-info">
-            <h4>Pedidos Cancel.</h4>
-            <p class="stat-value ${stats.pedidosCancelados > 5 ? 'negative' : 'positive'}">${stats.pedidosCancelados}</p>
-            <small>Este mês</small>
-          </div>
+        <div class="pedido-detalhes">
+          <span class="total">${this.formatarMoeda(pedido.total || 0)}</span>
+          <span class="status ${pedido.status}">${this.formatarStatus(pedido.status)}</span>
         </div>
       </div>
     `;
-  }
-
-  renderGrafico() {
-    const container = document.getElementById('graficoPedidos');
-    if (!container) return;
-    
-    const dados = this.financeiroData.vendasMensais;
-    const maxVendas = Math.max(...dados.map(d => d.vendas)) || 1;
-    
-    let html = '';
-    dados.forEach(item => {
-      const alturaVendas = (item.vendas / maxVendas) * 100;
-      const alturaCustos = (item.custos / maxVendas) * 100;
-      
-      html += `
-        <div class="barra-container">
-          <div class="barra-valor">${this.formatarMoeda(item.vendas)}</div>
-          <div class="barra" style="height: ${alturaVendas}%; background: linear-gradient(to top, var(--primary), var(--primary-light))"></div>
-          <div class="barra" style="height: ${alturaCustos}%; background: linear-gradient(to top, var(--danger), #ff6b6b); margin-top: 2px"></div>
-          <div class="barra-label">${item.mes}</div>
-        </div>
-      `;
-    });
-    
-    container.innerHTML = html;
-  }
-
-  renderUltimosPedidos() {
-    const container = document.getElementById('ultimosPedidos');
-    if (!container) return;
-    
-    const ultimosPedidos = [...this.pedidos]
-      .sort((a, b) => new Date(b.createdAt || b.data) - new Date(a.createdAt || a.data))
-      .slice(0, 5);
-
-    if (ultimosPedidos.length === 0) {
-      container.innerHTML = '<p class="empty-state">Nenhum pedido recente</p>';
-      return;
-    }
-
-    let html = '';
-    ultimosPedidos.forEach(pedido => {
-      html += `
-        <div class="pedido-resumo">
-          <div class="pedido-info">
-            <strong>${pedido._id?.slice(-6) || 'N/A'}</strong>
-            <span class="cliente">${pedido.cliente || 'Cliente'}</span>
-            <small>${new Date(pedido.createdAt || pedido.data).toLocaleDateString('pt-BR')}</small>
-          </div>
-          <div class="pedido-detalhes">
-            <span class="total">${this.formatarMoeda(pedido.total || 0)}</span>
-            <span class="status ${pedido.status}">${this.formatarStatus(pedido.status)}</span>
-          </div>
-        </div>
-      `;
-    });
-    
-    container.innerHTML = html;
-  }
-
+  });
+  
+  container.innerHTML = html;
+}
   renderFluxoCaixa() {
     const container = document.getElementById('fluxoCaixa');
     if (!container) return;
@@ -1167,4 +1085,5 @@ imprimirCupom(id) {
 document.addEventListener('DOMContentLoaded', () => {
   window.dashboard = new Dashboard();
 });
+
 
