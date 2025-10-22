@@ -1161,6 +1161,8 @@ calcularFinanceiroLocal() {
   };
 }
 
+/* ================= GRÁFICO MELHORADO ================= */
+
 renderGrafico() {
   const container = document.getElementById('graficoPedidos');
   if (!container) {
@@ -1266,7 +1268,7 @@ renderGrafico() {
   `;
   
   container.innerHTML = html;
-}
+},
 
 // Funções auxiliares para o gráfico melhorado
 gerarEscalaEixoY(maxValor) {
@@ -1284,7 +1286,7 @@ gerarEscalaEixoY(maxValor) {
   }
   
   return escalas.join('');
-}
+},
 
 obterMelhorMes(dados) {
   if (!dados.length) return '-';
@@ -1292,7 +1294,7 @@ obterMelhorMes(dados) {
     (prev.vendas > current.vendas) ? prev : current
   );
   return melhorMes.mes;
-}
+},
 
 calcularCrescimento(dados) {
   if (dados.length < 2) return 0;
@@ -1301,11 +1303,7 @@ calcularCrescimento(dados) {
   
   if (primeiro === 0) return 0;
   return (((ultimo - primeiro) / primeiro) * 100).toFixed(1);
-}
-  
-  container.innerHTML = html;
-  console.log('Gráfico renderizado com sucesso');
-}
+},
 
 // Adicione também um fallback para quando não há dados
 renderUltimosPedidos() {
@@ -1487,6 +1485,7 @@ renderUltimosPedidos() {
 document.addEventListener('DOMContentLoaded', () => {
   window.dashboard = new Dashboard();
 });
+
 
 
 
