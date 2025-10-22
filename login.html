@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Login — Artesanal Blend</title>
+  <link rel="stylesheet" href="dashboard.css" />
+  <style>
+    body {
+      display:flex; min-height:100vh; align-items:center; justify-content:center;
+      background:#f3f4f6; font-family:sans-serif;
+    }
+    .login-card {
+      width:100%; max-width:380px; background:#fff;
+      border:1px solid #ddd; border-radius:12px;
+      box-shadow:0 3px 10px rgba(0,0,0,0.1); padding:1.5rem;
+    }
+    .login-card h1 {
+      font-size:1.2rem; text-align:center; color:#333;
+      margin-bottom:1rem;
+    }
+    .form-group { margin-bottom:.75rem; }
+    label { display:block; font-weight:bold; margin-bottom:.3rem; color:#444; }
+    input {
+      width:100%; padding:.6rem; border:1px solid #ccc;
+      border-radius:6px; font-size:1rem;
+    }
+    button {
+      width:100%; background:#8b4513; color:#fff;
+      border:none; padding:.6rem; border-radius:6px;
+      font-weight:bold; cursor:pointer; margin-top:.5rem;
+    }
+    button:hover { background:#6f3610; }
+    .erro { color:#d9534f; margin-top:.5rem; text-align:center; }
+  </style>
+</head>
+<body>
+  <div class="login-card">
+    <h1>Entrar no Dashboard</h1>
+    <form id="loginForm">
+      <div class="form-group">
+        <label for="email">E-mail</label>
+        <input id="email" type="email" required autocomplete="username" />
+      </div>
+      <div class="form-group">
+        <label for="senha">Senha</label>
+        <input id="senha" type="password" required autocomplete="current-password" />
+      </div>
+      <button type="submit">Entrar</button>
+      <div id="erro" class="erro"></div>
+    </form>
+  </div>
+
+  <script>
+    const form = document.getElementById('loginForm');
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const email = document.getElementById('email').value.trim();
+      const senha = document.getElementById('senha').value;
+      const erro = document.getElementById('erro');
+      erro.textContent = '';
+
+      try {
+        const res = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, senha })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Falha no login');
+
+        localStorage.setItem('token', data.token);
+        location.href = '/dashboard';
+      } catch (e) {
+        erro.textContent = e.message;
+      }
+    });
+  </script>
+</body>
+</html>
