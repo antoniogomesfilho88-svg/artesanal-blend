@@ -66,7 +66,9 @@ function autenticarToken(req, res, next) {
   });
 }
 
-// Login
+// ===============================
+// 🔐 Rotas de autenticação
+// ===============================
 app.post("/api/auth/login", async (req, res) => {
   try {
     const { email, senha } = req.body;
@@ -128,7 +130,7 @@ app.get("/api/users", autenticarToken, async (req, res) => {
 });
 
 // ===============================
-// 💰 API Financeiro e Dados
+// 💰 Rotas de dados financeiros e operacionais
 // ===============================
 app.get("/api/stats", autenticarToken, (req, res) => {
   const vendas = 12890;
@@ -136,9 +138,7 @@ app.get("/api/stats", autenticarToken, (req, res) => {
   res.json({ vendas, gastos, lucro: vendas - gastos });
 });
 
-// ===============================
-// 📦 APIs de exemplo (substituir pelo Mongo real depois)
-// ===============================
+// Exemplos temporários — depois podem ser substituídos por coleções Mongo
 app.get("/api/menu", autenticarToken, (req, res) => {
   res.json([
     { id: 1, nome: "Burger Artesanal", preco: 29.9, disponivel: true },
@@ -165,21 +165,23 @@ app.get("/api/insumos", autenticarToken, (req, res) => {
 // ===============================
 app.use(express.static(__dirname));
 
+// Página inicial → Login
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "login.html"));
 });
 
+// Rota direta para o dashboard
 app.get("/dashboard", (req, res) => {
   res.sendFile(path.join(__dirname, "dashboard.html"));
 });
 
-// ⚠️ Rota genérica (última)
+// ⚠️ Fallback — sempre o último
 app.get("*", (req, res) => {
   res.status(404).json({ error: "Rota não encontrada" });
 });
 
 // ===============================
-// 🚀 Start Server
+// 🚀 Iniciar Servidor (Render usa variável PORT automaticamente)
 // ===============================
 app.listen(PORT, () => {
   console.log(`🚀 Servidor rodando na porta ${PORT}`);
