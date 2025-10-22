@@ -6,6 +6,9 @@ import cors from 'cors';
 import bodyParser from 'body-parser';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import jwt from "jsonwebtoken";
+import bcrypt from "bcryptjs";
+import User from "./models/User.js";
 
 // Configuração para compatibilidade de módulos ES
 const __filename = fileURLToPath(import.meta.url);
@@ -287,4 +290,5 @@ app.listen(PORT, () => {
     console.log(`📱 Cardápio: https://artesanal-blend.onrender.com`);
     console.log(`📊 Dashboard: https://artesanal-blend.onrender.com/dashboard`);
 });
+
 
