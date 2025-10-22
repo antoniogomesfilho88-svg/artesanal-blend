@@ -1,3 +1,32 @@
+// ===============================
+// 🚀 Verifica autenticação do usuário (Login JWT)
+// ===============================
+
+// Recupera o token salvo no navegador
+const token = localStorage.getItem('token');
+
+// Se não houver token, redireciona para a página de login
+if (!token) {
+  window.location.href = '/login';
+} else {
+  // Verifica se o token ainda é válido (opcional, mas recomendável)
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    const expiracao = payload.exp * 1000;
+    const agora = Date.now();
+
+    if (agora > expiracao) {
+      console.warn('⚠️ Token expirado. Redirecionando para login...');
+      localStorage.removeItem('token');
+      window.location.href = '/login';
+    }
+  } catch (err) {
+    console.error('❌ Token inválido:', err);
+    localStorage.removeItem('token');
+    window.location.href = '/login';
+  }
+}
+
 // dashboard.js - versão separada
 class Dashboard {
   constructor() {
@@ -803,6 +832,7 @@ imprimirCupom(id) {
 document.addEventListener('DOMContentLoaded', () => {
   window.dashboard = new Dashboard();
 });
+
 
 
 
