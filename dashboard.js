@@ -905,6 +905,26 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 
+// ===============================
+// 🧭 Controle de Abas
+// ===============================
+configurarAbas() {
+  const tabs = document.querySelectorAll('.tab-button');
+  const contents = document.querySelectorAll('.tab-content');
+
+  tabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      // Remove o estado ativo de todas as abas e conteúdos
+      tabs.forEach(t => t.classList.remove('active'));
+      contents.forEach(c => c.classList.remove('active'));
+
+      // Ativa a aba e o conteúdo selecionado
+      tab.classList.add('active');
+      const target = document.getElementById(tab.dataset.tab);
+      if (target) target.classList.add('active');
+    });
+  });
+}
 
 
 
