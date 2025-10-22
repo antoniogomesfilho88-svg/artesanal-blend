@@ -1,19 +1,10 @@
-// models/User.js
-import mongoose from 'mongoose';
-import bcrypt from 'bcryptjs';
+import mongoose from "mongoose";
 
 const UserSchema = new mongoose.Schema({
-  nome: { type: String, required: true },
-  email: { type: String, required: true, unique: true, index: true },
+  nome: String,
+  email: { type: String, required: true, unique: true },
   senhaHash: { type: String, required: true },
-  cargo: { type: String, enum: ['admin', 'colaborador'], default: 'colaborador' },
-  ativo: { type: Boolean, default: true }
+  cargo: { type: String, default: "admin" },
 }, { timestamps: true });
 
-// helper p/ setar senha a partir de texto puro
-UserSchema.methods.setSenha = async function (senhaPura) {
-  const salt = await bcrypt.genSalt(10);
-  this.senhaHash = await bcrypt.hash(senhaPura, salt);
-};
-
-export default mongoose.model('User', UserSchema);
+export default mongoose.model("User", UserSchema);
