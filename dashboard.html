@@ -1,149 +1,158 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Dashboard - Artesanal Blend</title>
-  <link rel="stylesheet" href="dashboard.css" />
-  <style>
-    /* ====== Tela de login integrada ====== */
-    #loginOverlay {
-      position: fixed;
-      inset: 0;
-      background: #111;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 9999;
-      flex-direction: column;
-      color: #fff;
-      transition: opacity 0.3s ease;
-    }
-    #loginOverlay.hidden {
-      opacity: 0;
-      pointer-events: none;
-    }
-    #loginBox {
-      background: #1e1e1e;
-      padding: 2rem;
-      border-radius: 12px;
-      box-shadow: 0 0 20px rgba(0,0,0,0.4);
-      width: 320px;
-      text-align: center;
-    }
-    #loginBox h2 {
-      color: #ffb300;
-      margin-bottom: 1rem;
-    }
-    #loginBox input {
-      width: 100%;
-      padding: 0.8rem;
-      margin-bottom: 1rem;
-      border: none;
-      border-radius: 8px;
-      background: #2a2a2a;
-      color: #fff;
-    }
-    #loginBox button {
-      width: 100%;
-      padding: 0.8rem;
-      border: none;
-      border-radius: 8px;
-      background: #ffb300;
-      color: #111;
-      font-weight: bold;
-      cursor: pointer;
-    }
-    #loginErro {
-      color: #ff5555;
-      margin-top: 0.5rem;
-      font-size: 0.9rem;
-      min-height: 1rem;
-    }
-  </style>
-</head>
-<body>
-  <!-- ================== TELA DE LOGIN ================== -->
-  <div id="loginOverlay">
-    <div id="loginBox">
-      <h2>Login - Artesanal Blend</h2>
-      <input type="email" id="email" placeholder="E-mail" required />
-      <input type="password" id="senha" placeholder="Senha" required />
-      <button id="btnLogin">Entrar</button>
-      <div id="loginErro"></div>
-    </div>
-  </div>
-
-  <!-- ================== DASHBOARD PRINCIPAL ================== -->
-  <header class="dashboard-header">
-    <div class="header-content">
-      <img src="images/logo.jpg" alt="Logo" class="logo" />
-      <h1>Dashboard Artesanal Blend</h1>
-      <button id="visualizarCardapio" class="btn primary">Ver Cardápio Online</button>
-      <button id="btnLogout" class="btn danger">Sair</button>
-    </div>
-  </header>
-
-  <div class="tabs">
-    <button class="tab-button active" data-tab="produtosTab">Produtos</button>
-    <button class="tab-button" data-tab="pedidosTab">Pedidos</button>
-    <button class="tab-button" data-tab="insumosTab">Insumos</button>
-    <button class="tab-button" data-tab="financeiroTab">Financeiro</button>
-  </div>
-
-  <main class="dashboard-content">
-    <!-- (todo o seu conteúdo permanece igual aqui) -->
-    <!-- ... -->
-  </main>
-
-  <div id="toast-container" aria-live="polite"></div>
-
-  <script src="dashboard.js"></script>
-  <script>
-    // ====== Login integrado ======
-    const overlay = document.getElementById('loginOverlay');
-    const btnLogin = document.getElementById('btnLogin');
-    const erroDiv = document.getElementById('loginErro');
-
-    // Se já tiver token salvo, esconder tela de login
-    if (localStorage.getItem('token')) {
-      overlay.classList.add('hidden');
-    }
-
-    btnLogin.addEventListener('click', async () => {
-      const email = document.getElementById('email').value;
-      const senha = document.getElementById('senha').value;
-      erroDiv.textContent = '';
-
-      try {
-        const res = await fetch('/api/auth/login', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email, senha })
-        });
-
-        const data = await res.json();
-        if (res.ok && data.token) {
-          localStorage.setItem('token', data.token);
-          overlay.classList.add('hidden');
-          location.reload(); // recarrega o painel com token
-        } else {
-          erroDiv.textContent = data.error || 'E-mail ou senha incorretos';
-        }
-      } catch (err) {
-        erroDiv.textContent = 'Erro de conexão.';
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Dashboard - Artesanal Blend</title>
+    <link rel="stylesheet" href="dashboard.css" />
+    <style>
+      /* ====== Tela de login integrada ====== */
+      #loginOverlay {
+        position: fixed;
+        inset: 0;
+        background: #111;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+        flex-direction: column;
+        color: #fff;
+        transition: opacity 0.3s ease;
       }
-    });
-  <script>
-  // Botão de logout — apaga o token e recarrega a página
-  document.getElementById('btnLogout')?.addEventListener('click', () => {
-    if (confirm("Deseja realmente sair do painel?")) {
-      localStorage.removeItem('token'); // apaga o JWT salvo
-      location.reload(); // recarrega a página → volta para login
-    }
-  });
-</script>
-</body>
+      #loginOverlay.hidden {
+        opacity: 0;
+        pointer-events: none;
+      }
+      #loginBox {
+        background: #1e1e1e;
+        padding: 2rem;
+        border-radius: 12px;
+        box-shadow: 0 0 20px rgba(0, 0, 0, 0.4);
+        width: 320px;
+        text-align: center;
+      }
+      #loginBox h2 {
+        color: #ffb300;
+        margin-bottom: 1rem;
+      }
+      #loginBox input {
+        width: 100%;
+        padding: 0.8rem;
+        margin-bottom: 1rem;
+        border: none;
+        border-radius: 8px;
+        background: #2a2a2a;
+        color: #fff;
+      }
+      #loginBox button {
+        width: 100%;
+        padding: 0.8rem;
+        border: none;
+        border-radius: 8px;
+        background: #ffb300;
+        color: #111;
+        font-weight: bold;
+        cursor: pointer;
+      }
+      #loginErro {
+        color: #ff5555;
+        margin-top: 0.5rem;
+        font-size: 0.9rem;
+        min-height: 1rem;
+      }
+    </style>
+  </head>
+
+  <body>
+    <!-- ================== TELA DE LOGIN ================== -->
+    <div id="loginOverlay">
+      <div id="loginBox">
+        <h2>Login - Artesanal Blend</h2>
+        <input type="email" id="email" placeholder="E-mail" required />
+        <input type="password" id="senha" placeholder="Senha" required />
+        <button id="btnLogin">Entrar</button>
+        <div id="loginErro"></div>
+      </div>
+    </div>
+
+    <!-- ================== DASHBOARD PRINCIPAL ================== -->
+    <header class="dashboard-header">
+      <div class="header-content">
+        <img src="images/logo.jpg" alt="Logo" class="logo" />
+        <h1>Dashboard Artesanal Blend</h1>
+        <button id="visualizarCardapio" class="btn primary">
+          Ver Cardápio Online
+        </button>
+        <button id="btnLogout" class="btn danger">Sair</button>
+      </div>
+    </header>
+
+    <div class="tabs">
+      <button class="tab-button active" data-tab="produtosTab">
+        Produtos
+      </button>
+      <button class="tab-button" data-tab="pedidosTab">Pedidos</button>
+      <button class="tab-button" data-tab="insumosTab">Insumos</button>
+      <button class="tab-button" data-tab="financeiroTab">Financeiro</button>
+    </div>
+
+    <main class="dashboard-content">
+      <!-- (Conteúdo principal do painel, como cards e tabelas) -->
+    </main>
+
+    <div id="toast-container" aria-live="polite"></div>
+
+    <!-- ================== SCRIPT DE LOGIN INTEGRADO ================== -->
+    <script>
+      const overlay = document.getElementById("loginOverlay");
+      const btnLogin = document.getElementById("btnLogin");
+      const erroDiv = document.getElementById("loginErro");
+
+      // Se já houver token salvo, oculta a tela de login
+      if (localStorage.getItem("token")) {
+        overlay.classList.add("hidden");
+      }
+
+      btnLogin.addEventListener("click", async () => {
+        const email = document.getElementById("email").value.trim();
+        const senha = document.getElementById("senha").value.trim();
+        erroDiv.textContent = "";
+
+        if (!email || !senha) {
+          erroDiv.textContent = "Preencha todos os campos.";
+          return;
+        }
+
+        try {
+          const res = await fetch("/api/auth/login", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email, senha }),
+          });
+
+          const data = await res.json();
+          if (res.ok && data.token) {
+            localStorage.setItem("token", data.token);
+            overlay.classList.add("hidden");
+            location.reload(); // Recarrega o painel autenticado
+          } else {
+            erroDiv.textContent = data.error || "E-mail ou senha incorretos.";
+          }
+        } catch (err) {
+          erroDiv.textContent = "Erro de conexão com o servidor.";
+        }
+      });
+
+      // Botão de logout — apaga o token e recarrega a página
+      document.getElementById("btnLogout")?.addEventListener("click", () => {
+        if (confirm("Deseja realmente sair do painel?")) {
+          localStorage.removeItem("token");
+          location.reload();
+        }
+      });
+    </script>
+
+    <!-- ================== SCRIPT PRINCIPAL DO DASHBOARD ================== -->
+    <script src="dashboard.js"></script>
+  </body>
 </html>
-
-
