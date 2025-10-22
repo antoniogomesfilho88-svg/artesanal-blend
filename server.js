@@ -9,9 +9,7 @@ import mongoose from "mongoose";
 import path from "path";
 import { fileURLToPath } from "url";
 import User from "./models/User.js";
-import dotenv from "dotenv";
 
-dotenv.config();
 
 // ===============================
 // ⚙️ Configuração base
@@ -168,3 +166,4 @@ app.listen(PORT, () => {
   console.log(`🚀 Servidor rodando na porta ${PORT}`);
   console.log(`📊 Dashboard: http://localhost:${PORT}`);
 });
+
