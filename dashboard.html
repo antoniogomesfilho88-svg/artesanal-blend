@@ -1,232 +1,110 @@
-// ===============================
-// 🔐 Verificação de Login (JWT)
-// ===============================
-const token = localStorage.getItem('token');
-if (!token) {
-  window.location.href = '/login';
-} else {
-  try {
-    const payload = JSON.parse(atob(token.split('.')[1]));
-    const exp = payload.exp * 1000;
-    if (Date.now() > exp) {
-      console.warn('⚠️ Token expirado. Redirecionando...');
-      localStorage.removeItem('token');
-      window.location.href = '/login';
-    }
-  } catch (err) {
-    console.error('Token inválido:', err);
-    localStorage.removeItem('token');
-    window.location.href = '/login';
-  }
-}
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Dashboard - Artesanal Blend</title>
+  <link rel="stylesheet" href="dashboard.css" />
+</head>
+<body>
+  <header class="dashboard-header">
+    <div class="header-content">
+      <img src="images/logo.jpg" alt="Logo" class="logo" />
+      <h1>Dashboard Artesanal Blend</h1>
+      <button id="visualizarCardapio" class="btn primary">Ver Cardápio Online</button>
+      <button id="btnLogout" class="btn secondary">Sair</button>
+    </div>
+  </header>
 
-// ===============================
-// 📊 Classe Principal do Dashboard
-// ===============================
-class Dashboard {
-  constructor() {
-    this.produtos = [];
-    this.pedidos = [];
-    this.insumos = [];
-    this.init();
-  }
+  <div class="tabs">
+    <button class="tab-button active" data-tab="produtosTab">Produtos</button>
+    <button class="tab-button" data-tab="pedidosTab">Pedidos</button>
+    <button class="tab-button" data-tab="insumosTab">Insumos</button>
+    <button class="tab-button" data-tab="financeiroTab">Financeiro</button>
+  </div>
 
-  async init() {
-    await this.carregarDados();
-    this.configurarAbas();
-    this.setupEventListeners();
-    this.renderProdutos();
-    this.renderInsumos();
-    this.renderPedidos();
-    this.updateFinanceiro(); // vai existir, mas versão simples
-  }
-
-  // ===============================
-  // 📦 Carrega Dados
-  // ===============================
-  async carregarDados() {
-    try {
-      this.showToast('Carregando dados...', 'info', 1000);
-      const headers = { 'Authorization': `Bearer ${localStorage.getItem('token')}` };
-
-      const [produtosRes, pedidosRes, insumosRes] = await Promise.all([
-        fetch('/api/menu', { headers }).then(r => r.ok ? r.json() : []),
-        fetch('/api/orders', { headers }).then(r => r.ok ? r.json() : []),
-        fetch('/api/insumos', { headers }).then(r => r.ok ? r.json() : [])
-      ]);
-
-      this.produtos = produtosRes || [];
-      this.pedidos = pedidosRes || [];
-      this.insumos = insumosRes || [];
-
-      console.log('✅ Dados carregados:', {
-        produtos: this.produtos.length,
-        pedidos: this.pedidos.length,
-        insumos: this.insumos.length
-      });
-    } catch (err) {
-      console.error('Erro ao carregar dados', err);
-      this.showToast('Erro ao carregar dados', 'error');
-    }
-  }
-
-  // ===============================
-  // ⚙️ Configurar Abas e Botões
-  // ===============================
-  configurarAbas() {
-    const tabs = document.querySelectorAll('.tab-button');
-    const contents = document.querySelectorAll('.tab-content');
-
-    tabs.forEach(tab => {
-      tab.addEventListener('click', () => {
-        tabs.forEach(t => t.classList.remove('active'));
-        contents.forEach(c => c.classList.remove('active'));
-        tab.classList.add('active');
-        const target = document.getElementById(tab.dataset.tab);
-        if (target) target.classList.add('active');
-      });
-    });
-  }
-
-  setupEventListeners() {
-    document.getElementById('visualizarCardapio')?.addEventListener('click', () => {
-      window.open('/', '_blank');
-    });
-
-    document.getElementById('btnLogout')?.addEventListener('click', () => {
-      if (confirm('Deseja realmente sair?')) {
-        localStorage.removeItem('token');
-        window.location.href = '/login';
-      }
-    });
-
-    // Filtros Produtos
-    document.getElementById('filtroCategoria')?.addEventListener('change', () => this.renderProdutos());
-    document.getElementById('filtroStatus')?.addEventListener('change', () => this.renderProdutos());
-    document.getElementById('buscaProdutos')?.addEventListener('input', () => this.renderProdutos());
-  }
-
-  // ===============================
-  // 🧱 Renderizar Produtos
-  // ===============================
-  renderProdutos() {
-    const container = document.getElementById('produtosContainer');
-    if (!container) return;
-
-    const categoria = document.getElementById('filtroCategoria')?.value || '';
-    const status = document.getElementById('filtroStatus')?.value || '';
-    const busca = document.getElementById('buscaProdutos')?.value?.toLowerCase() || '';
-
-    let produtosFiltrados = (this.produtos || []).slice();
-    if (categoria) produtosFiltrados = produtosFiltrados.filter(p => p.categoria === categoria);
-    if (status === 'disponivel') produtosFiltrados = produtosFiltrados.filter(p => p.disponivel);
-    else if (status === 'indisponivel') produtosFiltrados = produtosFiltrados.filter(p => !p.disponivel);
-    if (busca) produtosFiltrados = produtosFiltrados.filter(p => (p.nome || '').toLowerCase().includes(busca));
-
-    if (!produtosFiltrados.length) {
-      container.innerHTML = '<div class="empty-state">Nenhum produto encontrado</div>';
-      return;
-    }
-
-    container.innerHTML = produtosFiltrados.map(prod => `
-      <article class="produto-card ${!prod.disponivel ? 'indisponivel' : ''}">
-        <span class="categoria">${prod.categoria || ''}</span>
-        <span class="status">${prod.disponivel ? '✅' : '⏸️'}</span>
-        <h3>${prod.nome}</h3>
-        <div class="preco">R$ ${(prod.preco || 0).toFixed(2)}</div>
-        <div class="descricao">${prod.descricao || ''}</div>
-        ${prod.imagem ? `<img src="${this._formatImageSrc(prod.imagem)}" alt="${prod.nome}" style="width:100%;border-radius:8px;margin:8px 0;">` : ''}
-        <div class="card-actions">
-          <button class="btn-editar" onclick='dashboard.abrirModalProduto(${JSON.stringify(prod).replace(/"/g, '&quot;')})'>Editar</button>
-          <button class="btn-toggle" onclick="dashboard.toggleDisponibilidade('${prod._id}')">${prod.disponivel ? 'Pausar' : 'Ativar'}</button>
-          <button class="btn-excluir" onclick="dashboard.excluirProduto('${prod._id}')">Excluir</button>
+  <main class="dashboard-content">
+    <!-- PRODUTOS -->
+    <section id="produtosTab" class="tab-content active">
+      <div class="section-header">
+        <h2>Gerenciar Produtos do Cardápio</h2>
+        <div class="actions">
+          <button class="btn primary" onclick="dashboard.abrirModalProduto()">➕ Novo Produto</button>
         </div>
-      </article>
-    `).join('');
-  }
+      </div>
 
-  async toggleDisponibilidade(id) {
-    const produto = this.produtos.find(p => p._id === id);
-    if (!produto) return;
-    try {
-      const res = await fetch(`/api/menu/item/${id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        },
-        body: JSON.stringify({ disponivel: !produto.disponivel })
-      });
-      if (res.ok) {
-        produto.disponivel = !produto.disponivel;
-        this.renderProdutos();
-        this.showToast('Disponibilidade atualizada', 'success');
-      }
-    } catch {
-      this.showToast('Erro ao atualizar produto', 'error');
-    }
-  }
+      <div class="filters">
+        <select id="filtroCategoria" onchange="dashboard.filtrarProdutos()">
+          <option value="">Todas as categorias</option>
+          <option value="Hambúrgueres">Hambúrgueres</option>
+          <option value="Combos">Combos</option>
+          <option value="Acompanhamentos">Acompanhamentos</option>
+          <option value="Adicionais">Adicionais</option>
+          <option value="Bebidas">Bebidas</option>
+        </select>
 
-  async excluirProduto(id) {
-    if (!confirm('Deseja excluir este produto?')) return;
-    try {
-      const res = await fetch(`/api/menu/item/${id}`, {
-        method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
-      });
-      if (res.ok) {
-        this.produtos = this.produtos.filter(p => p._id !== id);
-        this.renderProdutos();
-        this.showToast('Produto excluído', 'success');
-      }
-    } catch {
-      this.showToast('Erro ao excluir produto', 'error');
-    }
-  }
+        <select id="filtroStatus" onchange="dashboard.filtrarProdutos()">
+          <option value="">Todos os status</option>
+          <option value="disponivel">Disponíveis</option>
+          <option value="indisponivel">Indisponíveis</option>
+        </select>
 
-  // ===============================
-  // 💰 Financeiro (versão simples)
-  // ===============================
-  async updateFinanceiro() {
-    try {
-      const res = await fetch('/api/stats', {
-        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
-      });
-      if (!res.ok) throw new Error();
-      const data = await res.json();
-      document.getElementById('totalVendas').textContent = `R$ ${data.vendas.toFixed(2)}`;
-      document.getElementById('totalCustos').textContent = `R$ ${data.gastos.toFixed(2)}`;
-      document.getElementById('lucro').textContent = `R$ ${data.lucro.toFixed(2)}`;
-    } catch (err) {
-      console.error('Erro financeiro:', err);
-    }
-  }
+        <input id="buscaProdutos" placeholder="Buscar produto..." oninput="dashboard.filtrarProdutos()" />
+      </div>
 
-  // ===============================
-  // 🧩 Utilitários
-  // ===============================
-  _formatImageSrc(src) {
-    if (!src) return '';
-    if (src.startsWith('http')) return src;
-    return src.startsWith('/') ? src : `/${src}`;
-  }
+      <div id="produtosContainer" class="produtos-grid"></div>
+    </section>
 
-  showToast(msg, tipo = 'success', tempo = 2500) {
-    const container = document.getElementById('toast-container');
-    const toast = document.createElement('div');
-    toast.className = `toast ${tipo}`;
-    toast.textContent = msg;
-    container.appendChild(toast);
-    setTimeout(() => {
-      toast.style.opacity = 0;
-      setTimeout(() => toast.remove(), 400);
-    }, tempo);
-  }
-}
+    <!-- PEDIDOS -->
+    <section id="pedidosTab" class="tab-content">
+      <div class="section-header">
+        <h2>Pedidos Recebidos</h2>
+        <div class="actions">
+          <button class="btn secondary" onclick="dashboard.atualizarPedidos()">🔄 Atualizar</button>
+        </div>
+      </div>
+      <div id="pedidosContainer"></div>
+    </section>
 
-// ===============================
-// 🚀 Inicializa Dashboard
-// ===============================
-document.addEventListener('DOMContentLoaded', () => {
-  window.dashboard = new Dashboard();
-});
+    <!-- INSUMOS -->
+    <section id="insumosTab" class="tab-content">
+      <div class="section-header">
+        <h2>Gerenciar Insumos</h2>
+        <div class="actions">
+          <button class="btn primary" onclick="dashboard.abrirModalInsumo()">➕ Novo Insumo</button>
+        </div>
+      </div>
+      <div id="insumosContainer"></div>
+    </section>
+
+    <!-- FINANCEIRO -->
+    <section id="financeiroTab" class="tab-content">
+      <div class="section-header">
+        <h2>Relatório Financeiro</h2>
+        <div class="actions">
+          <button class="btn secondary" onclick="dashboard.updateFinanceiro()">🔄 Atualizar</button>
+        </div>
+      </div>
+
+      <div class="financeiro-cards">
+        <div class="finance-card">
+          <h3>Total Vendas</h3>
+          <p id="totalVendas">R$ 0,00</p>
+        </div>
+        <div class="finance-card">
+          <h3>Total Custos</h3>
+          <p id="totalCustos">R$ 0,00</p>
+        </div>
+        <div class="finance-card">
+          <h3>Lucro</h3>
+          <p id="lucro">R$ 0,00</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <div id="toast-container" aria-live="polite"></div>
+
+  <script src="dashboard.js"></script>
+</body>
+</html>
