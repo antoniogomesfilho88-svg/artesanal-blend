@@ -69,21 +69,35 @@ class Dashboard {
   }
 
   setupEventListeners() {
-    // Tabs
-    document.querySelectorAll('.tab-button').forEach(btn => {
-      btn.addEventListener('click', () => {
-        document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
-        document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
-        btn.classList.add('active');
-        document.getElementById(btn.dataset.tab).classList.add('active');
-      });
+  // Tabs
+  document.querySelectorAll('.tab-button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById(btn.dataset.tab).classList.add('active');
     });
+  });
 
-    // visualizar cardápio
-    document.getElementById('visualizarCardapio')?.addEventListener('click', () => {
-      window.open('/', '_blank');
+  // 🌐 Ver Cardápio
+  document.getElementById('visualizarCardapio')?.addEventListener('click', () => {
+    window.open('/', '_blank');
+  });
+
+  // 🔐 Logout
+  const btnLogout = document.getElementById('btnLogout');
+  if (btnLogout) {
+    btnLogout.addEventListener('click', () => {
+      if (confirm('Deseja realmente sair do sistema?')) {
+        localStorage.removeItem('token');
+        window.location.href = '/login';
+      }
     });
+  } else {
+    console.warn('⚠️ Botão de logout não encontrado no DOM.');
   }
+}
+
 
   /* ================= PRODUTOS ================= */
   abrirModalProduto(produto = null) {
@@ -832,6 +846,7 @@ imprimirCupom(id) {
 document.addEventListener('DOMContentLoaded', () => {
   window.dashboard = new Dashboard();
 });
+
 
 
 
