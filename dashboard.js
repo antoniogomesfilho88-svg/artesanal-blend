@@ -1,435 +1,930 @@
-/* ================= FINANCEIRO PROFISSIONAL ================= */
+// dashboard.js - versão corrigida
+class Dashboard {
+  constructor() {
+    this.produtos = [];
+    this.pedidos = [];
+    this.insumos = [];
+    this.baseURL = 'https://artesanal-blend.onrender.com';
+    this.init();
+  }
 
-// Dados do Financeiro
-dashboard.financeiroData = {
-  totalVendas: 0,
-  totalCustos: 0,
-  lucro: 0,
-  variacaoVendas: 0,
-  variacaoCustos: 0,
-  variacaoLucro: 0,
-  margemLucro: 0,
-  
-  stats: {
-    ticketMedio: 0,
-    vendasMes: 0,
-    custoMedio: 0,
-    clientesAtendidos: 0,
-    pedidosCancelados: 0,
-    tempoMedioPreparo: '0 min'
-  },
-  
-  vendasMensais: [
-    { mes: 'Jan', vendas: 0, custos: 0 },
-    { mes: 'Fev', vendas: 0, custos: 0 },
-    { mes: 'Mar', vendas: 0, custos: 0 },
-    { mes: 'Abr', vendas: 0, custos: 0 },
-    { mes: 'Mai', vendas: 0, custos: 0 },
-    { mes: 'Jun', vendas: 0, custos: 0 }
-  ]
-};
+  async init() {
+    await this.carregarDados();
+    this.setupEventListeners();
+    this.renderProdutos();
+    this.renderInsumos();
+    this.renderPedidos();
+  }
 
-// Inicialização do Financeiro
-dashboard.initFinanceiro = function() {
-  this.configurarFiltrosFinanceiro();
-  this.renderFinanceiro();
-  this.renderStats();
-  this.renderGrafico();
-  this.renderUltimosPedidos();
-  this.renderFluxoCaixa();
-};
+  async carregarDados() {
+    try {
+      this.showToast('Carregando dados...', 'info', 900);
+      const [produtosRes, pedidosRes, insumosRes] = await Promise.all([
+        fetch(`${this.baseURL}/api/menu`).then(r => r.ok ? r.json() : []),
+        fetch(`${this.baseURL}/api/orders`).then(r => r.ok ? r.json() : []),
+        fetch(`${this.baseURL}/api/insumos`).then(r => r.ok ? r.json() : [])
+      ]);
 
-// Configuração dos filtros
-dashboard.configurarFiltrosFinanceiro = function() {
-  const filtroPeriodo = document.getElementById('filtroPeriodo');
-  const periodoPersonalizado = document.getElementById('periodoPersonalizado');
-  
-  if (filtroPeriodo && periodoPersonalizado) {
-    filtroPeriodo.addEventListener('change', function() {
-      periodoPersonalizado.style.display = this.value === 'personalizado' ? 'flex' : 'none';
-      dashboard.filtrarFinanceiro();
+      this.produtos = produtosRes || [];
+      this.pedidos = pedidosRes || [];
+      this.insumos = insumosRes || [];
+
+      console.log('Dados carregados:', this.produtos.length, 'produtos,', this.pedidos.length, 'pedidos,', this.insumos.length, 'insumos');
+    } catch (err) {
+      console.error('Erro ao carregar dados', err);
+      this.produtos = this.produtos || [];
+      this.pedidos = this.pedidos || [];
+      this.insumos = this.insumos || [];
+      this.showToast('Erro ao carregar dados', 'error');
+    }
+  }
+
+  setupEventListeners() {
+    document.querySelectorAll('.tab-button').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById(btn.dataset.tab).classList.add('active');
+        
+        // Inicializa o financeiro quando a aba for clicada
+        if (btn.dataset.tab === 'financeiroTab') {
+          this.initFinanceiro();
+        }
+      });
+    });
+
+    document.getElementById('visualizarCardapio')?.addEventListener('click', () => {
+      window.open('/', '_blank');
     });
   }
 
-  // Definir datas padrão
-  const hoje = new Date();
-  const umaSemanaAtras = new Date(hoje.getTime() - 7 * 24 * 60 * 60 * 1000);
-  
-  const dataInicio = document.getElementById('dataInicio');
-  const dataFim = document.getElementById('dataFim');
-  
-  if (dataInicio) dataInicio.value = umaSemanaAtras.toISOString().split('T')[0];
-  if (dataFim) dataFim.value = hoje.toISOString().split('T')[0];
-};
+  /* ================= PRODUTOS ================= */
+  abrirModalProduto(produto = null) {
+    const modal = document.createElement('div');
+    modal.className = 'modal-overlay';
+    modal.innerHTML = `
+      <div class="modal">
+        <h3>${produto ? 'Editar' : 'Novo'} Produto</h3>
+        <form id="formProduto">
+          <input type="hidden" id="produtoId" value="${produto?._id || ''}">
+          <div class="form-group">
+            <label>Nome do Produto</label>
+            <input type="text" id="produtoNome" value="${produto?.nome || ''}" required>
+          </div>
 
-// Filtragem dos dados financeiros
-dashboard.filtrarFinanceiro = function() {
-  const periodo = document.getElementById('filtroPeriodo')?.value || '';
-  const categoria = document.getElementById('filtroCategoria')?.value || '';
-  const dataInicio = document.getElementById('dataInicio')?.value || '';
-  const dataFim = document.getElementById('dataFim')?.value || '';
-  
-  console.log('Filtrando financeiro:', { periodo, categoria, dataInicio, dataFim });
-  this.updateFinanceiro();
-};
+          <div class="form-group">
+            <label>Categoria</label>
+            <select id="produtoCategoria" required>
+              <option value="">Selecione...</option>
+              <option value="Hambúrgueres" ${produto?.categoria === 'Hambúrgueres' ? 'selected' : ''}>Hambúrgueres</option>
+              <option value="Combos" ${produto?.categoria === 'Combos' ? 'selected' : ''}>Combos</option>
+              <option value="Acompanhamentos" ${produto?.categoria === 'Acompanhamentos' ? 'selected' : ''}>Acompanhamentos</option>
+              <option value="Adicionais" ${produto?.categoria === 'Adicionais' ? 'selected' : ''}>Adicionais</option>
+              <option value="Bebidas" ${produto?.categoria === 'Bebidas' ? 'selected' : ''}>Bebidas</option>
+            </select>
+          </div>
 
-// Atualização principal do financeiro
-dashboard.updateFinanceiro = function() {
-  const btn = document.querySelector('#financeiroTab .btn.secondary');
-  if (btn) {
-    btn.innerHTML = '⏳ Atualizando...';
-    btn.disabled = true;
+          <div class="form-row">
+            <div class="form-group">
+              <label>Preço (R$)</label>
+              <input type="number" id="produtoPreco" step="0.01" value="${produto?.preco ?? ''}" required>
+            </div>
+            <div class="form-group">
+              <label>URL da Imagem</label>
+              <input type="text" id="produtoImagem" value="${produto?.imagem || ''}">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Descrição</label>
+            <textarea id="produtoDescricao" rows="3">${produto?.descricao || ''}</textarea>
+          </div>
+
+          <div style="display:flex;gap:.5rem;align-items:center;margin-top:.5rem">
+            <label><input type="checkbox" id="produtoDisponivel" ${produto?.disponivel !== false ? 'checked' : ''}> Disponível</label>
+          </div>
+
+          <div style="display:flex;gap:.5rem;margin-top:1rem;justify-content:flex-end">
+            <button type="submit" class="btn primary">Salvar</button>
+            <button type="button" class="btn secondary" id="btnCancelarProduto">Cancelar</button>
+          </div>
+        </form>
+      </div>
+    `;
+    document.body.appendChild(modal);
+
+    modal.querySelector('#btnCancelarProduto').addEventListener('click', () => modal.remove());
+
+    modal.querySelector('#formProduto').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      await this.salvarProduto();
+    });
   }
 
-  // Simula carregamento com dados reais dos pedidos
-  setTimeout(() => {
-    try {
-      // Usa dados reais dos pedidos para cálculos
-      const pedidosEntregues = this.pedidos.filter(p => p.status === 'entregue');
-      const totalVendas = pedidosEntregues.reduce((sum, p) => sum + (parseFloat(p.total) || 0), 0);
-      
-      // Atualiza dados (simulação de custos baseada em 60% das vendas)
-      const custosPercentual = 0.6;
-      this.financeiroData.totalVendas = totalVendas;
-      this.financeiroData.totalCustos = totalVendas * custosPercentual;
-      this.financeiroData.lucro = totalVendas - this.financeiroData.totalCustos;
-      this.financeiroData.margemLucro = totalVendas > 0 ? 
-        ((this.financeiroData.lucro / totalVendas) * 100).toFixed(1) : 0;
-      
-      // Atualiza estatísticas com dados reais
-      this.financeiroData.stats.vendasMes = pedidosEntregues.length;
-      this.financeiroData.stats.ticketMedio = pedidosEntregues.length > 0 ? 
-        totalVendas / pedidosEntregues.length : 0;
-      this.financeiroData.stats.clientesAtendidos = new Set(pedidosEntregues.map(p => p.cliente)).size;
-      this.financeiroData.stats.pedidosCancelados = this.pedidos.filter(p => p.status === 'cancelado').length;
+  async salvarProduto() {
+    const formData = {
+      nome: document.getElementById('produtoNome').value,
+      categoria: document.getElementById('produtoCategoria').value,
+      preco: parseFloat(document.getElementById('produtoPreco').value) || 0,
+      descricao: document.getElementById('produtoDescricao').value,
+      imagem: document.getElementById('produtoImagem').value,
+      disponivel: document.getElementById('produtoDisponivel').checked
+    };
 
-      this.renderFinanceiro();
+    const produtoId = document.getElementById('produtoId').value;
+    const url = produtoId ? `${this.baseURL}/api/menu/item/${produtoId}` : `${this.baseURL}/api/menu/item`;
+    const method = produtoId ? 'PUT' : 'POST';
+
+    try {
+      const res = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData)
+      });
+      if (res.ok) {
+        await this.carregarDados();
+        this.renderProdutos();
+        document.querySelector('.modal-overlay')?.remove();
+        this.showToast('Produto salvo', 'success');
+      } else {
+        const err = await res.json().catch(() => ({}));
+        this.showToast(err.error || 'Erro ao salvar produto', 'error');
+      }
+    } catch (e) {
+      this.showToast('Erro de rede ao salvar produto', 'error');
+    }
+  }
+
+  renderProdutos() {
+    const container = document.getElementById('produtosContainer');
+    const categoria = document.getElementById('filtroCategoria')?.value || '';
+    const status = document.getElementById('filtroStatus')?.value || '';
+    const busca = document.getElementById('buscaProdutos')?.value?.toLowerCase() || '';
+
+    let produtosFiltrados = (this.produtos || []).slice();
+
+    if (categoria) produtosFiltrados = produtosFiltrados.filter(p => p.categoria === categoria);
+    if (status === 'disponivel') produtosFiltrados = produtosFiltrados.filter(p => p.disponivel);
+    else if (status === 'indisponivel') produtosFiltrados = produtosFiltrados.filter(p => !p.disponivel);
+    if (busca) produtosFiltrados = produtosFiltrados.filter(p => (p.nome || '').toLowerCase().includes(busca) || (p.descricao || '').toLowerCase().includes(busca));
+
+    if (!produtosFiltrados.length) {
+      container.innerHTML = '<div class="empty-state">Nenhum produto encontrado</div>';
+      return;
+    }
+
+    container.innerHTML = produtosFiltrados.map(prod => `
+      <article class="produto-card ${!prod.disponivel ? 'indisponivel' : ''}">
+        <span class="categoria">${prod.categoria || ''}</span>
+        <span class="status">${prod.disponivel ? '✅' : '⏸️'}</span>
+        <h3>${prod.nome}</h3>
+        <div class="preco">R$ ${(prod.preco || 0).toFixed(2)}</div>
+        <div class="descricao">${prod.descricao || ''}</div>
+        ${prod.imagem ? `<div style="margin:0.75rem 0"><img src="${this._formatImageSrc(prod.imagem)}" alt="${prod.nome}" style="width:100%;height:140px;object-fit:cover;border-radius:8px"></div>` : ''}
+        <div class="card-actions">
+          <button class="btn-editar" onclick='window.dashboard.abrirModalProduto(${JSON.stringify(prod).replace(/\"/g,'&quot;')})'>Editar</button>
+          <button class="btn-toggle" onclick="window.dashboard.toggleDisponibilidade('${prod._id}')">${prod.disponivel ? 'Pausar' : 'Ativar'}</button>
+          <button class="btn-excluir" onclick="window.dashboard.excluirProduto('${prod._id}')">Excluir</button>
+        </div>
+      </article>
+    `).join('');
+  }
+
+  filtrarProdutos() { this.renderProdutos(); }
+
+  async toggleDisponibilidade(id) {
+    const produto = this.produtos.find(p => p._id === id);
+    if (!produto) return;
+    try {
+      const res = await fetch(`${this.baseURL}/api/menu/item/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ disponivel: !produto.disponivel })
+      });
+      if (res.ok) {
+        produto.disponivel = !produto.disponivel;
+        this.renderProdutos();
+        this.showToast('Disponibilidade atualizada', 'success');
+      } else {
+        this.showToast('Erro ao atualizar produto', 'error');
+      }
+    } catch (e) {
+      this.showToast('Erro de rede', 'error');
+    }
+  }
+
+  async excluirProduto(id) {
+    if (!confirm('Tem certeza que deseja excluir este produto?')) return;
+    try {
+      const res = await fetch(`${this.baseURL}/api/menu/item/${id}`, { method: 'DELETE' });
+      if (res.ok) {
+        this.produtos = this.produtos.filter(p => p._id !== id);
+        this.renderProdutos();
+        this.showToast('Produto excluído', 'success');
+      } else this.showToast('Erro ao excluir produto', 'error');
+    } catch (e) {
+      this.showToast('Erro de rede', 'error');
+    }
+  }
+
+  /* ================= INSUMOS ================= */
+  abrirModalInsumo(insumo = null) {
+    const modal = document.createElement('div');
+    modal.className = 'modal-overlay';
+    modal.innerHTML = `
+      <div class="modal">
+        <h3>${insumo ? 'Editar' : 'Novo'} Insumo</h3>
+        <form id="formInsumo">
+          <input type="hidden" id="insumoId" value="${insumo?._id || ''}">
+          <div class="form-row">
+            <div class="form-group">
+              <label>Nome</label>
+              <input type="text" id="insumoNome" value="${insumo?.nome || ''}" required>
+            </div>
+            <div class="form-group">
+              <label>Quantidade</label>
+              <input type="number" id="insumoQuantidade" value="${insumo?.quantidade || 0}" required>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Unidade</label>
+              <select id="insumoUnidade">
+                <option value="g" ${insumo?.unidade === 'g' ? 'selected' : ''}>g</option>
+                <option value="ml" ${insumo?.unidade === 'ml' ? 'selected' : ''}>ml</option>
+                <option value="un" ${insumo?.unidade === 'un' ? 'selected' : ''}>un</option>
+                <option value="kg" ${insumo?.unidade === 'kg' ? 'selected' : ''}>kg</option>
+                <option value="l" ${insumo?.unidade === 'l' ? 'selected' : ''}>l</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Preço Unitário (R$)</label>
+              <input type="number" id="insumoPreco" step="0.01" value="${insumo?.preco || 0}" required>
+            </div>
+          </div>
+          <div style="display:flex;justify-content:flex-end;gap:.5rem;margin-top:.75rem">
+            <button class="btn primary" type="submit">Salvar</button>
+            <button class="btn secondary" type="button" id="btnCancelarInsumo">Cancelar</button>
+          </div>
+        </form>
+      </div>
+    `;
+    document.body.appendChild(modal);
+    modal.querySelector('#btnCancelarInsumo').addEventListener('click', () => modal.remove());
+    modal.querySelector('#formInsumo').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      await this.salvarInsumo();
+    });
+  }
+
+  async salvarInsumo() {
+    const formData = {
+      nome: document.getElementById('insumoNome').value,
+      quantidade: parseInt(document.getElementById('insumoQuantidade').value) || 0,
+      unidade: document.getElementById('insumoUnidade').value,
+      preco: parseFloat(document.getElementById('insumoPreco').value) || 0
+    };
+    const insumoId = document.getElementById('insumoId').value;
+    const url = insumoId ? `${this.baseURL}/api/insumos/${insumoId}` : `${this.baseURL}/api/insumos`;
+    const method = insumoId ? 'PUT' : 'POST';
+    try {
+      const res = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(formData) });
+      if (res.ok) {
+        await this.carregarDados();
+        this.renderInsumos();
+        document.querySelector('.modal-overlay')?.remove();
+        this.showToast('Insumo salvo', 'success');
+      } else this.showToast('Erro ao salvar insumo', 'error');
+    } catch (e) {
+      this.showToast('Erro de rede', 'error');
+    }
+  }
+
+  renderInsumos() {
+    const container = document.getElementById('insumosContainer');
+    if (!this.insumos || !this.insumos.length) {
+      container.innerHTML = '<div class="empty-state">Nenhum insumo cadastrado</div>';
+      return;
+    }
+    container.innerHTML = this.insumos.map(i => `
+      <div class="produto-card ${i.quantidade <= (i.minimo || 0) ? 'estoque-baixo' : ''}">
+        <h3>${i.nome}</h3>
+        <div class="insumo-info">
+          <div class="quantidade ${i.quantidade <= (i.minimo || 0) ? 'alerta' : ''}">${i.quantidade} ${i.unidade}${i.minimo ? ` <small>(mín: ${i.minimo} ${i.unidade})</small>` : ''}</div>
+          <div class="preco">R$ ${(i.preco || 0).toFixed(2)}/${i.unidade}</div>
+        </div>
+        <div class="card-actions">
+          <button class="btn-editar" onclick='window.dashboard.abrirModalInsumo(${JSON.stringify(i).replace(/\"/g,'&quot;')})'>Editar</button>
+          <button class="btn-excluir" onclick="window.dashboard.excluirInsumo('${i._id}')">Excluir</button>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  async excluirInsumo(id) {
+    if (!confirm('Tem certeza que deseja excluir este insumo?')) return;
+    try {
+      const res = await fetch(`${this.baseURL}/api/insumos/${id}`, { method: 'DELETE' });
+      if (res.ok) {
+        this.insumos = this.insumos.filter(x => x._id !== id);
+        this.renderInsumos();
+        this.showToast('Insumo excluído', 'success');
+      } else this.showToast('Erro ao excluir insumo', 'error');
+    } catch (e) {
+      this.showToast('Erro de rede', 'error');
+    }
+  }
+
+  /* ================= PEDIDOS ================= */
+  abrirModalPedido(pedido = null) {
+    const modal = document.createElement('div');
+    modal.className = 'modal-overlay';
+
+    const itens = pedido?.itens || [];
+    modal.innerHTML = `
+      <div class="modal">
+        <h3>${pedido ? 'Editar' : 'Novo'} Pedido</h3>
+        <form id="formPedido">
+          <input type="hidden" id="pedidoId" value="${pedido?._id || ''}">
+          <div class="form-row">
+            <div class="form-group">
+              <label>Cliente</label>
+              <input type="text" id="pedidoCliente" value="${pedido?.cliente || ''}" required>
+            </div>
+            <div class="form-group">
+              <label>Telefone</label>
+              <input type="text" id="pedidoTelefone" value="${pedido?.telefone || ''}">
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Endereço</label>
+            <input type="text" id="pedidoEndereco" value="${pedido?.endereco || ''}">
+          </div>
+
+          <div id="itensWrapper">
+            ${itens.map((it, idx) => `
+              <div class="form-row" data-item-index="${idx}">
+                <div class="form-group"><label>Item</label><input type="text" class="pedidoItemNome" value="${it.nome || ''}" required></div>
+                <div class="form-group"><label>Qtd</label><input type="number" class="pedidoItemQtd" value="${it.quantidade || 1}" min="1" required></div>
+                <div class="form-group"><label>Preço</label><input type="number" class="pedidoItemPreco" value="${it.preco || 0}" step="0.01"></div>
+              </div>
+            `).join('')}
+          </div>
+
+          <div style="display:flex;gap:.5rem;margin-top:.5rem">
+            <button type="button" class="btn secondary" id="adicionarItemBtn">➕ Adicionar Item</button>
+          </div>
+
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-top:1rem">
+            <div><strong>Total: R$ <span id="pedidoTotal">${(pedido?.total || 0).toFixed(2)}</span></strong></div>
+            <div style="display:flex;gap:.5rem">
+              <button type="submit" class="btn primary">Salvar Pedido</button>
+              <button type="button" class="btn secondary" id="btnCancelarPedido">Cancelar</button>
+            </div>
+          </div>
+        </form>
+      </div>
+    `;
+
+    document.body.appendChild(modal);
+
+    const itensWrapper = modal.querySelector('#itensWrapper');
+    const atualizarTotal = () => {
+      const qtds = Array.from(itensWrapper.querySelectorAll('.pedidoItemQtd')).map(i => parseInt(i.value) || 0);
+      const precos = Array.from(itensWrapper.querySelectorAll('.pedidoItemPreco')).map(i => parseFloat(i.value) || 0);
+      let total = 0;
+      for (let i = 0; i < qtds.length; i++) total += (qtds[i] || 0) * (precos[i] || 0);
+      modal.querySelector('#pedidoTotal').textContent = total.toFixed(2);
+    };
+
+    modal.querySelectorAll('.pedidoItemQtd, .pedidoItemPreco').forEach(el => el.addEventListener('input', atualizarTotal));
+
+    modal.querySelector('#adicionarItemBtn').addEventListener('click', () => {
+      const idx = itensWrapper.querySelectorAll('.form-row[data-item-index]').length;
+      const div = document.createElement('div');
+      div.className = 'form-row';
+      div.dataset.itemIndex = idx;
+      div.innerHTML = `
+        <div class="form-group"><label>Item</label><input type="text" class="pedidoItemNome" required></div>
+        <div class="form-group"><label>Qtd</label><input type="number" class="pedidoItemQtd" value="1" min="1" required></div>
+        <div class="form-group"><label>Preço</label><input type="number" class="pedidoItemPreco" value="0" step="0.01"></div>
+      `;
+      itensWrapper.appendChild(div);
+      div.querySelectorAll('.pedidoItemQtd, .pedidoItemPreco').forEach(el => el.addEventListener('input', atualizarTotal));
+      atualizarTotal();
+    });
+
+    modal.querySelector('#btnCancelarPedido').addEventListener('click', () => modal.remove());
+
+    modal.querySelector('#formPedido').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const pedidoId = modal.querySelector('#pedidoId').value;
+      const cliente = modal.querySelector('#pedidoCliente').value;
+      const telefone = modal.querySelector('#pedidoTelefone').value;
+      const endereco = modal.querySelector('#pedidoEndereco').value;
+      const nomes = Array.from(modal.querySelectorAll('.pedidoItemNome')).map(i => i.value);
+      const qtds = Array.from(modal.querySelectorAll('.pedidoItemQtd')).map(i => parseInt(i.value) || 0);
+      const precos = Array.from(modal.querySelectorAll('.pedidoItemPreco')).map(i => parseFloat(i.value) || 0);
+      const itens = nomes.map((nome, i) => ({ nome, quantidade: qtds[i], preco: precos[i] })).filter(it => it.nome && it.quantidade > 0);
+      const total = itens.reduce((s, it) => s + (it.quantidade * (it.preco || 0)), 0);
+      const payload = { cliente, telefone, endereco, itens, total, status: pedido?.status || 'pendente' };
+
+      try {
+        const url = pedidoId ? `${this.baseURL}/api/orders/${pedidoId}` : `${this.baseURL}/api/orders`;
+        const method = pedidoId ? 'PUT' : 'POST';
+        const res = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+        if (res.ok) {
+          await this.carregarDados();
+          this.renderPedidos();
+          document.querySelector('.modal-overlay')?.remove();
+          this.showToast('Pedido salvo', 'success');
+        } else {
+          const err = await res.json().catch(() => ({}));
+          this.showToast(err.error || 'Erro ao salvar pedido', 'error');
+        }
+      } catch (e) {
+        this.showToast('Erro de rede ao salvar pedido', 'error');
+      }
+    });
+  }
+
+  renderPedidos() {
+    const container = document.getElementById('pedidosContainer');
+    if (!this.pedidos || !this.pedidos.length) {
+      container.innerHTML = '<div class="empty-state">Nenhum pedido recebido</div>';
+      return;
+    }
+
+    container.innerHTML = this.pedidos.map(pedido => `
+      <article class="produto-card">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:0.5rem">
+          <div>
+            <h3>Pedido #${pedido._id?.slice(-6) || 'N/A'}</h3>
+            <p><strong>Cliente:</strong> ${pedido.cliente || '-'}</p>
+            <p><strong>Telefone:</strong> ${pedido.telefone || '-'}</p>
+            <p><strong>Endereço:</strong> ${pedido.endereco || '-'}</p>
+          </div>
+          <div style="text-align:right">
+            <div style="margin-bottom:.5rem"><strong>Total:</strong> R$ ${(pedido.total || 0).toFixed(2)}</div>
+            <div class="status">${this.formatarStatus(pedido.status)}</div>
+          </div>
+        </div>
+
+        <div style="margin:0.5rem 0;border-top:1px solid var(--border);padding-top:0.5rem">
+          <strong>Itens:</strong>
+          ${(pedido.itens || []).map(item => `<div style="display:flex;justify-content:space-between;margin:.25rem 0"><span>${item.quantidade}x ${item.nome}</span><span>R$ ${((item.preco || 0) * (item.quantidade || 1)).toFixed(2)}</span></div>`).join('')}
+        </div>
+
+        <div class="card-actions" style="margin-top:.75rem">
+          <button class="btn-editar" onclick='window.dashboard.abrirModalPedido(${JSON.stringify(pedido).replace(/\"/g,'&quot;')})'>Editar</button>
+          <button class="btn secondary" onclick="window.dashboard.atualizarStatusPedido('${pedido._id}','preparando')">👨‍🍳 Preparando</button>
+          <button class="btn secondary" onclick="window.dashboard.atualizarStatusPedido('${pedido._id}','pronto')">✅ Pronto</button>
+          <button class="btn secondary" onclick="window.dashboard.atualizarStatusPedido('${pedido._id}','entregue')">🚗 Entregue</button>
+          <button class="btn" onclick="window.dashboard.imprimirCupom('${pedido._id}')">🖨️ Imprimir Cupom</button>
+          <button class="btn-excluir" onclick="window.dashboard.excluirPedido('${pedido._id}')">Excluir</button>
+        </div>
+      </article>
+    `).join('');
+  }
+
+  formatarStatus(status) {
+    const map = { pendente: '⏳ Pendente', preparando: '👨‍🍳 Preparando', pronto: '✅ Pronto', entregue: '🚗 Entregue', cancelado: '❌ Cancelado' };
+    return map[status] || status;
+  }
+
+  async atualizarStatusPedido(id, novoStatus) {
+    try {
+      const res = await fetch(`${this.baseURL}/api/orders/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status: novoStatus }) });
+      if (res.ok) {
+        const pedido = this.pedidos.find(p => p._id === id);
+        if (pedido) pedido.status = novoStatus;
+        this.renderPedidos();
+        this.showToast('Status atualizado', 'success');
+      } else this.showToast('Erro ao atualizar status', 'error');
+    } catch (e) {
+      this.showToast('Erro de rede', 'error');
+    }
+  }
+
+  async excluirPedido(id) {
+    if (!confirm('Tem certeza que deseja excluir este pedido?')) return;
+    try {
+      const res = await fetch(`${this.baseURL}/api/orders/${id}`, { method: 'DELETE' });
+      if (res.ok) {
+        this.pedidos = this.pedidos.filter(p => p._id !== id);
+        this.renderPedidos();
+        this.showToast('Pedido excluído', 'success');
+      } else this.showToast('Erro ao excluir pedido', 'error');
+    } catch (e) {
+      this.showToast('Erro de rede', 'error');
+    }
+  }
+
+  /* ================= FINANCEIRO PROFISSIONAL ================= */
+  initFinanceiro() {
+    this.configurarFiltrosFinanceiro();
+    this.updateFinanceiro();
+  }
+
+  configurarFiltrosFinanceiro() {
+    const filtroPeriodo = document.getElementById('filtroPeriodo');
+    const periodoPersonalizado = document.getElementById('periodoPersonalizado');
+    
+    if (filtroPeriodo && periodoPersonalizado) {
+      filtroPeriodo.addEventListener('change', function() {
+        periodoPersonalizado.style.display = this.value === 'personalizado' ? 'flex' : 'none';
+        window.dashboard.filtrarFinanceiro();
+      });
+    }
+
+    // Definir datas padrão
+    const hoje = new Date();
+    const umaSemanaAtras = new Date(hoje.getTime() - 7 * 24 * 60 * 60 * 1000);
+    
+    const dataInicio = document.getElementById('dataInicio');
+    const dataFim = document.getElementById('dataFim');
+    
+    if (dataInicio) dataInicio.value = umaSemanaAtras.toISOString().split('T')[0];
+    if (dataFim) dataFim.value = hoje.toISOString().split('T')[0];
+  }
+
+  filtrarFinanceiro() {
+    const periodo = document.getElementById('filtroPeriodo')?.value || '';
+    const categoria = document.getElementById('filtroCategoria')?.value || '';
+    const dataInicio = document.getElementById('dataInicio')?.value || '';
+    const dataFim = document.getElementById('dataFim')?.value || '';
+    
+    console.log('Filtrando financeiro:', { periodo, categoria, dataInicio, dataFim });
+    this.updateFinanceiro();
+  }
+
+  async updateFinanceiro() {
+    const btn = document.querySelector('#financeiroTab .btn.secondary');
+    if (btn) {
+      btn.innerHTML = '⏳ Atualizando...';
+      btn.disabled = true;
+    }
+
+    try {
+      // Calcula com dados locais dos pedidos
+      this.calcularFinanceiroLocal();
       this.renderStats();
       this.renderGrafico();
       this.renderUltimosPedidos();
+      this.renderFluxoCaixa();
       
       if (btn) {
         btn.innerHTML = '🔄 Atualizar';
         btn.disabled = false;
       }
       
-      this.showToast('Dados financeiros atualizados com sucesso!', 'success');
+      this.showToast('Dados financeiros atualizados!', 'success');
     } catch (error) {
-      console.error('Erro ao atualizar financeiro:', error);
-      this.showToast('Erro ao atualizar dados financeiros', 'error');
+      console.error('Erro no financeiro:', error);
+      this.showToast('Erro ao carregar dados financeiros', 'error');
     }
-  }, 1500);
-};
+  }
 
-// Renderização dos cards principais
-dashboard.renderFinanceiro = function() {
-  const data = this.financeiroData;
-  
-  // Cards principais
-  const totalVendasEl = document.getElementById('totalVendas');
-  const totalCustosEl = document.getElementById('totalCustos');
-  const lucroEl = document.getElementById('lucro');
-  const margemLucroEl = document.getElementById('margemLucro');
-  
-  if (totalVendasEl) totalVendasEl.textContent = this.formatarMoeda(data.totalVendas);
-  if (totalCustosEl) totalCustosEl.textContent = this.formatarMoeda(data.totalCustos);
-  if (lucroEl) {
-    lucroEl.textContent = this.formatarMoeda(data.lucro);
-    lucroEl.className = data.lucro >= 0 ? 'positive' : 'negative';
-  }
-  if (margemLucroEl) {
-    margemLucroEl.textContent = data.margemLucro + '%';
-    margemLucroEl.className = data.margemLucro >= 0 ? 'positive' : 'negative';
-  }
-  
-  // Variações
-  const variacaoVendasEl = document.getElementById('variacaoVendas');
-  const variacaoCustosEl = document.getElementById('variacaoCustos');
-  const variacaoLucroEl = document.getElementById('variacaoLucro');
-  
-  if (variacaoVendasEl) {
-    variacaoVendasEl.textContent = `${data.variacaoVendas >= 0 ? '+' : ''}${data.variacaoVendas}%`;
-    variacaoVendasEl.className = data.variacaoVendas >= 0 ? 'positive' : 'negative';
-  }
-  
-  if (variacaoCustosEl) {
-    variacaoCustosEl.textContent = `${data.variacaoCustos >= 0 ? '+' : ''}${data.variacaoCustos}%`;
-    variacaoCustosEl.className = data.variacaoCustos >= 0 ? 'positive' : 'negative';
-  }
-  
-  if (variacaoLucroEl) {
-    variacaoLucroEl.textContent = `${data.variacaoLucro >= 0 ? '+' : ''}${data.variacaoLucro}%`;
-    variacaoLucroEl.className = data.variacaoLucro >= 0 ? 'positive' : 'negative';
-  }
-};
+  calcularFinanceiroLocal() {
+    const pedidosEntregues = this.pedidos.filter(p => p.status === 'entregue');
+    const totalVendas = pedidosEntregues.reduce((sum, p) => sum + (parseFloat(p.total) || 0), 0);
+    
+    // Dados simulados para demonstração
+    this.financeiroData = {
+      totalVendas: totalVendas,
+      totalCustos: totalVendas * 0.6, // 60% de custos
+      lucro: totalVendas - (totalVendas * 0.6),
+      variacaoVendas: 12.5,
+      variacaoCustos: 8.2,
+      variacaoLucro: 15.3,
+      margemLucro: totalVendas > 0 ? ((totalVendas - (totalVendas * 0.6)) / totalVendas * 100).toFixed(1) : 0,
+      
+      stats: {
+        ticketMedio: pedidosEntregues.length > 0 ? totalVendas / pedidosEntregues.length : 0,
+        vendasMes: pedidosEntregues.length,
+        custoMedio: pedidosEntregues.length > 0 ? (totalVendas * 0.6) / pedidosEntregues.length : 0,
+        clientesAtendidos: new Set(pedidosEntregues.map(p => p.cliente)).size,
+        pedidosCancelados: this.pedidos.filter(p => p.status === 'cancelado').length,
+        tempoMedioPreparo: '18 min'
+      },
+      
+      vendasMensais: [
+        { mes: 'Jan', vendas: totalVendas * 0.1, custos: totalVendas * 0.06 },
+        { mes: 'Fev', vendas: totalVendas * 0.15, custos: totalVendas * 0.09 },
+        { mes: 'Mar', vendas: totalVendas * 0.12, custos: totalVendas * 0.072 },
+        { mes: 'Abr', vendas: totalVendas * 0.18, custos: totalVendas * 0.108 },
+        { mes: 'Mai', vendas: totalVendas * 0.22, custos: totalVendas * 0.132 },
+        { mes: 'Jun', vendas: totalVendas * 0.23, custos: totalVendas * 0.138 }
+      ]
+    };
 
-// Renderização das estatísticas
-dashboard.renderStats = function() {
-  const container = document.getElementById('financeiroStats');
-  if (!container) return;
-  
-  const stats = this.financeiroData.stats;
-  
-  container.innerHTML = `
-    <div class="stats-cards">
-      <div class="stat-card">
-        <div class="stat-icon">🎫</div>
-        <div class="stat-info">
-          <h4>Ticket Médio</h4>
-          <p class="stat-value">${this.formatarMoeda(stats.ticketMedio)}</p>
-          <small>Por pedido</small>
-        </div>
-      </div>
-      
-      <div class="stat-card">
-        <div class="stat-icon">📈</div>
-        <div class="stat-info">
-          <h4>Vendas/Mês</h4>
-          <p class="stat-value">${stats.vendasMes}</p>
-          <small>Pedidos realizados</small>
-        </div>
-      </div>
-      
-      <div class="stat-card">
-        <div class="stat-icon">👥</div>
-        <div class="stat-info">
-          <h4>Clientes Únicos</h4>
-          <p class="stat-value">${stats.clientesAtendidos}</p>
-          <small>Atendidos</small>
-        </div>
-      </div>
-      
-      <div class="stat-card">
-        <div class="stat-icon">⏱️</div>
-        <div class="stat-info">
-          <h4>Tempo Médio</h4>
-          <p class="stat-value">${stats.tempoMedioPreparo}</p>
-          <small>Preparação</small>
-        </div>
-      </div>
-      
-      <div class="stat-card">
-        <div class="stat-icon">📊</div>
-        <div class="stat-info">
-          <h4>Custo Médio</h4>
-          <p class="stat-value">${this.formatarMoeda(stats.custoMedio)}</p>
-          <small>Por pedido</small>
-        </div>
-      </div>
-      
-      <div class="stat-card">
-        <div class="stat-icon">❌</div>
-        <div class="stat-info">
-          <h4>Pedidos Cancel.</h4>
-          <p class="stat-value ${stats.pedidosCancelados > 5 ? 'negative' : 'positive'}">${stats.pedidosCancelados}</p>
-          <small>Este mês</small>
-        </div>
-      </div>
-    </div>
-  `;
-};
+    this.renderFinanceiro();
+  }
 
-// Renderização do gráfico
-dashboard.renderGrafico = function() {
-  const container = document.getElementById('graficoPedidos');
-  if (!container) return;
-  
-  const dados = this.financeiroData.vendasMensais;
-  const maxVendas = Math.max(...dados.map(d => d.vendas)) || 1;
-  
-  let html = '';
-  dados.forEach(item => {
-    const alturaVendas = (item.vendas / maxVendas) * 100;
-    const alturaCustos = (item.custos / maxVendas) * 100;
+  renderFinanceiro() {
+    const data = this.financeiroData;
+    
+    const totalVendasEl = document.getElementById('totalVendas');
+    const totalCustosEl = document.getElementById('totalCustos');
+    const lucroEl = document.getElementById('lucro');
+    const margemLucroEl = document.getElementById('margemLucro');
+    
+    if (totalVendasEl) totalVendasEl.textContent = this.formatarMoeda(data.totalVendas);
+    if (totalCustosEl) totalCustosEl.textContent = this.formatarMoeda(data.totalCustos);
+    if (lucroEl) {
+      lucroEl.textContent = this.formatarMoeda(data.lucro);
+      lucroEl.className = data.lucro >= 0 ? 'positive' : 'negative';
+    }
+    if (margemLucroEl) {
+      margemLucroEl.textContent = data.margemLucro + '%';
+      margemLucroEl.className = data.margemLucro >= 0 ? 'positive' : 'negative';
+    }
+    
+    const variacaoVendasEl = document.getElementById('variacaoVendas');
+    const variacaoCustosEl = document.getElementById('variacaoCustos');
+    const variacaoLucroEl = document.getElementById('variacaoLucro');
+    
+    if (variacaoVendasEl) {
+      variacaoVendasEl.textContent = `${data.variacaoVendas >= 0 ? '+' : ''}${data.variacaoVendas}%`;
+      variacaoVendasEl.className = data.variacaoVendas >= 0 ? 'positive' : 'negative';
+    }
+    
+    if (variacaoCustosEl) {
+      variacaoCustosEl.textContent = `${data.variacaoCustos >= 0 ? '+' : ''}${data.variacaoCustos}%`;
+      variacaoCustosEl.className = data.variacaoCustos >= 0 ? 'positive' : 'negative';
+    }
+    
+    if (variacaoLucroEl) {
+      variacaoLucroEl.textContent = `${data.variacaoLucro >= 0 ? '+' : ''}${data.variacaoLucro}%`;
+      variacaoLucroEl.className = data.variacaoLucro >= 0 ? 'positive' : 'negative';
+    }
+  }
+
+  renderStats() {
+    const container = document.getElementById('financeiroStats');
+    if (!container) return;
+    
+    const stats = this.financeiroData.stats;
+    
+    container.innerHTML = `
+      <div class="stats-cards">
+        <div class="stat-card">
+          <div class="stat-icon">🎫</div>
+          <div class="stat-info">
+            <h4>Ticket Médio</h4>
+            <p class="stat-value">${this.formatarMoeda(stats.ticketMedio)}</p>
+            <small>Por pedido</small>
+          </div>
+        </div>
+        
+        <div class="stat-card">
+          <div class="stat-icon">📈</div>
+          <div class="stat-info">
+            <h4>Vendas/Mês</h4>
+            <p class="stat-value">${stats.vendasMes}</p>
+            <small>Pedidos realizados</small>
+          </div>
+        </div>
+        
+        <div class="stat-card">
+          <div class="stat-icon">👥</div>
+          <div class="stat-info">
+            <h4>Clientes Únicos</h4>
+            <p class="stat-value">${stats.clientesAtendidos}</p>
+            <small>Atendidos</small>
+          </div>
+        </div>
+        
+        <div class="stat-card">
+          <div class="stat-icon">⏱️</div>
+          <div class="stat-info">
+            <h4>Tempo Médio</h4>
+            <p class="stat-value">${stats.tempoMedioPreparo}</p>
+            <small>Preparação</small>
+          </div>
+        </div>
+        
+        <div class="stat-card">
+          <div class="stat-icon">📊</div>
+          <div class="stat-info">
+            <h4>Custo Médio</h4>
+            <p class="stat-value">${this.formatarMoeda(stats.custoMedio)}</p>
+            <small>Por pedido</small>
+          </div>
+        </div>
+        
+        <div class="stat-card">
+          <div class="stat-icon">❌</div>
+          <div class="stat-info">
+            <h4>Pedidos Cancel.</h4>
+            <p class="stat-value ${stats.pedidosCancelados > 5 ? 'negative' : 'positive'}">${stats.pedidosCancelados}</p>
+            <small>Este mês</small>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  renderGrafico() {
+    const container = document.getElementById('graficoPedidos');
+    if (!container) return;
+    
+    const dados = this.financeiroData.vendasMensais;
+    const maxVendas = Math.max(...dados.map(d => d.vendas)) || 1;
+    
+    let html = '';
+    dados.forEach(item => {
+      const alturaVendas = (item.vendas / maxVendas) * 100;
+      const alturaCustos = (item.custos / maxVendas) * 100;
+      
+      html += `
+        <div class="barra-container">
+          <div class="barra-valor">${this.formatarMoeda(item.vendas)}</div>
+          <div class="barra" style="height: ${alturaVendas}%; background: linear-gradient(to top, var(--primary), var(--primary-light))"></div>
+          <div class="barra" style="height: ${alturaCustos}%; background: linear-gradient(to top, var(--danger), #ff6b6b); margin-top: 2px"></div>
+          <div class="barra-label">${item.mes}</div>
+        </div>
+      `;
+    });
+    
+    container.innerHTML = html;
+  }
+
+  renderUltimosPedidos() {
+    const container = document.getElementById('ultimosPedidos');
+    if (!container) return;
+    
+    const ultimosPedidos = [...this.pedidos]
+      .sort((a, b) => new Date(b.createdAt || b.data) - new Date(a.createdAt || a.data))
+      .slice(0, 5);
+
+    if (ultimosPedidos.length === 0) {
+      container.innerHTML = '<p class="empty-state">Nenhum pedido recente</p>';
+      return;
+    }
+
+    let html = '';
+    ultimosPedidos.forEach(pedido => {
+      html += `
+        <div class="pedido-resumo">
+          <div class="pedido-info">
+            <strong>${pedido._id?.slice(-6) || 'N/A'}</strong>
+            <span class="cliente">${pedido.cliente || 'Cliente'}</span>
+            <small>${new Date(pedido.createdAt || pedido.data).toLocaleDateString('pt-BR')}</small>
+          </div>
+          <div class="pedido-detalhes">
+            <span class="total">${this.formatarMoeda(pedido.total || 0)}</span>
+            <span class="status ${pedido.status}">${this.formatarStatus(pedido.status)}</span>
+          </div>
+        </div>
+      `;
+    });
+    
+    container.innerHTML = html;
+  }
+
+  renderFluxoCaixa() {
+    const container = document.getElementById('fluxoCaixa');
+    if (!container) return;
+    
+    const fluxo = this.gerarFluxoCaixa();
+    
+    let html = `
+      <div style="overflow-x: auto;">
+        <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem;">
+          <thead>
+            <tr style="background: var(--light);">
+              <th style="padding: 0.75rem; text-align: left; border-bottom: 1px solid var(--border);">Data</th>
+              <th style="padding: 0.75rem; text-align: left; border-bottom: 1px solid var(--border);">Descrição</th>
+              <th style="padding: 0.75rem; text-align: right; border-bottom: 1px solid var(--border);">Entrada</th>
+              <th style="padding: 0.75rem; text-align: right; border-bottom: 1px solid var(--border);">Saída</th>
+              <th style="padding: 0.75rem; text-align: right; border-bottom: 1px solid var(--border);">Saldo</th>
+            </tr>
+          </thead>
+          <tbody>
+    `;
+    
+    fluxo.forEach(item => {
+      html += `
+        <tr>
+          <td style="padding: 0.75rem; border-bottom: 1px solid var(--border);">${item.data}</td>
+          <td style="padding: 0.75rem; border-bottom: 1px solid var(--border);">${item.descricao}</td>
+          <td style="padding: 0.75rem; text-align: right; border-bottom: 1px solid var(--border); color: var(--success);">
+            ${item.entrada > 0 ? this.formatarMoeda(item.entrada) : '-'}
+          </td>
+          <td style="padding: 0.75rem; text-align: right; border-bottom: 1px solid var(--border); color: var(--danger);">
+            ${item.saida > 0 ? this.formatarMoeda(item.saida) : '-'}
+          </td>
+          <td style="padding: 0.75rem; text-align: right; border-bottom: 1px solid var(--border); font-weight: bold; color: ${item.saldo >= 0 ? 'var(--success)' : 'var(--danger)'};">
+            ${this.formatarMoeda(item.saldo)}
+          </td>
+        </tr>
+      `;
+    });
     
     html += `
-      <div class="barra-container">
-        <div class="barra-valor">${this.formatarMoeda(item.vendas)}</div>
-        <div class="barra" style="height: ${alturaVendas}%; background: linear-gradient(to top, var(--primary), var(--primary-light))"></div>
-        <div class="barra" style="height: ${alturaCustos}%; background: linear-gradient(to top, var(--danger), #ff6b6b); margin-top: 2px"></div>
-        <div class="barra-label">${item.mes}</div>
+          </tbody>
+        </table>
       </div>
     `;
-  });
-  
-  container.innerHTML = html;
-};
-
-// Renderização dos últimos pedidos
-dashboard.renderUltimosPedidos = function() {
-  const container = document.getElementById('ultimosPedidos');
-  if (!container) return;
-  
-  // Usa os pedidos reais do sistema
-  const ultimosPedidos = [...this.pedidos]
-    .sort((a, b) => new Date(b.createdAt || b.data) - new Date(a.createdAt || a.data))
-    .slice(0, 5);
-
-  if (ultimosPedidos.length === 0) {
-    container.innerHTML = '<p class="empty-state">Nenhum pedido recente</p>';
-    return;
+    
+    container.innerHTML = html;
   }
 
-  let html = '';
-  ultimosPedidos.forEach(pedido => {
-    html += `
-      <div class="pedido-resumo">
-        <div class="pedido-info">
-          <strong>${pedido._id?.slice(-6) || 'N/A'}</strong>
-          <span class="cliente">${pedido.cliente || 'Cliente'}</span>
-          <small>${new Date(pedido.createdAt || pedido.data).toLocaleDateString('pt-BR')}</small>
-        </div>
-        <div class="pedido-detalhes">
-          <span class="total">${this.formatarMoeda(pedido.total || 0)}</span>
-          <span class="status ${pedido.status}">${this.formatarStatus(pedido.status)}</span>
-        </div>
-      </div>
-    `;
-  });
-  
-  container.innerHTML = html;
-};
-
-// Renderização do fluxo de caixa
-dashboard.renderFluxoCaixa = function() {
-  const container = document.getElementById('fluxoCaixa');
-  if (!container) return;
-  
-  // Gera fluxo de caixa baseado nos pedidos reais
-  const fluxo = this.gerarFluxoCaixa();
-  
-  let html = `
-    <div style="overflow-x: auto;">
-      <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem;">
-        <thead>
-          <tr style="background: var(--light);">
-            <th style="padding: 0.75rem; text-align: left; border-bottom: 1px solid var(--border);">Data</th>
-            <th style="padding: 0.75rem; text-align: left; border-bottom: 1px solid var(--border);">Descrição</th>
-            <th style="padding: 0.75rem; text-align: right; border-bottom: 1px solid var(--border);">Entrada</th>
-            <th style="padding: 0.75rem; text-align: right; border-bottom: 1px solid var(--border);">Saída</th>
-            <th style="padding: 0.75rem; text-align: right; border-bottom: 1px solid var(--border);">Saldo</th>
-          </tr>
-        </thead>
-        <tbody>
-  `;
-  
-  fluxo.forEach(item => {
-    html += `
-      <tr>
-        <td style="padding: 0.75rem; border-bottom: 1px solid var(--border);">${item.data}</td>
-        <td style="padding: 0.75rem; border-bottom: 1px solid var(--border);">${item.descricao}</td>
-        <td style="padding: 0.75rem; text-align: right; border-bottom: 1px solid var(--border); color: var(--success);">
-          ${item.entrada > 0 ? this.formatarMoeda(item.entrada) : '-'}
-        </td>
-        <td style="padding: 0.75rem; text-align: right; border-bottom: 1px solid var(--border); color: var(--danger);">
-          ${item.saida > 0 ? this.formatarMoeda(item.saida) : '-'}
-        </td>
-        <td style="padding: 0.75rem; text-align: right; border-bottom: 1px solid var(--border); font-weight: bold; color: ${item.saldo >= 0 ? 'var(--success)' : 'var(--danger)'};">
-          ${this.formatarMoeda(item.saldo)}
-        </td>
-      </tr>
-    `;
-  });
-  
-  html += `
-        </tbody>
-      </table>
-    </div>
-  `;
-  
-  container.innerHTML = html;
-};
-
-// Gera fluxo de caixa baseado nos pedidos
-dashboard.gerarFluxoCaixa = function() {
-  const pedidosEntregues = this.pedidos.filter(p => p.status === 'entregue');
-  const fluxo = [];
-  let saldo = 0;
-  
-  // Agrupa por data
-  const pedidosPorData = {};
-  pedidosEntregues.forEach(pedido => {
-    const data = new Date(pedido.createdAt || pedido.data).toLocaleDateString('pt-BR');
-    if (!pedidosPorData[data]) {
-      pedidosPorData[data] = 0;
-    }
-    pedidosPorData[data] += parseFloat(pedido.total) || 0;
-  });
-  
-  // Cria entradas de vendas
-  Object.entries(pedidosPorData).forEach(([data, total]) => {
-    saldo += total;
-    fluxo.push({
-      data: data,
-      descricao: 'Vendas do dia',
-      entrada: total,
-      saida: 0,
-      saldo: saldo
+  gerarFluxoCaixa() {
+    const pedidosEntregues = this.pedidos.filter(p => p.status === 'entregue');
+    const fluxo = [];
+    let saldo = 0;
+    
+    const pedidosPorData = {};
+    pedidosEntregues.forEach(pedido => {
+      const data = new Date(pedido.createdAt || pedido.data).toLocaleDateString('pt-BR');
+      if (!pedidosPorData[data]) {
+        pedidosPorData[data] = 0;
+      }
+      pedidosPorData[data] += parseFloat(pedido.total) || 0;
     });
-  });
-  
-  return fluxo.sort((a, b) => new Date(a.data.split('/').reverse().join('-')) - new Date(b.data.split('/').reverse().join('-')));
-};
-
-// Exportação de relatório
-dashboard.exportarRelatorio = function() {
-  this.showToast('Gerando relatório financeiro...', 'info');
-  
-  setTimeout(() => {
-    try {
-      const dataStr = "data:text/csv;charset=utf-8," + encodeURIComponent(this.gerarCSV());
-      const link = document.createElement('a');
-      link.href = dataStr;
-      link.download = `relatorio-financeiro-${new Date().toISOString().split('T')[0]}.csv`;
-      link.click();
-      
-      this.showToast('Relatório exportado com sucesso!', 'success');
-    } catch (error) {
-      console.error('Erro ao exportar relatório:', error);
-      this.showToast('Erro ao exportar relatório', 'error');
-    }
-  }, 1000);
-};
-
-// Geração de CSV para relatório
-dashboard.gerarCSV = function() {
-  const data = this.financeiroData;
-  let csv = 'Relatório Financeiro - Artesanal Blend\n\n';
-  csv += `Período: ${new Date().toLocaleDateString('pt-BR')}\n\n`;
-  csv += 'Métrica,Valor\n';
-  csv += `Total Vendas,${data.totalVendas}\n`;
-  csv += `Total Custos,${data.totalCustos}\n`;
-  csv += `Lucro Líquido,${data.lucro}\n`;
-  csv += `Margem de Lucro,${data.margemLucro}%\n`;
-  csv += `Ticket Médio,${data.stats.ticketMedio}\n`;
-  csv += `Vendas no Mês,${data.stats.vendasMes}\n`;
-  csv += `Clientes Atendidos,${data.stats.clientesAtendidos}\n`;
-  csv += `Pedidos Cancelados,${data.stats.pedidosCancelados}\n`;
-  return csv;
-};
-
-// Utilitários para o financeiro
-dashboard.formatarMoeda = function(valor) {
-  return new Intl.NumberFormat('pt-BR', {
-    style: 'currency',
-    currency: 'BRL'
-  }).format(valor || 0);
-};
-
-// Inicialização automática quando a aba financeiro for ativada
-document.addEventListener('DOMContentLoaded', function() {
-  const financeiroTab = document.getElementById('financeiroTab');
-  if (financeiroTab) {
-    const observer = new MutationObserver(function(mutations) {
-      mutations.forEach(function(mutation) {
-        if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
-          if (financeiroTab.classList.contains('active')) {
-            dashboard.initFinanceiro();
-          }
-        }
+    
+    Object.entries(pedidosPorData).forEach(([data, total]) => {
+      saldo += total;
+      fluxo.push({
+        data: data,
+        descricao: 'Vendas do dia',
+        entrada: total,
+        saida: 0,
+        saldo: saldo
       });
     });
     
-    observer.observe(financeiroTab, { attributes: true });
+    return fluxo.sort((a, b) => new Date(a.data.split('/').reverse().join('-')) - new Date(b.data.split('/').reverse().join('-')));
   }
+
+  exportarRelatorio() {
+    this.showToast('Gerando relatório financeiro...', 'info');
+    
+    setTimeout(() => {
+      try {
+        const dataStr = "data:text/csv;charset=utf-8," + encodeURIComponent(this.gerarCSV());
+        const link = document.createElement('a');
+        link.href = dataStr;
+        link.download = `relatorio-financeiro-${new Date().toISOString().split('T')[0]}.csv`;
+        link.click();
+        
+        this.showToast('Relatório exportado com sucesso!', 'success');
+      } catch (error) {
+        console.error('Erro ao exportar relatório:', error);
+        this.showToast('Erro ao exportar relatório', 'error');
+      }
+    }, 1000);
+  }
+
+  gerarCSV() {
+    const data = this.financeiroData;
+    let csv = 'Relatório Financeiro - Artesanal Blend\n\n';
+    csv += `Período: ${new Date().toLocaleDateString('pt-BR')}\n\n`;
+    csv += 'Métrica,Valor\n';
+    csv += `Total Vendas,${data.totalVendas}\n`;
+    csv += `Total Custos,${data.totalCustos}\n`;
+    csv += `Lucro Líquido,${data.lucro}\n`;
+    csv += `Margem de Lucro,${data.margemLucro}%\n`;
+    csv += `Ticket Médio,${data.stats.ticketMedio}\n`;
+    csv += `Vendas no Mês,${data.stats.vendasMes}\n`;
+    csv += `Clientes Atendidos,${data.stats.clientesAtendidos}\n`;
+    csv += `Pedidos Cancelados,${data.stats.pedidosCancelados}\n`;
+    return csv;
+  }
+
+  formatarMoeda(valor) {
+    return new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency: 'BRL'
+    }).format(valor || 0);
+  }
+
+  /* ================= UTILITÁRIOS ================= */
+  showToast(mensagem, tipo = 'success', timeout = 2500) {
+    const container = document.getElementById('toast-container');
+    const t = document.createElement('div');
+    t.className = `toast ${tipo === 'error' ? 'error' : tipo === 'info' ? 'info' : 'success'}`;
+    t.textContent = mensagem;
+    container.appendChild(t);
+    setTimeout(() => { t.style.opacity = '0'; setTimeout(() => t.remove(), 400); }, timeout);
+  }
+
+  _formatImageSrc(src) {
+    if (!src) return '';
+    try {
+      const u = new URL(src);
+      return src;
+    } catch (e) {
+      if (src.startsWith('/')) return src;
+      return src;
+    }
+  }
+}
+
+// Inicialização correta
+document.addEventListener('DOMContentLoaded', () => {
+  window.dashboard = new Dashboard();
 });
