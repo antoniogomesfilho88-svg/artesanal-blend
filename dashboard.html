@@ -134,7 +134,16 @@
         erroDiv.textContent = 'Erro de conexão.';
       }
     });
-  </script>
+  <script>
+  // Botão de logout — apaga o token e recarrega a página
+  document.getElementById('btnLogout')?.addEventListener('click', () => {
+    if (confirm("Deseja realmente sair do painel?")) {
+      localStorage.removeItem('token'); // apaga o JWT salvo
+      location.reload(); // recarrega a página → volta para login
+    }
+  });
+</script>
 </body>
 </html>
+
 
