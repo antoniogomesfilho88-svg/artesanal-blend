@@ -145,10 +145,13 @@ app.get("/api/stats", autenticarToken, (req, res) => {
 });
 
 // ===============================
-// 🗂️ Servir frontend do diretório /public
-// ===============================
-app.use(express.static(path.join(__dirname, "public")));
+// 🗂️ Servir frontend direto da raiz
+app.use(express.static(__dirname));
 
+// Redireciona "/" para dashboard.html (na raiz)
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "dashboard.html"));
+});
 // Redireciona "/" para o dashboard.html
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "dashboard.html"));
@@ -166,4 +169,5 @@ app.listen(PORT, () => {
   console.log(`🚀 Servidor rodando na porta ${PORT}`);
   console.log(`📊 Dashboard: http://localhost:${PORT}`);
 });
+
 
