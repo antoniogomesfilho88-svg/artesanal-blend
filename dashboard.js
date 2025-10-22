@@ -799,24 +799,81 @@ imprimirCupom(id) {
     janelaImpressao.close();
   }
 }
-  /* ================= FINANCEIRO ================= */
-  async updateFinanceiro() {
-    try {
-      const res = await fetch('/api/stats');
-      if (res.ok) {
-        const financeiro = await res.json();
-        this.atualizarUIFinanceiro(financeiro);
-      }
-    } catch (e) {
-      console.error('Erro financeiro', e);
-    }
+  // ===================== FINANCEIRO PRO =====================
+let chartFinanceiro;
+
+async function updateFinanceiro() {
+  const periodo = document.getElementById('filtroPeriodo').value;
+  const inicio = document.getElementById('dataInicio').value;
+  const fim = document.getElementById('dataFim').value;
+
+  let url = '/api/stats';
+  if (periodo === 'personalizado' && inicio && fim) {
+    url += `?inicio=${inicio}&fim=${fim}`;
   }
 
-  atualizarUIFinanceiro({ vendas = 0, gastos = 0, lucro = 0 } = {}) {
-    document.getElementById('totalVendas').textContent = `R$ ${Number(vendas).toFixed(2)}`;
-    document.getElementById('totalCustos').textContent = `R$ ${Number(gastos).toFixed(2)}`;
-    document.getElementById('lucro').textContent = `R$ ${Number(lucro).toFixed(2)}`;
+  try {
+    const res = await fetch(url);
+    if (!res.ok) throw new Error('Erro ao buscar financeiro');
+    const data = await res.json();
+
+    renderFinanceiro(data);
+    renderGraficoFinanceiro(data);
+  } catch (err) {
+    console.error(err);
   }
+}
+
+function renderFinanceiro({ vendas = 0, custos = 0, lucro = 0, pedidos = 0, ticketMedio = 0, melhorDia = '-' } = {}) {
+  document.getElementById('totalVendas').textContent = `R$ ${vendas.toFixed(2)}`;
+  document.getElementById('totalCustos').textContent = `R$ ${custos.toFixed(2)}`;
+  document.getElementById('lucro').textContent = `R$ ${lucro.toFixed(2)}`;
+  document.getElementById('margemLucro').textContent = `${((lucro / vendas) * 100 || 0).toFixed(1)}%`;
+  document.getElementById('totalPedidos').textContent = pedidos;
+  document.getElementById('ticketMedio').textContent = `R$ ${ticketMedio.toFixed(2)}`;
+  document.getElementById('melhorDia').textContent = melhorDia;
+}
+
+function renderGraficoFinanceiro({ historico = [] } = {}) {
+  const ctx = document.getElementById('graficoFinanceiro').getContext('2d');
+  const labels = historico.map(d => d.data);
+  const vendas = historico.map(d => d.vendas);
+  const custos = historico.map(d => d.custos);
+
+  if (chartFinanceiro) chartFinanceiro.destroy();
+
+  chartFinanceiro = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [
+        { label: 'Vendas', data: vendas, borderColor: '#d4af37', fill: false, tension: 0.3 },
+        { label: 'Custos', data: custos, borderColor: '#6b3e26', fill: false, tension: 0.3 }
+      ]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { position: 'top' },
+        title: { display: true, text: 'Desempenho Financeiro' }
+      }
+    }
+  });
+}
+
+// Eventos
+document.getElementById('btnAtualizarFinanceiro')?.addEventListener('click', updateFinanceiro);
+document.getElementById('filtroPeriodo')?.addEventListener('change', (e) => {
+  const inicio = document.getElementById('dataInicio');
+  const fim = document.getElementById('dataFim');
+  if (e.target.value === 'personalizado') {
+    inicio.style.display = fim.style.display = 'inline-block';
+  } else {
+    inicio.style.display = fim.style.display = 'none';
+    updateFinanceiro();
+  }
+});
+
 
   /* ================= UTILITÁRIOS ================= */
   showToast(mensagem, tipo = 'success', timeout = 2500) {
@@ -846,6 +903,7 @@ imprimirCupom(id) {
 document.addEventListener('DOMContentLoaded', () => {
   window.dashboard = new Dashboard();
 });
+
 
 
 
