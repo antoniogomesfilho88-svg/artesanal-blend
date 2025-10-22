@@ -144,10 +144,6 @@ app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "login.html"));
 });
 
-// Qualquer outra rota → Dashboard
-app.get("*", (req, res) => {
-  res.sendFile(path.join(__dirname, "dashboard.html"));
-});
 
 // ===============================
 // 🚀 Start Server
@@ -157,3 +153,4 @@ app.listen(PORT, () => {
   console.log(`📱 Cardápio: http://localhost:${PORT}`);
   console.log(`📊 Dashboard: http://localhost:${PORT}/dashboard`);
 });
+
