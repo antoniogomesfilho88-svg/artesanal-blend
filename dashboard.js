@@ -3,7 +3,7 @@
 // ===============================
 
 // 🚀 Verifica se o usuário está logado
-const token = localStorage.getItem('token');
+const token = localStorage.getItem('token', data.token);
 if (!token) {
   window.location.href = '/';
 }
@@ -356,3 +356,4 @@ class Dashboard {
 document.addEventListener('DOMContentLoaded', () => {
   window.dashboard = new Dashboard();
 });
+
