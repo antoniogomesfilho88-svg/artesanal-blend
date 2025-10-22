@@ -1,0 +1,26 @@
+// models/User.js
+import mongoose from 'mongoose';
+import bcrypt from 'bcryptjs';
+
+const UserSchema = new mongoose.Schema({
+  nome: { type: String, required: true },
+  email: { type: String, required: true, unique: true },
+  senhaHash: { type: String, required: true },
+  cargo: { type: String, enum: ['admin', 'colaborador'], default: 'colaborador' },
+  ativo: { type: Boolean, default: true }
+});
+
+// Cria hash automaticamente ao salvar
+UserSchema.pre('save', async function(next) {
+  if (!this.isModified('senhaHash')) return next();
+  const salt = await bcrypt.genSalt(10);
+  this.senhaHash = await bcrypt.hash(this.senhaHash, salt);
+  next();
+});
+
+// Valida senha
+UserSchema.methods.validarSenha = async function(senha) {
+  return bcrypt.compare(senha, this.senhaHash);
+};
+
+export default mongoose.model('User', UserSchema);
