@@ -3,314 +3,209 @@ import express from "express";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 import cors from "cors";
+import mongoose from "mongoose";
+import path from "path";
+import { fileURLToPath } from "url";
+
+// ===== Configuração ES Modules =====
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-app.use(cors()); // permite requisições do front-end
-app.use(express.json()); // permite ler JSON do body
+// ===== Middleware =====
+app.use(cors());
+app.use(express.json());
+app.use(express.static(__dirname)); // Servir index.html, dashboard.html, JS, CSS
 
-// Chave secreta para JWT
+// ===== JWT =====
 const SECRET_KEY = process.env.JWT_SECRET || "segredo-artesanal-blend";
 
-// Usuário admin com senha criptografada
+// ===== Usuário admin =====
 const admin = {
   username: "admin",
   passwordHash: bcrypt.hashSync("123456", 10),
 };
 
-// Rota de login
-app.post("/api/login", (req, res) => {
-  const { username, password } = req.body;
-
-  if (!username || !password) {
-    return res.status(400).json({ message: "Usuário e senha obrigatórios" });
-  }
-
-  if (username !== admin.username) {
-    return res.status(401).json({ message: "Usuário ou senha inválidos" });
-  }
-
-  const isPasswordValid = bcrypt.compareSync(password, admin.passwordHash);
-
-  if (!isPasswordValid) {
-    return res.status(401).json({ message: "Usuário ou senha inválidos" });
-  }
-
-  // Gerar token JWT válido por 1 hora
-  const token = jwt.sign({ username: admin.username }, SECRET_KEY, { expiresIn: "1h" });
-
-  return res.json({ token });
-});
-
-// Iniciar servidor
-app.listen(PORT, () => {
-  console.log(`Servidor rodando na porta ${PORT}`);
-});
-
-
-import express from 'express';
-import mongoose from 'mongoose';
-import cors from 'cors';
-import bodyParser from 'body-parser';
-import path from 'path';
-import { fileURLToPath } from 'url';
-
-// Configuração para compatibilidade de módulos ES
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-const app = express();
-const PORT = process.env.PORT || 10000;
-
-// ===== Middleware =====
-app.use(cors());
-app.use(bodyParser.json());
-// Servir arquivos estáticos (index.html, dashboard.html, JS, CSS)
-app.use(express.static(__dirname));
-
-// ===== MongoDB Connection (Simplificada e Dependente da Variável de Ambiente) =====
-// O fallback para 'localhost' foi removido.
-const MONGO_URI = process.env.MONGO_URI; 
-
+// ===== Conexão MongoDB =====
+const MONGO_URI = process.env.MONGO_URI;
 if (MONGO_URI) {
-    mongoose.connect(MONGO_URI)
-        .then(() => console.log('✅ MongoDB conectado'))
-        .catch(err => console.error('⚠️ Erro ao conectar MongoDB:', err.message));
+  mongoose.connect(MONGO_URI)
+    .then(() => console.log("✅ MongoDB conectado"))
+    .catch(err => console.error("⚠️ Erro ao conectar MongoDB:", err.message));
 } else {
-    // Se a MONGO_URI não estiver definida, o servidor não tentará conectar, 
-    // mas também não terá persistência de dados.
-    console.error('❌ ERRO: Variável MONGO_URI não está definida. A persistência de dados não funcionará.');
+  console.error("❌ MONGO_URI não definida. Persistência de dados não funcionará.");
 }
 
-
-// ===== Schemas (Adaptado do seu último código) =====
+// ===== Schemas =====
 const ProdutoSchema = new mongoose.Schema({
-    nome: String,
-    preco: Number,
-    descricao: String,
-    imagem: String,
-    // Campos adicionais dos modelos anteriores (para segurança):
-    categoria: String, 
-    disponivel: { type: Boolean, default: true },
-    ingredientes: [String],
-    tempoPreparo: Number
+  nome: String,
+  preco: Number,
+  descricao: String,
+  imagem: String,
+  categoria: String,
+  disponivel: { type: Boolean, default: true },
+  ingredientes: [String],
+  tempoPreparo: Number,
 }, { timestamps: true });
 
 const InsumoSchema = new mongoose.Schema({
-    nome: String,
-    quantidade: Number,
-    unidade: String,
-    preco: Number,
-    minimo: Number, // Adaptado do seu último código (uso foi substituído por minimo)
+  nome: String,
+  quantidade: Number,
+  unidade: String,
+  preco: Number,
+  minimo: Number,
 }, { timestamps: true });
 
 const PedidoSchema = new mongoose.Schema({
-    cliente: String,
-    telefone: String,
-    endereco: String,
-    regiao: String,
-    taxaEntrega: Number,
-    itens: [{ nome: String, quantidade: Number, preco: Number, categoria: String }], // Adaptado para 'quantidade'
-    total: Number,
-    formaPagamento: String,
-    troco: Number,
-    observacao: String,
-    status: { type: String, default: 'pending' },
-    criadoEm: { type: Date, default: Date.now }
+  cliente: String,
+  telefone: String,
+  endereco: String,
+  regiao: String,
+  taxaEntrega: Number,
+  itens: [{ nome: String, quantidade: Number, preco: Number, categoria: String }],
+  total: Number,
+  formaPagamento: String,
+  troco: Number,
+  observacao: String,
+  status: { type: String, default: "pending" },
+  criadoEm: { type: Date, default: Date.now }
 }, { timestamps: true });
 
-const Produto = mongoose.model('Produto', ProdutoSchema);
-const Insumo = mongoose.model('Insumo', InsumoSchema);
-const Pedido = mongoose.model('Pedido', PedidoSchema);
+const Produto = mongoose.model("Produto", ProdutoSchema);
+const Insumo = mongoose.model("Insumo", InsumoSchema);
+const Pedido = mongoose.model("Pedido", PedidoSchema);
 
+// ===== Autenticação =====
+app.post("/api/login", (req, res) => {
+  const { username, password } = req.body;
+  if (!username || !password) return res.status(400).json({ message: "Usuário e senha obrigatórios" });
+  if (username !== admin.username) return res.status(401).json({ message: "Usuário ou senha inválidos" });
 
-// ===== Rotas do Cardápio Público =====
-app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'index.html'));
+  const isPasswordValid = bcrypt.compareSync(password, admin.passwordHash);
+  if (!isPasswordValid) return res.status(401).json({ message: "Usuário ou senha inválidos" });
+
+  const token = jwt.sign({ username: admin.username }, SECRET_KEY, { expiresIn: "1h" });
+  res.json({ token });
 });
 
-// API para o cardápio (Formatação por categoria)
-app.get('/api/cardapio', async (req, res) => {
-    try {
-        const produtos = await Produto.find({ disponivel: true });
-        
-        const cardapioFormatado = {
-            "Hambúrgueres": produtos.filter(p => p.categoria === 'Hambúrgueres'),
-            "Combos": produtos.filter(p => p.categoria === 'Combos'),
-            "Acompanhamentos": produtos.filter(p => p.categoria === 'Acompanhamentos'),
-            "Adicionais": produtos.filter(p => p.categoria === 'Adicionais'),
-            "Bebidas": produtos.filter(p => p.categoria === 'Bebidas')
-        };
-        res.json(cardapioFormatado);
-    } catch (error) {
-        console.error('Erro ao carregar cardápio:', error);
-        res.status(500).json({ error: 'Erro ao carregar cardápio.' });
-    }
+// ===== Rotas Públicas =====
+app.get("/", (req, res) => res.sendFile(path.join(__dirname, "index.html")));
+app.get("/dashboard", (req, res) => res.sendFile(path.join(__dirname, "dashboard.html")));
+
+// Cardápio público
+app.get("/api/cardapio", async (req, res) => {
+  try {
+    const produtos = await Produto.find({ disponivel: true });
+    const cardapio = {
+      "Hambúrgueres": produtos.filter(p => p.categoria === "Hambúrgueres"),
+      "Combos": produtos.filter(p => p.categoria === "Combos"),
+      "Acompanhamentos": produtos.filter(p => p.categoria === "Acompanhamentos"),
+      "Adicionais": produtos.filter(p => p.categoria === "Adicionais"),
+      "Bebidas": produtos.filter(p => p.categoria === "Bebidas"),
+    };
+    res.json(cardapio);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Erro ao carregar cardápio." });
+  }
 });
 
-
-// ===== Rotas do Dashboard (UNIFICADAS: Português -> Inglês) =====
-
-app.get('/dashboard', (req, res) => {
-    res.sendFile(path.join(__dirname, 'dashboard.html'));
+// ===== Rotas Dashboard =====
+// Produtos
+app.get("/api/menu", async (req, res) => {
+  try {
+    const produtos = await Produto.find().sort({ categoria: 1, nome: 1 });
+    const produtosFormatados = produtos.map(p => ({ ...p._doc, id: p._id }));
+    res.json(produtosFormatados);
+  } catch (error) {
+    res.status(500).json({ error: "Erro ao listar produtos." });
+  }
 });
 
-// GET /api/menu (Lista todos os produtos para o Dashboard)
-app.get('/api/menu', async (req, res) => {
-    try {
-        const produtos = await Produto.find().sort({ categoria: 1, nome: 1 });
-        // Mapeia _id para id para compatibilidade com o frontend
-        const produtosFormatados = produtos.map(p => ({
-            ...p._doc,
-            id: p._id
-        }));
-        res.json(produtosFormatados);
-    } catch (error) {
-        res.status(500).json({ error: 'Erro ao listar menu.' });
-    }
+app.post("/api/menu/item", async (req, res) => {
+  try {
+    const produto = new Produto(req.body);
+    const salvo = await produto.save();
+    res.status(201).json({ success: true, produto: { ...salvo._doc, id: salvo._id } });
+  } catch (error) {
+    res.status(500).json({ error: "Erro ao criar produto." });
+  }
 });
 
-// POST /api/menu/item (Criar Produto - ROTA CORRETA DO DASHBOARD)
-app.post('/api/menu/item', async (req, res) => {
-    try {
-        const produto = new Produto(req.body);
-        const produtoSalvo = await produto.save();
-        res.status(201).json({ 
-            success: true, 
-            produto: { ...produtoSalvo._doc, id: produtoSalvo._id } 
-        });
-    } catch (error) {
-        console.error('Erro ao criar item do menu:', error.message);
-        res.status(500).json({ error: 'Erro ao criar produto.' });
-    }
+app.put("/api/menu/item/:id", async (req, res) => {
+  try {
+    const produto = await Produto.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    if (!produto) return res.status(404).json({ error: "Produto não encontrado." });
+    res.json({ success: true, produto: { ...produto._doc, id: produto._id } });
+  } catch (error) {
+    res.status(500).json({ error: "Erro ao atualizar produto." });
+  }
 });
 
-// PUT /api/menu/item/:id (Editar Produto - ROTA CORRETA DO DASHBOARD)
-app.put('/api/menu/item/:id', async (req, res) => {
-    try {
-        const id = req.params.id;
-        const produto = await Produto.findByIdAndUpdate(id, req.body, { new: true });
-        if (!produto) return res.status(404).json({ error: 'Produto não encontrado.' });
-        res.json({ success: true, produto: { ...produto._doc, id: produto._id } });
-    } catch (error) {
-        res.status(500).json({ error: 'Erro ao atualizar produto.' });
-    }
+app.delete("/api/menu/item/:id", async (req, res) => {
+  try {
+    const result = await Produto.findByIdAndDelete(req.params.id);
+    if (!result) return res.status(404).json({ error: "Produto não encontrado." });
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: "Erro ao excluir produto." });
+  }
 });
 
-// DELETE /api/menu/item/:id (Excluir Produto - ROTA CORRETA DO DASHBOARD)
-app.delete('/api/menu/item/:id', async (req, res) => {
-    try {
-        const result = await Produto.findByIdAndDelete(req.params.id);
-        if (!result) return res.status(404).json({ error: 'Produto não encontrado.' });
-        res.json({ success: true });
-    } catch (error) {
-        res.status(500).json({ error: 'Erro ao excluir produto.' });
-    }
+// Insumos
+app.get("/api/insumos", async (req, res) => {
+  try { res.json(await Insumo.find()); } 
+  catch (error) { res.status(500).json({ error: "Erro ao listar insumos." }); }
+});
+app.post("/api/insumos", async (req, res) => {
+  try { const i = new Insumo(req.body); await i.save(); res.status(201).json({ success: true }); }
+  catch (error) { res.status(500).json({ error: "Erro ao criar insumo." }); }
+});
+app.put("/api/insumos/:id", async (req, res) => {
+  try { await Insumo.findByIdAndUpdate(req.params.id, req.body); res.json({ success: true }); }
+  catch (error) { res.status(500).json({ error: "Erro ao atualizar insumo." }); }
+});
+app.delete("/api/insumos/:id", async (req, res) => {
+  try { await Insumo.findByIdAndDelete(req.params.id); res.json({ success: true }); }
+  catch (error) { res.status(500).json({ error: "Erro ao excluir insumo." }); }
 });
 
-
-// ===== Insumos (Supplies) Routes (Mantido em Português) =====
-app.get('/api/insumos', async (req, res) => {
-    try {
-        const insumos = await Insumo.find();
-        res.json(insumos);
-    } catch (error) {
-        res.status(500).json({ error: 'Erro ao listar insumos.' });
-    }
+// Pedidos
+app.get("/api/orders", async (req, res) => {
+  try { res.json(await Pedido.find().sort({ criadoEm: -1 })); } 
+  catch (error) { res.status(500).json({ error: "Erro ao listar pedidos." }); }
+});
+app.post("/api/orders", async (req, res) => {
+  try { const p = new Pedido(req.body); await p.save(); res.status(201).json({ success: true }); } 
+  catch (error) { res.status(500).json({ error: "Erro ao criar pedido." }); }
+});
+app.put("/api/orders/:id", async (req, res) => {
+  try { await Pedido.findByIdAndUpdate(req.params.id, req.body); res.json({ success: true }); } 
+  catch (error) { res.status(500).json({ error: "Erro ao atualizar pedido." }); }
+});
+app.delete("/api/orders/:id", async (req, res) => {
+  try { await Pedido.findByIdAndDelete(req.params.id); res.json({ success: true }); } 
+  catch (error) { res.status(500).json({ error: "Erro ao excluir pedido." }); }
 });
 
-app.post('/api/insumos', async (req, res) => {
-    try {
-        const insumo = new Insumo(req.body);
-        await insumo.save();
-        res.status(201).json({ success: true });
-    } catch (error) {
-        res.status(500).json({ error: 'Erro ao criar insumo.' });
-    }
+// Financeiro
+app.get("/api/stats", async (req, res) => {
+  try {
+    const pedidos = await Pedido.find();
+    const insumos = await Insumo.find();
+    const vendas = pedidos.reduce((acc, p) => acc + (p.total || 0), 0);
+    const gastos = insumos.reduce((acc, i) => acc + (i.preco * i.quantidade), 0);
+    res.json({ vendas, gastos, lucro: vendas - gastos });
+  } catch (error) {
+    res.status(500).json({ error: "Erro ao calcular financeiro." });
+  }
 });
 
-app.put('/api/insumos/:id', async (req, res) => {
-    try {
-        await Insumo.findByIdAndUpdate(req.params.id, req.body);
-        res.json({ success: true });
-    } catch (error) {
-        res.status(500).json({ error: 'Erro ao atualizar insumo.' });
-    }
-});
-
-app.delete('/api/insumos/:id', async (req, res) => {
-    try {
-        await Insumo.findByIdAndDelete(req.params.id);
-        res.json({ success: true });
-    } catch (error) {
-        res.status(500).json({ error: 'Erro ao excluir insumo.' });
-    }
-});
-
-
-// ===== Pedidos (Orders) Routes - UNIFICADAS com o Dashboard =====
-app.get('/api/orders', async (req, res) => { // Renomeada de /api/pedidos
-    try {
-        const pedidos = await Pedido.find().sort({ criadoEm: -1 });
-        res.json(pedidos);
-    } catch (error) {
-        res.status(500).json({ error: 'Erro ao listar pedidos (orders).' });
-    }
-});
-
-app.post('/api/orders', async (req, res) => { // Renomeada de /api/pedidos
-    try {
-        const pedido = new Pedido(req.body);
-        await pedido.save();
-        res.status(201).json({ success: true });
-    } catch (error) {
-        res.status(500).json({ error: 'Erro ao criar pedido (order).' });
-    }
-});
-
-app.put('/api/orders/:id', async (req, res) => { // Renomeada de /api/pedidos/:id
-    try {
-        await Pedido.findByIdAndUpdate(req.params.id, req.body);
-        res.json({ success: true });
-    } catch (error) {
-        res.status(500).json({ error: 'Erro ao atualizar pedido (order).' });
-    }
-});
-
-app.delete('/api/orders/:id', async (req, res) => { // Renomeada de /api/pedidos/:id
-    try {
-        await Pedido.findByIdAndDelete(req.params.id);
-        res.json({ success: true });
-    } catch (error) {
-        res.status(500).json({ error: 'Erro ao excluir pedido (order).' });
-    }
-});
-
-// ===== Financeiro (Stats) Route - UNIFICADA com o Dashboard =====
-app.get('/api/stats', async (req, res) => { // Renomeada de /api/financeiro
-    try {
-        const pedidos = await Pedido.find();
-        const insumos = await Insumo.find();
-
-        const vendas = pedidos.reduce((acc, p) => acc + (p.total || 0), 0);
-        // Assumindo que o gasto é o custo total dos insumos atuais (preco * quantidade)
-        const gastos = insumos.reduce((acc, i) => acc + (i.preco * i.quantidade), 0); 
-        const lucro = vendas - gastos;
-
-        res.json({ vendas, gastos, lucro });
-    } catch (error) {
-        res.status(500).json({ error: 'Erro ao calcular financeiro/stats.' });
-    }
-});
-
-
-// ===== Servidor =====
+// ===== Start Server =====
 app.listen(PORT, () => {
-    console.log(`🚀 Servidor rodando na porta ${PORT}`);
-    // Log dos URLs para facilitar o debug no Render
-    console.log(`📱 Cardápio: https://artesanal-blend.onrender.com`);
-    console.log(`📊 Dashboard: https://artesanal-blend.onrender.com/dashboard`);
+  console.log(`🚀 Servidor rodando na porta ${PORT}`);
+  console.log(`📱 Cardápio: http://localhost:${PORT}`);
+  console.log(`📊 Dashboard: http://localhost:${PORT}/dashboard`);
 });
-
-
