@@ -1,397 +1,96 @@
-/* ==========================================================
-   🎨 DASHBOARD ARTESANAL BLEND - CSS FINAL OTIMIZADO
-   ========================================================== */
-
-:root {
-  --primary: #8B4513;
-  --primary-light: #A0522D;
-  --secondary: #D2691E;
-  --accent: #CD853F;
-  --light: #F5F5DC;
-  --dark: #3E2723;
-  --text: #333;
-  --text-light: #666;
-  --border: #DDD;
-  --success: #27ae60;
-  --warning: #f39c12;
-  --danger: #e74c3c;
-  --shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
-  --radius: 10px;
+:root{
+  --primary:#8B4513;
+  --primary-light:#A0522D;
+  --secondary:#D2691E;
+  --accent:#CD853F;
+  --light:#F5F5DC;
+  --dark:#3E2723;
+  --text:#333;
+  --text-light:#666;
+  --border:#DDD;
+  --success:#27ae60;
+  --warning:#f39c12;
+  --danger:#e74c3c;
+  --shadow: 0 6px 20px rgba(0,0,0,0.08);
+  --radius:10px;
 }
 
-/* ==================== BASE ==================== */
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Inter, 'Segoe UI', Roboto, system-ui, -apple-system, sans-serif;background:#f3f4f6;color:var(--text);line-height:1.5}
 
-body {
-  font-family: "Inter", "Segoe UI", Roboto, system-ui, -apple-system, sans-serif;
-  background: #f3f4f6;
-  color: var(--text);
-  line-height: 1.5;
-}
+/* Header */
+.dashboard-header{background:linear-gradient(135deg,var(--primary),var(--primary-light));color:#fff;padding:1rem 1.25rem;box-shadow:var(--shadow);position:sticky;top:0;z-index:50}
+.header-content{max-width:1200px;margin:0 auto;display:flex;align-items:center;gap:1rem}
+.logo{width:48px;height:48px;border-radius:8px;object-fit:cover;border:2px solid rgba(255,255,255,0.15)}
+.header-content h1{flex:1;font-size:1.1rem}
 
-/* ==================== HEADER ==================== */
-.dashboard-header {
-  background: linear-gradient(135deg, var(--primary), var(--primary-light));
-  color: #fff;
-  padding: 1rem 1.25rem;
-  box-shadow: var(--shadow);
-  position: sticky;
-  top: 0;
-  z-index: 50;
-}
+/* Tabs */
+.tabs{display:flex;background:#fff;border-bottom:1px solid var(--border);padding:0 1.25rem;max-width:1200px;margin:0 auto}
+.tab-button{padding:0.65rem 1rem;border:0;background:transparent;cursor:pointer;font-size:0.95rem;color:var(--text-light);border-bottom:3px solid transparent}
+.tab-button.active{color:var(--primary);border-bottom-color:var(--primary);background:#fafafa}
 
-.header-content {
-  max-width: 1200px;
-  margin: 0 auto;
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-}
+/* Layout */
+.dashboard-content{max-width:1200px;margin:1rem auto;padding:0 1.25rem}
+.tab-content{display:none}
+.tab-content.active{display:block}
+.section-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;gap:1rem}
+.section-header h2{color:var(--dark);font-size:1.05rem}
+.actions{display:flex;gap:.5rem;align-items:center}
 
-.logo {
-  width: 48px;
-  height: 48px;
-  border-radius: 8px;
-  object-fit: cover;
-  border: 2px solid rgba(255, 255, 255, 0.15);
-}
+/* Buttons */
+.btn{padding:.5rem .75rem;border-radius:8px;border:0;cursor:pointer;font-size:.95rem}
+.btn.primary{background:var(--primary);color:#fff}
+.btn.secondary{background:#eef2f3;color:var(--dark)}
 
-.header-content h1 {
-  flex: 1;
-  font-size: 1.1rem;
-}
+/* Filters */
+.filters{display:flex;gap:1rem;margin-bottom:1rem;align-items:center}
+.filters select, .filters input{padding:.5rem;border:1px solid var(--border);border-radius:8px}
+#buscaProdutos{min-width:180px}
 
-/* ==================== TABS ==================== */
-.tabs {
-  display: flex;
-  background: #fff;
-  border-bottom: 1px solid var(--border);
-  padding: 0 1.25rem;
-  max-width: 1200px;
-  margin: 0 auto;
-}
+/* Grid */
+.produtos-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1rem}
+.produto-card{background:#fff;padding:1rem;border-radius:10px;box-shadow:var(--shadow);position:relative;border-left:4px solid var(--primary);transition:transform .18s ease,box-shadow .18s ease}
+.produto-card:hover{transform:translateY(-3px)}
+.produto-card.indisponivel{opacity:.75;background:#fbfbfb}
+.produto-card.estoque-baixo{border-left-color:var(--danger)}
 
-.tab-button {
-  padding: 0.65rem 1rem;
-  border: 0;
-  background: transparent;
-  cursor: pointer;
-  font-size: 0.95rem;
-  color: var(--text-light);
-  border-bottom: 3px solid transparent;
-  transition: all 0.2s ease;
-}
+.produto-card h3{color:var(--primary);margin-bottom:.25rem}
+.preco{font-weight:700;color:var(--success);margin-bottom:.5rem}
+.categoria{display:inline-block;background:var(--primary);color:#fff;padding:4px 8px;border-radius:999px;font-size:.75rem}
+.status{position:absolute;top:12px;right:12px;padding:4px 8px;border-radius:6px;font-size:.75rem}
 
-.tab-button.active {
-  color: var(--primary);
-  border-bottom-color: var(--primary);
-  background: #fafafa;
-}
+/* Card actions */
+.card-actions{display:flex;gap:.5rem;margin-top:.75rem;flex-wrap:wrap}
+.btn-editar{background:var(--warning);color:#fff;padding:.45rem .65rem;border-radius:8px;border:0}
+.btn-excluir{background:var(--danger);color:#fff;padding:.45rem .65rem;border-radius:8px;border:0}
+.btn-toggle{background:var(--secondary);color:#fff;padding:.45rem .65rem;border-radius:8px;border:0}
 
-/* ==================== LAYOUT PRINCIPAL ==================== */
-.dashboard-content {
-  max-width: 1200px;
-  margin: 1rem auto;
-  padding: 0 1.25rem;
-}
+/* Insumos & Financeiro */
+.financeiro-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1rem;margin-top:1rem}
+.finance-card{text-align:center;padding:1rem;background:#fff;border-radius:10px;box-shadow:var(--shadow)}
+.empty-state{text-align:center;padding:2rem;background:#fff;border-radius:10px;box-shadow:var(--shadow)}
 
-.tab-content {
-  display: none;
-}
+/* Modal */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;z-index:200;padding:1rem}
+.modal{background:#fff;padding:1.25rem;border-radius:10px;max-width:720px;width:100%;box-shadow:var(--shadow);max-height:90vh;overflow:auto}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:.75rem}
+.form-group{margin-bottom:.6rem}
+.form-group label{display:block;margin-bottom:.25rem;font-weight:600}
+.form-group input, .form-group select, .form-group textarea{width:100%;padding:.5rem;border:1px solid var(--border);border-radius:8px}
 
-.tab-content.active {
-  display: block;
-}
+/* Toasts */
+#toast-container{position:fixed;right:16px;bottom:16px;z-index:9999;display:flex;flex-direction:column;gap:.5rem}
+.toast{padding:.6rem .9rem;border-radius:8px;color:#fff;min-width:200px;box-shadow:0 6px 18px rgba(0,0,0,0.12)}
+.toast.success{background:var(--success)}
+.toast.error{background:var(--danger)}
+.toast.info{background:var(--primary)}
 
-/* ==================== SEÇÕES E BOTÕES ==================== */
-.section-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1rem;
-  gap: 1rem;
-}
-
-.section-header h2 {
-  color: var(--dark);
-  font-size: 1.05rem;
-}
-
-.btn {
-  padding: 0.5rem 0.75rem;
-  border-radius: 8px;
-  border: 0;
-  cursor: pointer;
-  font-size: 0.95rem;
-  transition: transform 0.15s ease;
-}
-
-.btn:hover {
-  transform: translateY(-1px);
-}
-
-.btn.primary {
-  background: var(--primary);
-  color: #fff;
-}
-
-.btn.secondary {
-  background: #eef2f3;
-  color: var(--dark);
-}
-
-.btn.danger {
-  background: var(--danger);
-  color: #fff;
-  font-weight: bold;
-}
-
-.btn.danger:hover {
-  background: #ff4d5a;
-}
-
-/* ==================== PRODUTOS ==================== */
-.produtos-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 1rem;
-}
-
-.produto-card {
-  background: #fff;
-  padding: 1rem;
-  border-radius: var(--radius);
-  box-shadow: var(--shadow);
-  position: relative;
-  border-left: 4px solid var(--primary);
-  transition: transform 0.18s ease, box-shadow 0.18s ease;
-}
-
-.produto-card:hover {
-  transform: translateY(-3px);
-}
-
-.produto-card.indisponivel {
-  opacity: 0.75;
-  background: #fbfbfb;
-}
-
-.produto-card h3 {
-  color: var(--primary);
-  margin-bottom: 0.25rem;
-}
-
-.preco {
-  font-weight: 700;
-  color: var(--success);
-  margin-bottom: 0.5rem;
-}
-
-.categoria {
-  display: inline-block;
-  background: var(--primary);
-  color: #fff;
-  padding: 4px 8px;
-  border-radius: 999px;
-  font-size: 0.75rem;
-}
-
-/* ==================== FINANCEIRO ==================== */
-.financeiro-cards {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 1rem;
-  margin-top: 1rem;
-}
-
-.finance-card {
-  text-align: center;
-  padding: 1rem;
-  background: #fff;
-  border-radius: 10px;
-  box-shadow: var(--shadow);
-  border: 1px solid var(--border);
-}
-
-.finance-card h3 {
-  color: var(--text-light);
-  font-size: 0.9rem;
-  margin-bottom: 0.75rem;
-}
-
-.finance-card p {
-  font-size: 1.6rem;
-  font-weight: 700;
-  color: var(--dark);
-}
-
-.positive {
-  color: var(--success);
-}
-
-.negative {
-  color: var(--danger);
-}
-
-/* ==================== MODAL ==================== */
-.modal-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.45);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 200;
-  padding: 1rem;
-}
-
-.modal {
-  background: #fff;
-  padding: 1.25rem;
-  border-radius: 10px;
-  max-width: 720px;
-  width: 100%;
-  box-shadow: var(--shadow);
-  max-height: 90vh;
-  overflow: auto;
-}
-
-/* ==================== TOAST ==================== */
-#toast-container {
-  position: fixed;
-  right: 16px;
-  bottom: 16px;
-  z-index: 9999;
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.toast {
-  padding: 0.6rem 0.9rem;
-  border-radius: 8px;
-  color: #fff;
-  min-width: 200px;
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12);
-  font-weight: 600;
-}
-
-.toast.success {
-  background: var(--success);
-}
-
-.toast.error {
-  background: var(--danger);
-}
-
-.toast.info {
-  background: var(--primary);
-}
-
-/* ==================== LOGIN EMBUTIDO ==================== */
-#loginOverlay {
-  position: fixed;
-  inset: 0;
-  background: #111;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 9999;
-  flex-direction: column;
-  color: #fff;
-  transition: opacity 0.3s ease;
-}
-
-#loginOverlay.hidden {
-  opacity: 0;
-  pointer-events: none;
-}
-
-#loginBox {
-  background: #1e1e1e;
-  padding: 2rem;
-  border-radius: 12px;
-  box-shadow: 0 0 20px rgba(0, 0, 0, 0.4);
-  width: 320px;
-  text-align: center;
-}
-
-#loginBox h2 {
-  color: #ffb300;
-  margin-bottom: 1rem;
-}
-
-#loginBox input {
-  width: 100%;
-  padding: 0.8rem;
-  margin-bottom: 1rem;
-  border: none;
-  border-radius: 8px;
-  background: #2a2a2a;
-  color: #fff;
-}
-
-#loginBox button {
-  width: 100%;
-  padding: 0.8rem;
-  border: none;
-  border-radius: 8px;
-  background: #ffb300;
-  color: #111;
-  font-weight: bold;
-  cursor: pointer;
-}
-
-#loginErro {
-  color: #ff5555;
-  margin-top: 0.5rem;
-  font-size: 0.9rem;
-  min-height: 1rem;
-}
-
-/* ==================== RESPONSIVO ==================== */
-@media (max-width: 768px) {
-  .header-content {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
-  .tabs {
-    overflow-x: auto;
-  }
-
-  .section-header {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
-  .produtos-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .financeiro-cards {
-    grid-template-columns: 1fr;
-  }
-
-  .finance-card p {
-    font-size: 1.3rem;
-  }
-
-  .modal {
-    padding: 1rem;
-  }
-}
-
-@media (max-width: 480px) {
-  .finance-card {
-    padding: 1.25rem;
-  }
-
-  .finance-card p {
-    font-size: 1.2rem;
-  }
+/* Responsive */
+@media (max-width:768px){
+  .header-content{flex-direction:column;align-items:flex-start}
+  .tabs{overflow-x:auto}
+  .section-header{flex-direction:column;align-items:flex-start}
+  .produtos-grid{grid-template-columns:1fr}
+  .form-row{grid-template-columns:1fr}
+  .filters{flex-direction:column;align-items:flex-start}
 }
