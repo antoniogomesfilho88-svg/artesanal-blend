@@ -558,3 +558,46 @@ body{font-family:Inter, 'Segoe UI', Roboto, system-ui, -apple-system, sans-serif
     gap: 1rem;
   }
 }
+/* === Login Embutido no Dashboard === */
+.login-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  background: #111;
+  color: #fff;
+}
+
+.login-container h2 {
+  margin-bottom: 1rem;
+  color: var(--primary, #ffb300);
+}
+
+.login-container input {
+  width: 280px;
+  padding: 10px;
+  margin-bottom: 10px;
+  border-radius: 6px;
+  border: none;
+  background: #222;
+  color: #fff;
+}
+
+.login-container .btn.primary {
+  width: 280px;
+  padding: 10px;
+  font-weight: bold;
+  cursor: pointer;
+  border-radius: 6px;
+  border: none;
+  background: var(--primary, #ffb300);
+  color: #111;
+}
+
+.erro {
+  color: #ff4d4d;
+  font-size: 0.9rem;
+  text-align: center;
+}
+
