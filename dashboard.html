@@ -55,6 +55,7 @@
   </main>
 
   <script>
+    const BASE_URL = "https://artesanal-blend.onrender.com"; // URL do Render
     const loginOverlay = document.getElementById('loginOverlay');
     const loginBtn = document.getElementById('loginBtn');
     const loginError = document.getElementById('loginError');
@@ -65,7 +66,7 @@
       const password = document.getElementById('password').value.trim();
 
       try {
-        const res = await fetch('http://localhost:3000/api/login', {
+        const res = await fetch(`${BASE_URL}/api/login`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ username, password })
@@ -88,13 +89,14 @@
     async function carregarProdutos() {
       const token = localStorage.getItem('token');
       try {
-        const res = await fetch('http://localhost:3000/api/produtos', {
+        const res = await fetch(`${BASE_URL}/api/menu`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         const produtos = await res.json();
-        produtosList.innerHTML = produtos.map(p => `<li>${p.nome} - R$ ${p.preco}</li>`).join('');
+        produtosList.innerHTML = produtos.map(p => `<li>${p.nome} - R$ ${p.preco.toFixed(2)}</li>`).join('');
       } catch (err) {
         console.error(err);
+        produtosList.innerHTML = "<li>Erro ao carregar produtos.</li>";
       }
     }
 
