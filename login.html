@@ -1,85 +1,80 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Login - Artesanal Blend</title>
-  <link rel="stylesheet" href="dashboard.css">
   <style>
     body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #111;
+      color: #fff;
       display: flex;
+      flex-direction: column;
       justify-content: center;
       align-items: center;
       height: 100vh;
-      background: #111;
-      color: #fff;
-      font-family: Arial, sans-serif;
     }
     .login-box {
       background: #1e1e1e;
       padding: 2rem;
       border-radius: 12px;
-      box-shadow: 0 0 15px rgba(0,0,0,0.4);
+      box-shadow: 0 0 20px rgba(0,0,0,0.4);
       width: 320px;
+      text-align: center;
     }
     h2 {
-      text-align: center;
+      color: #ffb300;
       margin-bottom: 1.5rem;
-      color: var(--primary, #ffb300);
     }
     input {
       width: 100%;
-      padding: 0.75rem;
+      padding: 0.8rem;
       margin-bottom: 1rem;
       border: none;
       border-radius: 8px;
       background: #2a2a2a;
       color: #fff;
+      font-size: 1rem;
     }
     button {
       width: 100%;
-      padding: 0.75rem;
+      padding: 0.8rem;
       border: none;
       border-radius: 8px;
-      background: var(--primary, #ffb300);
+      background: #ffb300;
       color: #111;
       font-weight: bold;
       cursor: pointer;
-      transition: 0.2s;
-    }
-    button:hover {
-      background: #ffc933;
     }
     .erro {
-      color: #ff4444;
-      font-size: 0.9rem;
-      text-align: center;
-      margin-bottom: 0.75rem;
+      color: #ff4d4d;
+      margin-top: 0.5rem;
+      min-height: 1.5rem;
     }
   </style>
 </head>
 <body>
   <div class="login-box">
-    <h2>Artesanal Blend</h2>
-    <form id="loginForm">
-      <input type="email" id="email" placeholder="E-mail" required>
-      <input type="password" id="senha" placeholder="Senha" required>
-      <div id="erro" class="erro"></div>
-      <button type="submit">Entrar</button>
-    </form>
+    <h2>Artesanal Blend - Login</h2>
+    <input type="email" id="email" placeholder="E-mail" required />
+    <input type="password" id="senha" placeholder="Senha" required />
+    <button id="btnLogin">Entrar</button>
+    <div class="erro" id="erro"></div>
   </div>
 
   <script>
-    // Se já tiver token, vai direto pro dashboard
-    if (localStorage.getItem('token')) {
-      window.location.href = '/dashboard';
-    }
-
-    document.getElementById('loginForm').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const email = document.getElementById('email').value;
-      const senha = document.getElementById('senha').value;
+    document.getElementById('btnLogin').addEventListener('click', async () => {
+      const email = document.getElementById('email').value.trim();
+      const senha = document.getElementById('senha').value.trim();
       const erroDiv = document.getElementById('erro');
+      erroDiv.textContent = '';
+
+      if (!email || !senha) {
+        erroDiv.textContent = 'Preencha todos os campos.';
+        return;
+      }
 
       try {
         const res = await fetch('/api/auth/login', {
@@ -93,10 +88,10 @@
           localStorage.setItem('token', data.token);
           window.location.href = '/dashboard';
         } else {
-          erroDiv.textContent = data.error || 'E-mail ou senha incorretos';
+          erroDiv.textContent = data.error || 'E-mail ou senha incorretos.';
         }
-      } catch (err) {
-        erroDiv.textContent = 'Erro de conexão. Tente novamente.';
+      } catch {
+        erroDiv.textContent = 'Erro ao conectar com o servidor.';
       }
     });
   </script>
