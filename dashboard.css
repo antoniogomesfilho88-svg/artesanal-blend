@@ -601,3 +601,12 @@ body{font-family:Inter, 'Segoe UI', Roboto, system-ui, -apple-system, sans-serif
   text-align: center;
 }
 
+.btn.danger {
+  background: #e63946;
+  color: #fff;
+  font-weight: bold;
+}
+.btn.danger:hover {
+  background: #ff4d5a;
+}
+
