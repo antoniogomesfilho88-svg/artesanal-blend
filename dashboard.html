@@ -8,75 +8,26 @@
   <style>
     /* Tela de login */
     #loginOverlay {
-      position: fixed;
-      inset: 0;
+      position: fixed; inset: 0;
       background: linear-gradient(135deg, #8B4513, #A0522D);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-direction: column;
-      z-index: 9999;
-      color: #fff;
+      display: flex; align-items: center; justify-content: center;
+      flex-direction: column; z-index: 9999; color: #fff;
     }
-
     #loginBox {
-      background: #fff;
-      color: #333;
-      padding: 2rem;
-      border-radius: 12px;
-      box-shadow: 0 8px 25px rgba(0,0,0,0.25);
-      width: 100%;
-      max-width: 360px;
+      background: #fff; color: #333; padding: 2rem; border-radius: 12px;
+      box-shadow: 0 8px 25px rgba(0,0,0,0.25); width: 100%; max-width: 360px;
       text-align: center;
     }
-
-    #loginBox img {
-      width: 100px;
-      height: 100px;
-      border-radius: 50%;
-      border: 3px solid #8B4513;
-      margin-bottom: 1rem;
-    }
-
-    #loginBox h2 {
-      color: #8B4513;
-      margin-bottom: 1rem;
-    }
-
-    #loginBox input {
-      width: 100%;
-      padding: 0.6rem;
-      margin: 0.4rem 0;
-      border: 1px solid #ccc;
-      border-radius: 8px;
-    }
-
-    #loginBox button {
-      width: 100%;
-      padding: 0.7rem;
-      margin-top: 1rem;
-      border: none;
-      border-radius: 8px;
-      background: #8B4513;
-      color: #fff;
-      font-weight: 600;
-      cursor: pointer;
-      transition: background 0.2s;
-    }
-
-    #loginBox button:hover {
-      background: #A0522D;
-    }
-
-    #loginError {
-      color: #d33;
-      font-size: 0.9rem;
-      margin-top: 0.5rem;
-    }
+    #loginBox img { width: 100px; height: 100px; border-radius: 50%; border: 3px solid #8B4513; margin-bottom: 1rem; }
+    #loginBox h2 { color: #8B4513; margin-bottom: 1rem; }
+    #loginBox input { width: 100%; padding: 0.6rem; margin: 0.4rem 0; border: 1px solid #ccc; border-radius: 8px; }
+    #loginBox button { width: 100%; padding: 0.7rem; margin-top: 1rem; border: none; border-radius: 8px; background: #8B4513; color: #fff; font-weight: 600; cursor: pointer; transition: background 0.2s; }
+    #loginBox button:hover { background: #A0522D; }
+    #loginError { color: #d33; font-size: 0.9rem; margin-top: 0.5rem; }
   </style>
 </head>
-
 <body>
+
   <!-- 🔐 Login -->
   <div id="loginOverlay">
     <div id="loginBox">
@@ -89,7 +40,7 @@
     </div>
   </div>
 
-  <!-- 🔧 Dashboard original -->
+  <!-- 🔧 Dashboard -->
   <header class="dashboard-header">
     <div class="header-content">
       <img src="images/logo.jpg" alt="Logo" class="logo" />
@@ -98,32 +49,23 @@
     </div>
   </header>
 
-  <div class="tabs">
-    <button class="tab-button active" data-tab="produtosTab">Produtos</button>
-    <button class="tab-button" data-tab="pedidosTab">Pedidos</button>
-    <button class="tab-button" data-tab="insumosTab">Insumos</button>
-    <button class="tab-button" data-tab="financeiroTab">Financeiro</button>
-  </div>
-
   <main class="dashboard-content">
-    <!-- seu conteúdo original continua igual -->
+    <h2>Produtos</h2>
+    <ul id="produtosList"></ul>
   </main>
 
-  <div id="toast-container" aria-live="polite"></div>
-  <script src="dashboard.js"></script>
-
-  <!-- 🔑 Script do login com backend -->
   <script>
     const loginOverlay = document.getElementById('loginOverlay');
     const loginBtn = document.getElementById('loginBtn');
     const loginError = document.getElementById('loginError');
+    const produtosList = document.getElementById('produtosList');
 
     async function fazerLogin() {
       const username = document.getElementById('username').value.trim();
       const password = document.getElementById('password').value.trim();
 
       try {
-        const res = await fetch('/api/login', {
+        const res = await fetch('http://localhost:3000/api/login', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ username, password })
@@ -134,19 +76,34 @@
         if (res.ok) {
           localStorage.setItem('token', data.token);
           loginOverlay.style.display = 'none';
+          carregarProdutos();
         } else {
-          loginError.textContent = data.error || 'Usuário ou senha incorretos.';
+          loginError.textContent = data.message || 'Usuário ou senha incorretos.';
         }
       } catch (error) {
         loginError.textContent = 'Erro ao conectar ao servidor.';
       }
     }
 
+    async function carregarProdutos() {
+      const token = localStorage.getItem('token');
+      try {
+        const res = await fetch('http://localhost:3000/api/produtos', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const produtos = await res.json();
+        produtosList.innerHTML = produtos.map(p => `<li>${p.nome} - R$ ${p.preco}</li>`).join('');
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
     loginBtn.addEventListener('click', fazerLogin);
 
-    // Se já tiver token salvo, pula o login
+    // Pula login se já estiver logado
     if (localStorage.getItem('token')) {
       loginOverlay.style.display = 'none';
+      carregarProdutos();
     }
   </script>
 </body>
