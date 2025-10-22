@@ -1,612 +1,397 @@
-:root{
-  --primary:#8B4513;
-  --primary-light:#A0522D;
-  --secondary:#D2691E;
-  --accent:#CD853F;
-  --light:#F5F5DC;
-  --dark:#3E2723;
-  --text:#333;
-  --text-light:#666;
-  --border:#DDD;
-  --success:#27ae60;
-  --warning:#f39c12;
-  --danger:#e74c3c;
-  --shadow: 0 6px 20px rgba(0,0,0,0.08);
-  --radius:10px;
+/* ==========================================================
+   🎨 DASHBOARD ARTESANAL BLEND - CSS FINAL OTIMIZADO
+   ========================================================== */
+
+:root {
+  --primary: #8B4513;
+  --primary-light: #A0522D;
+  --secondary: #D2691E;
+  --accent: #CD853F;
+  --light: #F5F5DC;
+  --dark: #3E2723;
+  --text: #333;
+  --text-light: #666;
+  --border: #DDD;
+  --success: #27ae60;
+  --warning: #f39c12;
+  --danger: #e74c3c;
+  --shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+  --radius: 10px;
 }
 
-*{box-sizing:border-box;margin:0;padding:0}
-body{font-family:Inter, 'Segoe UI', Roboto, system-ui, -apple-system, sans-serif;background:#f3f4f6;color:var(--text);line-height:1.5}
-
-/* Header */
-.dashboard-header{background:linear-gradient(135deg,var(--primary),var(--primary-light));color:#fff;padding:1rem 1.25rem;box-shadow:var(--shadow);position:sticky;top:0;z-index:50}
-.header-content{max-width:1200px;margin:0 auto;display:flex;align-items:center;gap:1rem}
-.logo{width:48px;height:48px;border-radius:8px;object-fit:cover;border:2px solid rgba(255,255,255,0.15)}
-.header-content h1{flex:1;font-size:1.1rem}
-
-/* Tabs */
-.tabs{display:flex;background:#fff;border-bottom:1px solid var(--border);padding:0 1.25rem;max-width:1200px;margin:0 auto}
-.tab-button{padding:0.65rem 1rem;border:0;background:transparent;cursor:pointer;font-size:0.95rem;color:var(--text-light);border-bottom:3px solid transparent}
-.tab-button.active{color:var(--primary);border-bottom-color:var(--primary);background:#fafafa}
-
-/* Layout */
-.dashboard-content{max-width:1200px;margin:1rem auto;padding:0 1.25rem}
-.tab-content{display:none}
-.tab-content.active{display:block}
-.section-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;gap:1rem}
-.section-header h2{color:var(--dark);font-size:1.05rem}
-.actions{display:flex;gap:.5rem;align-items:center}
-
-/* Buttons */
-.btn{padding:.5rem .75rem;border-radius:8px;border:0;cursor:pointer;font-size:.95rem}
-.btn.primary{background:var(--primary);color:#fff}
-.btn.secondary{background:#eef2f3;color:var(--dark)}
-
-/* Filters */
-.filters{display:flex;gap:1rem;margin-bottom:1rem;align-items:center}
-.filters select, .filters input{padding:.5rem;border:1px solid var(--border);border-radius:8px}
-#buscaProdutos{min-width:180px}
-
-/* Grid */
-.produtos-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1rem}
-.produto-card{background:#fff;padding:1rem;border-radius:10px;box-shadow:var(--shadow);position:relative;border-left:4px solid var(--primary);transition:transform .18s ease,box-shadow .18s ease}
-.produto-card:hover{transform:translateY(-3px)}
-.produto-card.indisponivel{opacity:.75;background:#fbfbfb}
-.produto-card.estoque-baixo{border-left-color:var(--danger)}
-
-.produto-card h3{color:var(--primary);margin-bottom:.25rem}
-.preco{font-weight:700;color:var(--success);margin-bottom:.5rem}
-.categoria{display:inline-block;background:var(--primary);color:#fff;padding:4px 8px;border-radius:999px;font-size:.75rem}
-.status{position:absolute;top:12px;right:12px;padding:4px 8px;border-radius:6px;font-size:.75rem}
-
-/* Card actions */
-.card-actions{display:flex;gap:.5rem;margin-top:.75rem;flex-wrap:wrap}
-.btn-editar{background:var(--warning);color:#fff;padding:.45rem .65rem;border-radius:8px;border:0}
-.btn-excluir{background:var(--danger);color:#fff;padding:.45rem .65rem;border-radius:8px;border:0}
-.btn-toggle{background:var(--secondary);color:#fff;padding:.45rem .65rem;border-radius:8px;border:0}
-
-/* ================= FINANCEIRO PROFISSIONAL - CORRIGIDO ================= */
-
-/* Filtros do Financeiro */
-.financeiro-filters {
-    display: flex;
-    gap: 0.75rem;
-    margin-bottom: 1.5rem;
-    align-items: center;
-    flex-wrap: wrap;
+/* ==================== BASE ==================== */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
 }
 
-.periodo-personalizado {
-    display: none;
-    gap: 0.5rem;
-    align-items: center;
+body {
+  font-family: "Inter", "Segoe UI", Roboto, system-ui, -apple-system, sans-serif;
+  background: #f3f4f6;
+  color: var(--text);
+  line-height: 1.5;
 }
 
-.periodo-personalizado span {
-    color: var(--text-light);
-    font-size: 0.9rem;
+/* ==================== HEADER ==================== */
+.dashboard-header {
+  background: linear-gradient(135deg, var(--primary), var(--primary-light));
+  color: #fff;
+  padding: 1rem 1.25rem;
+  box-shadow: var(--shadow);
+  position: sticky;
+  top: 0;
+  z-index: 50;
 }
 
-/* Cards Financeiros - Grid 2x2 */
-.financeiro-cards {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 1rem;
-    margin-bottom: 1.5rem;
+.header-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
 }
 
-.finance-card {
-    text-align: center;
-    padding: 1.5rem;
-    background: #fff;
-    border-radius: var(--radius);
-    box-shadow: var(--shadow);
-    border: 1px solid var(--border);
-    transition: transform .18s ease, box-shadow .18s ease;
+.logo {
+  width: 48px;
+  height: 48px;
+  border-radius: 8px;
+  object-fit: cover;
+  border: 2px solid rgba(255, 255, 255, 0.15);
 }
 
-.finance-card:hover {
-    transform: translateY(-2px);
+.header-content h1 {
+  flex: 1;
+  font-size: 1.1rem;
 }
 
-.finance-card h3 {
-    color: var(--text-light);
-    font-size: 0.9rem;
-    margin-bottom: 0.75rem;
-    font-weight: 600;
+/* ==================== TABS ==================== */
+.tabs {
+  display: flex;
+  background: #fff;
+  border-bottom: 1px solid var(--border);
+  padding: 0 1.25rem;
+  max-width: 1200px;
+  margin: 0 auto;
 }
 
-.finance-card p {
-    font-size: 1.8rem;
-    font-weight: 700;
-    color: var(--dark);
-    margin-bottom: 0.5rem;
+.tab-button {
+  padding: 0.65rem 1rem;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  font-size: 0.95rem;
+  color: var(--text-light);
+  border-bottom: 3px solid transparent;
+  transition: all 0.2s ease;
 }
 
-.finance-card small {
-    font-size: 0.85rem;
-    font-weight: 600;
-    display: block;
+.tab-button.active {
+  color: var(--primary);
+  border-bottom-color: var(--primary);
+  background: #fafafa;
 }
 
-.positive {
-    color: var(--success);
+/* ==================== LAYOUT PRINCIPAL ==================== */
+.dashboard-content {
+  max-width: 1200px;
+  margin: 1rem auto;
+  padding: 0 1.25rem;
 }
 
-.negative {
-    color: var(--danger);
+.tab-content {
+  display: none;
 }
 
-/* Grid Principal do Financeiro */
-.financeiro-grid {
-    display: grid;
-    grid-template-columns: 2fr 1fr;
-    gap: 1.5rem;
-    margin-top: 1.5rem;
+.tab-content.active {
+  display: block;
 }
 
-/* Seções de Conteúdo */
-.grafico-section {
-    background: #fff;
-    padding: 1.5rem;
-    border-radius: var(--radius);
-    box-shadow: var(--shadow);
-    border: 1px solid var(--border);
-}
-
-.grafico-section h4 {
-    margin: 0 0 1rem 0;
-    color: var(--dark);
-    font-size: 1rem;
-    font-weight: 600;
-}
-
-.pedidos-recentes {
-    background: #fff;
-    padding: 1.5rem;
-    border-radius: var(--radius);
-    box-shadow: var(--shadow);
-    border: 1px solid var(--border);
-    height: fit-content;
-}
-
-.pedidos-recentes h4 {
-    margin: 0 0 1rem 0;
-    color: var(--dark);
-    font-size: 1rem;
-    font-weight: 600;
-}
-
-/* Fluxo de Caixa */
-.fluxo-caixa-section {
-    background: #fff;
-    padding: 1.5rem;
-    border-radius: var(--radius);
-    box-shadow: var(--shadow);
-    border: 1px solid var(--border);
-    margin-top: 1.5rem;
-}
-
-.fluxo-caixa-section h4 {
-    margin: 0 0 1rem 0;
-    color: var(--dark);
-    font-size: 1rem;
-    font-weight: 600;
-}
-
-/* Estados Vazios - Placeholders */
-.empty-grafico,
-.empty-pedidos,
-.empty-fluxo {
-    background: var(--light);
-    border: 2px dashed var(--border);
-    border-radius: 8px;
-    padding: 3rem 2rem;
-    text-align: center;
-    color: var(--text-light);
-}
-
-.empty-grafico::before {
-    content: "📊 Gráfico de Desempenho";
-    font-size: 1.1rem;
-    font-weight: 600;
-}
-
-.empty-pedidos::before {
-    content: "🕒 Últimos Pedidos";
-    font-size: 1.1rem;
-    font-weight: 600;
-}
-
-.empty-fluxo::before {
-    content: "💳 Fluxo de Caixa";
-    font-size: 1.1rem;
-    font-weight: 600;
-}
-
-/* Insumos & Financeiro (original mantido) */
-.financeiro-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1rem;margin-top:1rem}
-.finance-card{text-align:center;padding:1rem;background:#fff;border-radius:10px;box-shadow:var(--shadow)}
-.empty-state{text-align:center;padding:2rem;background:#fff;border-radius:10px;box-shadow:var(--shadow)}
-
-/* Modal */
-.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;z-index:200;padding:1rem}
-.modal{background:#fff;padding:1.25rem;border-radius:10px;max-width:720px;width:100%;box-shadow:var(--shadow);max-height:90vh;overflow:auto}
-.form-row{display:grid;grid-template-columns:1fr 1fr;gap:.75rem}
-.form-group{margin-bottom:.6rem}
-.form-group label{display:block;margin-bottom:.25rem;font-weight:600}
-.form-group input, .form-group select, .form-group textarea{width:100%;padding:.5rem;border:1px solid var(--border);border-radius:8px}
-
-/* Toasts */
-#toast-container{position:fixed;right:16px;bottom:16px;z-index:9999;display:flex;flex-direction:column;gap:.5rem}
-.toast{padding:.6rem .9rem;border-radius:8px;color:#fff;min-width:200px;box-shadow:0 6px 18px rgba(0,0,0,0.12)}
-.toast.success{background:var(--success)}
-.toast.error{background:var(--danger)}
-.toast.info{background:var(--primary)}
-
-/* Responsive */
-@media (max-width:768px){
-  .header-content{flex-direction:column;align-items:flex-start}
-  .tabs{overflow-x:auto}
-  .section-header{flex-direction:column;align-items:flex-start}
-  .produtos-grid{grid-template-columns:1fr}
-  .form-row{grid-template-columns:1fr}
-  .filters{flex-direction:column;align-items:flex-start}
-  
-  /* Financeiro Responsivo */
-  .financeiro-cards {
-      grid-template-columns: 1fr;
-  }
-  
-  .financeiro-grid {
-      grid-template-columns: 1fr;
-  }
-  
-  .financeiro-filters {
-      flex-direction: column;
-      align-items: stretch;
-  }
-  
-  .periodo-personalizado {
-      flex-direction: column;
-      gap: 0.5rem;
-  }
-}
-
-@media (max-width:480px){
-  .finance-card {
-      padding: 1.25rem;
-  }
-  
-  .finance-card p {
-      font-size: 1.5rem;
-  }
-  
-  .grafico-section,
-  .pedidos-recentes,
-  .fluxo-caixa-section {
-      padding: 1rem;
-  }
-}
-/* ================= GRÁFICO MELHORADO ================= */
-
-.grafico-header {
+/* ==================== SEÇÕES E BOTÕES ==================== */
+.section-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 1rem;
-  padding: 0 0.5rem;
-}
-
-.grafico-legendas {
-  display: flex;
   gap: 1rem;
-  flex-wrap: wrap;
 }
 
-.legenda-item {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-size: 0.8rem;
-  color: var(--text-light);
+.section-header h2 {
+  color: var(--dark);
+  font-size: 1.05rem;
 }
 
-.legenda-cor {
-  width: 12px;
-  height: 12px;
-  border-radius: 2px;
-  display: inline-block;
-}
-
-.grafico-barras-melhorado {
-  display: flex;
-  gap: 1rem;
-  height: 300px;
-  background: linear-gradient(to top, #f8f9fa, #fff);
+.btn {
+  padding: 0.5rem 0.75rem;
   border-radius: 8px;
-  padding: 1rem;
-  position: relative;
-}
-
-.grafico-eixo-y {
-  display: flex;
-  flex-direction: column-reverse;
-  justify-content: space-between;
-  height: 100%;
-  padding-right: 0.5rem;
-  border-right: 1px solid var(--border);
-  min-width: 80px;
-}
-
-.escala-y {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  height: 20%;
-}
-
-.escala-valor {
-  font-size: 0.7rem;
-  color: var(--text-light);
-  min-width: 60px;
-  text-align: right;
-}
-
-.escala-linha {
-  width: 10px;
-  height: 1px;
-  background: var(--border);
-}
-
-.grafico-barras-container {
-  display: flex;
-  gap: 1.5rem;
-  align-items: end;
-  flex: 1;
-  height: 100%;
-  justify-content: space-around;
-}
-
-.mes-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  height: 100%;
-  flex: 1;
-  position: relative;
-}
-
-.barras-mes {
-  display: flex;
-  flex-direction: column-reverse;
-  align-items: center;
-  height: 100%;
-  width: 40px;
-  position: relative;
-  gap: 2px;
-}
-
-.barra-vendas, .barra-custos, .barra-lucro {
-  width: 100%;
-  border-radius: 3px 3px 0 0;
-  position: relative;
-  transition: all 0.3s ease;
-  min-height: 3px;
+  border: 0;
   cursor: pointer;
+  font-size: 0.95rem;
+  transition: transform 0.15s ease;
 }
 
-.barra-vendas {
-  background: linear-gradient(to top, var(--primary), var(--primary-light));
-  z-index: 3;
+.btn:hover {
+  transform: translateY(-1px);
 }
 
-.barra-custos {
-  background: linear-gradient(to top, var(--danger), #ff6b6b);
-  z-index: 2;
-}
-
-.barra-lucro {
-  background: var(--success);
-  z-index: 1;
-}
-
-.barra-lucro[style*="background: var(--danger)"] {
-  background: var(--danger) !important;
-}
-
-.barra-valor {
-  position: absolute;
-  top: -25px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: rgba(0,0,0,0.9);
-  color: white;
-  padding: 4px 8px;
-  border-radius: 4px;
-  font-size: 0.7rem;
-  white-space: nowrap;
-  opacity: 0;
-  transition: opacity 0.3s ease;
-  pointer-events: none;
-  z-index: 10;
-  font-weight: 600;
-}
-
-.barras-mes:hover .barra-valor {
-  opacity: 1;
-}
-
-.mes-info {
-  margin-top: 0.5rem;
-  text-align: center;
-  width: 100%;
-}
-
-.mes-nome {
-  font-size: 0.8rem;
-  font-weight: 600;
-  color: var(--dark);
-  margin-bottom: 0.25rem;
-}
-
-.mes-detalhes {
-  display: flex;
-  flex-direction: column;
-  gap: 0.1rem;
-}
-
-.mes-detalhes small {
-  font-size: 0.65rem;
-  color: var(--text-light);
-}
-
-.grafico-footer {
-  margin-top: 1rem;
-  padding: 1rem;
-  background: var(--light);
-  border-radius: 8px;
-  border: 1px solid var(--border);
-}
-
-.indicadores {
-  display: flex;
-  gap: 2rem;
-  justify-content: center;
-  flex-wrap: wrap;
-}
-
-.indicador {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.25rem;
-}
-
-.indicador-label {
-  font-size: 0.8rem;
-  color: var(--text-light);
-  font-weight: 600;
-}
-
-.indicador-valor {
-  font-size: 1rem;
-  font-weight: 700;
-  color: var(--dark);
-}
-
-/* Efeitos de hover melhorados */
-.barra-vendas:hover {
-  transform: scale(1.05);
-  filter: brightness(1.1);
-}
-
-.barra-custos:hover {
-  transform: scale(1.05);
-  filter: brightness(1.1);
-}
-
-.barra-lucro:hover {
-  transform: scale(1.05);
-  filter: brightness(1.1);
-}
-
-/* Responsividade */
-@media (max-width: 768px) {
-  .grafico-barras-melhorado {
-    height: 250px;
-    flex-direction: column;
-    gap: 0.5rem;
-  }
-  
-  .grafico-eixo-y {
-    flex-direction: row;
-    border-right: none;
-    border-bottom: 1px solid var(--border);
-    padding-right: 0;
-    padding-bottom: 0.5rem;
-    min-width: auto;
-    height: auto;
-  }
-  
-  .escala-y {
-    height: auto;
-    flex: 1;
-    flex-direction: column;
-    gap: 0.25rem;
-  }
-  
-  .escala-valor {
-    text-align: center;
-    min-width: auto;
-  }
-  
-  .escala-linha {
-    width: 100%;
-    height: 1px;
-  }
-  
-  .grafico-barras-container {
-    height: 200px;
-  }
-  
-  .grafico-legendas {
-    justify-content: center;
-  }
-  
-  .indicadores {
-    gap: 1rem;
-  }
-}
-/* === Login Embutido no Dashboard === */
-.login-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  height: 100vh;
-  background: #111;
+.btn.primary {
+  background: var(--primary);
   color: #fff;
 }
 
-.login-container h2 {
-  margin-bottom: 1rem;
-  color: var(--primary, #ffb300);
-}
-
-.login-container input {
-  width: 280px;
-  padding: 10px;
-  margin-bottom: 10px;
-  border-radius: 6px;
-  border: none;
-  background: #222;
-  color: #fff;
-}
-
-.login-container .btn.primary {
-  width: 280px;
-  padding: 10px;
-  font-weight: bold;
-  cursor: pointer;
-  border-radius: 6px;
-  border: none;
-  background: var(--primary, #ffb300);
-  color: #111;
-}
-
-.erro {
-  color: #ff4d4d;
-  font-size: 0.9rem;
-  text-align: center;
+.btn.secondary {
+  background: #eef2f3;
+  color: var(--dark);
 }
 
 .btn.danger {
-  background: #e63946;
+  background: var(--danger);
   color: #fff;
   font-weight: bold;
 }
+
 .btn.danger:hover {
   background: #ff4d5a;
 }
 
+/* ==================== PRODUTOS ==================== */
+.produtos-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1rem;
+}
+
+.produto-card {
+  background: #fff;
+  padding: 1rem;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  position: relative;
+  border-left: 4px solid var(--primary);
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+.produto-card:hover {
+  transform: translateY(-3px);
+}
+
+.produto-card.indisponivel {
+  opacity: 0.75;
+  background: #fbfbfb;
+}
+
+.produto-card h3 {
+  color: var(--primary);
+  margin-bottom: 0.25rem;
+}
+
+.preco {
+  font-weight: 700;
+  color: var(--success);
+  margin-bottom: 0.5rem;
+}
+
+.categoria {
+  display: inline-block;
+  background: var(--primary);
+  color: #fff;
+  padding: 4px 8px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+}
+
+/* ==================== FINANCEIRO ==================== */
+.financeiro-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.finance-card {
+  text-align: center;
+  padding: 1rem;
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: var(--shadow);
+  border: 1px solid var(--border);
+}
+
+.finance-card h3 {
+  color: var(--text-light);
+  font-size: 0.9rem;
+  margin-bottom: 0.75rem;
+}
+
+.finance-card p {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: var(--dark);
+}
+
+.positive {
+  color: var(--success);
+}
+
+.negative {
+  color: var(--danger);
+}
+
+/* ==================== MODAL ==================== */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+  padding: 1rem;
+}
+
+.modal {
+  background: #fff;
+  padding: 1.25rem;
+  border-radius: 10px;
+  max-width: 720px;
+  width: 100%;
+  box-shadow: var(--shadow);
+  max-height: 90vh;
+  overflow: auto;
+}
+
+/* ==================== TOAST ==================== */
+#toast-container {
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.toast {
+  padding: 0.6rem 0.9rem;
+  border-radius: 8px;
+  color: #fff;
+  min-width: 200px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12);
+  font-weight: 600;
+}
+
+.toast.success {
+  background: var(--success);
+}
+
+.toast.error {
+  background: var(--danger);
+}
+
+.toast.info {
+  background: var(--primary);
+}
+
+/* ==================== LOGIN EMBUTIDO ==================== */
+#loginOverlay {
+  position: fixed;
+  inset: 0;
+  background: #111;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  flex-direction: column;
+  color: #fff;
+  transition: opacity 0.3s ease;
+}
+
+#loginOverlay.hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+#loginBox {
+  background: #1e1e1e;
+  padding: 2rem;
+  border-radius: 12px;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.4);
+  width: 320px;
+  text-align: center;
+}
+
+#loginBox h2 {
+  color: #ffb300;
+  margin-bottom: 1rem;
+}
+
+#loginBox input {
+  width: 100%;
+  padding: 0.8rem;
+  margin-bottom: 1rem;
+  border: none;
+  border-radius: 8px;
+  background: #2a2a2a;
+  color: #fff;
+}
+
+#loginBox button {
+  width: 100%;
+  padding: 0.8rem;
+  border: none;
+  border-radius: 8px;
+  background: #ffb300;
+  color: #111;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+#loginErro {
+  color: #ff5555;
+  margin-top: 0.5rem;
+  font-size: 0.9rem;
+  min-height: 1rem;
+}
+
+/* ==================== RESPONSIVO ==================== */
+@media (max-width: 768px) {
+  .header-content {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .tabs {
+    overflow-x: auto;
+  }
+
+  .section-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .produtos-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .financeiro-cards {
+    grid-template-columns: 1fr;
+  }
+
+  .finance-card p {
+    font-size: 1.3rem;
+  }
+
+  .modal {
+    padding: 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .finance-card {
+    padding: 1.25rem;
+  }
+
+  .finance-card p {
+    font-size: 1.2rem;
+  }
+}
