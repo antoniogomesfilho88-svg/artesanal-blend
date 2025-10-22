@@ -75,6 +75,30 @@ const Produto = mongoose.model('Produto', ProdutoSchema);
 const Insumo = mongoose.model('Insumo', InsumoSchema);
 const Pedido = mongoose.model('Pedido', PedidoSchema);
 
+// ===============================
+// 🔐 Rotas de Autenticação (login e registro)
+// ===============================
+app.post("/api/auth/login", async (req, res) => {
+  try {
+    const { email, senha } = req.body;
+    const user = await User.findOne({ email });
+    if (!user) return res.status(401).json({ error: "Usuário não encontrado" });
+
+    const senhaValida = await bcrypt.compare(senha, user.senhaHash);
+    if (!senhaValida) return res.status(401).json({ error: "Senha incorreta" });
+
+    const token = jwt.sign(
+      { id: user._id, nome: user.nome, cargo: user.cargo },
+      JWT_SECRET,
+      { expiresIn: "8h" }
+    );
+
+    res.json({ token });
+  } catch (err) {
+    console.error("Erro no login:", err);
+    res.status(500).json({ error: "Erro interno no login" });
+  }
+});
 
 // ===== Rotas do Cardápio Público =====
 app.get('/', (req, res) => {
@@ -263,3 +287,4 @@ app.listen(PORT, () => {
     console.log(`📱 Cardápio: https://artesanal-blend.onrender.com`);
     console.log(`📊 Dashboard: https://artesanal-blend.onrender.com/dashboard`);
 });
+
