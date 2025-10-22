@@ -1,412 +1,172 @@
-<section id="financeiroTab" class="tab-content">
-  <div class="section-header">
-    <h2>📊 Dashboard Financeiro</h2>
-    <div class="actions">
-      <button class="btn secondary" onclick="dashboard.updateFinanceiro()">🔄 Atualizar</button>
-      <button class="btn primary" onclick="dashboard.exportarRelatorio()">📄 Exportar</button>
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Dashboard - Artesanal Blend</title>
+  <link rel="stylesheet" href="dashboard.css" />
+</head>
+<body>
+  <header class="dashboard-header">
+    <div class="header-content">
+      <img src="images/logo.jpg" alt="Logo" class="logo" />
+      <h1>Dashboard Artesanal Blend</h1>
+      <button id="visualizarCardapio" class="btn primary">Ver Cardápio Online</button>
     </div>
+  </header>
+
+  <div class="tabs">
+    <button class="tab-button active" data-tab="produtosTab">Produtos</button>
+    <button class="tab-button" data-tab="pedidosTab">Pedidos</button>
+    <button class="tab-button" data-tab="insumosTab">Insumos</button>
+    <button class="tab-button" data-tab="financeiroTab">Financeiro</button>
   </div>
 
-  <!-- Filtros -->
-  <div class="filters">
-    <select id="filtroPeriodo" onchange="dashboard.filtrarFinanceiro()">
-      <option value="hoje">Hoje</option>
-      <option value="semana">Esta Semana</option>
-      <option value="mes" selected>Este Mês</option>
-      <option value="trimestre">Este Trimestre</option>
-      <option value="ano">Este Ano</option>
-    </select>
-    
-    <select id="filtroCategoria" onchange="dashboard.filtrarFinanceiro()">
-      <option value="">Todas Categorias</option>
-      <option value="hamburgueres">Hambúrgueres</option>
-      <option value="combos">Combos</option>
-      <option value="bebidas">Bebidas</option>
-      <option value="acompanhamentos">Acompanhamentos</option>
-    </select>
-    
-    <input type="date" id="dataInicio" onchange="dashboard.filtrarFinanceiro()">
-    <input type="date" id="dataFim" onchange="dashboard.filtrarFinanceiro()">
-  </div>
-
-  <!-- Cards Principais -->
-  <div class="financeiro-cards">
-    <div class="finance-card">
-      <h3>💰 Total Vendas</h3>
-      <p id="totalVendas">R$ 0,00</p>
-      <small id="variacaoVendas" class="positive">+0%</small>
-    </div>
-    <div class="finance-card">
-      <h3>📉 Total Custos</h3>
-      <p id="totalCustos">R$ 0,00</p>
-      <small id="variacaoCustos" class="positive">+0%</small>
-    </div>
-    <div class="finance-card">
-      <h3>💸 Lucro Líquido</h3>
-      <p id="lucro">R$ 0,00</p>
-      <small id="variacaoLucro" class="positive">+0%</small>
-    </div>
-    <div class="finance-card">
-      <h3>📊 Margem</h3>
-      <p id="margemLucro">0%</p>
-      <small>Lucratividade</small>
-    </div>
-  </div>
-
-  <!-- Estatísticas Detalhadas -->
-  <div class="stats-cards" id="financeiroStats">
-    <!-- Será preenchido via JavaScript -->
-  </div>
-
-  <!-- Gráficos e Tabelas -->
-  <div class="financeiro-grid">
-    <!-- Gráfico de Desempenho -->
-    <div class="grafico-section">
-      <h4>📈 Desempenho Mensal</h4>
-      <div class="grafico-barras" id="graficoPedidos">
-        <!-- Gráfico será renderizado aqui -->
-      </div>
-    </div>
-
-    <!-- Pedidos Recentes -->
-    <div class="pedidos-recentes">
-      <h4>🕒 Últimos Pedidos</h4>
-      <div id="ultimosPedidos">
-        <!-- Pedidos serão renderizados aqui -->
-      </div>
-    </div>
-  </div>
-
-  <!-- Fluxo de Caixa -->
-  <div class="grafico-section">
-    <h4>💳 Fluxo de Caixa</h4>
-    <div id="fluxoCaixa">
-      <!-- Tabela de fluxo será renderizada aqui -->
-    </div>
-  </div>
-</section>
-
-<script>
-// Dados de exemplo para demonstração
-const financeiroData = {
-  totalVendas: 125430.50,
-  totalCustos: 78420.30,
-  lucro: 47010.20,
-  variacaoVendas: 12.5,
-  variacaoCustos: 8.2,
-  variacaoLucro: 15.3,
-  margemLucro: 37.5,
-  
-  stats: {
-    ticketMedio: 245.80,
-    vendasMes: 42,
-    custoMedio: 186.70,
-    clientesAtendidos: 128,
-    pedidosCancelados: 3,
-    tempoMedioPreparo: '18 min'
-  },
-  
-  vendasMensais: [
-    { mes: 'Jan', vendas: 8500, custos: 6200 },
-    { mes: 'Fev', vendas: 9200, custos: 6800 },
-    { mes: 'Mar', vendas: 10200, custos: 7500 },
-    { mes: 'Abr', vendas: 11500, custos: 8200 },
-    { mes: 'Mai', vendas: 12300, custos: 8800 },
-    { mes: 'Jun', vendas: 13200, custos: 9200 }
-  ],
-  
-  ultimosPedidos: [
-    { id: 'P00123', cliente: 'João Silva', valor: 320.50, data: '15/10/2023', status: 'entregue' },
-    { id: 'P00122', cliente: 'Maria Santos', valor: 185.00, data: '14/10/2023', status: 'pronto' },
-    { id: 'P00121', cliente: 'Carlos Oliveira', valor: 420.75, data: '14/10/2023', status: 'preparando' },
-    { id: 'P00120', cliente: 'Ana Costa', valor: 210.30, data: '13/10/2023', status: 'entregue' },
-    { id: 'P00119', cliente: 'Pedro Alves', valor: 150.00, data: '12/10/2023', status: 'pendente' }
-  ],
-  
-  fluxoCaixa: [
-    { data: '01/10/2023', descricao: 'Vendas do dia', entrada: 1250.00, saida: 0, saldo: 1250.00 },
-    { data: '01/10/2023', descricao: 'Compra de insumos', entrada: 0, saida: 450.00, saldo: 800.00 },
-    { data: '02/10/2023', descricao: 'Vendas do dia', entrada: 980.00, saida: 0, saldo: 1780.00 },
-    { data: '02/10/2023', descricao: 'Manutenção equipamentos', entrada: 0, saida: 120.00, saldo: 1660.00 }
-  ]
-};
-
-// Funções do Financeiro
-const dashboard = {
-  initFinanceiro: function() {
-    this.renderFinanceiro();
-    this.renderStats();
-    this.renderGrafico();
-    this.renderUltimosPedidos();
-    this.renderFluxoCaixa();
-    this.configurarDatas();
-  },
-  
-  configurarDatas: function() {
-    const hoje = new Date();
-    const umaSemanaAtras = new Date(hoje.getTime() - 7 * 24 * 60 * 60 * 1000);
-    
-    document.getElementById('dataInicio').value = umaSemanaAtras.toISOString().split('T')[0];
-    document.getElementById('dataFim').value = hoje.toISOString().split('T')[0];
-  },
-  
-  filtrarFinanceiro: function() {
-    const periodo = document.getElementById('filtroPeriodo').value;
-    const categoria = document.getElementById('filtroCategoria').value;
-    const dataInicio = document.getElementById('dataInicio').value;
-    const dataFim = document.getElementById('dataFim').value;
-    
-    console.log('Filtrando:', { periodo, categoria, dataInicio, dataFim });
-    this.updateFinanceiro();
-  },
-  
-  updateFinanceiro: function() {
-    const btn = document.querySelector('#financeiroTab .btn.secondary');
-    btn.innerHTML = '⏳ Atualizando...';
-    btn.disabled = true;
-    
-    // Simula carregamento
-    setTimeout(() => {
-      // Atualiza dados (simulação)
-      financeiroData.totalVendas += Math.random() * 1000;
-      financeiroData.totalCustos += Math.random() * 600;
-      financeiroData.lucro = financeiroData.totalVendas - financeiroData.totalCustos;
-      financeiroData.margemLucro = (financeiroData.lucro / financeiroData.totalVendas * 100).toFixed(1);
-      
-      this.renderFinanceiro();
-      this.renderStats();
-      this.renderGrafico();
-      
-      btn.innerHTML = '🔄 Atualizar';
-      btn.disabled = false;
-      
-      this.mostrarToast('Dados atualizados com sucesso!', 'success');
-    }, 1500);
-  },
-  
-  renderFinanceiro: function() {
-    const data = financeiroData;
-    
-    document.getElementById('totalVendas').textContent = this.formatarMoeda(data.totalVendas);
-    document.getElementById('totalCustos').textContent = this.formatarMoeda(data.totalCustos);
-    document.getElementById('lucro').textContent = this.formatarMoeda(data.lucro);
-    document.getElementById('margemLucro').textContent = data.margemLucro + '%';
-    
-    // Variações
-    document.getElementById('variacaoVendas').textContent = 
-      `${data.variacaoVendas >= 0 ? '+' : ''}${data.variacaoVendas}%`;
-    document.getElementById('variacaoVendas').className = data.variacaoVendas >= 0 ? 'positive' : 'negative';
-    
-    document.getElementById('variacaoCustos').textContent = 
-      `${data.variacaoCustos >= 0 ? '+' : ''}${data.variacaoCustos}%`;
-    document.getElementById('variacaoCustos').className = data.variacaoCustos >= 0 ? 'positive' : 'negative';
-    
-    document.getElementById('variacaoLucro').textContent = 
-      `${data.variacaoLucro >= 0 ? '+' : ''}${data.variacaoLucro}%`;
-    document.getElementById('variacaoLucro').className = data.variacaoLucro >= 0 ? 'positive' : 'negative';
-  },
-  
-  renderStats: function() {
-    const container = document.getElementById('financeiroStats');
-    const stats = financeiroData.stats;
-    
-    container.innerHTML = `
-      <div class="stat-card">
-        <div class="stat-icon">🎫</div>
-        <div class="stat-info">
-          <h4>Ticket Médio</h4>
-          <p class="stat-value">${this.formatarMoeda(stats.ticketMedio)}</p>
-          <small>Por pedido</small>
+  <main class="dashboard-content">
+    <!-- Produtos -->
+    <section id="produtosTab" class="tab-content active">
+      <div class="section-header">
+        <h2>Gerenciar Produtos do Cardápio</h2>
+        <div class="actions">
+          <button class="btn primary" onclick="dashboard.abrirModalProduto()">➕ Novo Produto</button>
         </div>
       </div>
-      <div class="stat-card">
-        <div class="stat-icon">📈</div>
-        <div class="stat-info">
-          <h4>Vendas/Mês</h4>
-          <p class="stat-value">${stats.vendasMes}</p>
-          <small>Pedidos realizados</small>
-        </div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-icon">👥</div>
-        <div class="stat-info">
-          <h4>Clientes</h4>
-          <p class="stat-value">${stats.clientesAtendidos}</p>
-          <small>Atendidos</small>
-        </div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-icon">⏱️</div>
-        <div class="stat-info">
-          <h4>Tempo Médio</h4>
-          <p class="stat-value">${stats.tempoMedioPreparo}</p>
-          <small>Preparação</small>
-        </div>
-      </div>
-    `;
-  },
-  
-  renderGrafico: function() {
-    const container = document.getElementById('graficoPedidos');
-    const dados = financeiroData.vendasMensais;
-    
-    const maxVendas = Math.max(...dados.map(d => d.vendas));
-    
-    let html = '';
-    dados.forEach(item => {
-      const alturaVendas = (item.vendas / maxVendas) * 100;
-      const alturaCustos = (item.custos / maxVendas) * 100;
-      
-      html += `
-        <div class="barra-container">
-          <div class="barra-valor">${this.formatarMoeda(item.vendas)}</div>
-          <div class="barra" style="height: ${alturaVendas}%; background: linear-gradient(to top, var(--primary), var(--primary-light))"></div>
-          <div class="barra" style="height: ${alturaCustos}%; background: linear-gradient(to top, var(--danger), #ff6b6b); margin-top: 2px"></div>
-          <div class="barra-label">${item.mes}</div>
-        </div>
-      `;
-    });
-    
-    container.innerHTML = html;
-  },
-  
-  renderUltimosPedidos: function() {
-    const container = document.getElementById('ultimosPedidos');
-    const pedidos = financeiroData.ultimosPedidos;
-    
-    let html = '';
-    pedidos.forEach(pedido => {
-      html += `
-        <div class="pedido-resumo">
-          <div class="pedido-info">
-            <strong>${pedido.id}</strong>
-            <span class="cliente">${pedido.cliente}</span>
-            <small>${pedido.data}</small>
-          </div>
-          <div class="pedido-detalhes">
-            <span class="total">${this.formatarMoeda(pedido.valor)}</span>
-            <span class="status ${pedido.status}">${this.formatarStatus(pedido.status)}</span>
-          </div>
-        </div>
-      `;
-    });
-    
-    container.innerHTML = html;
-  },
-  
-  renderFluxoCaixa: function() {
-    const container = document.getElementById('fluxoCaixa');
-    const fluxo = financeiroData.fluxoCaixa;
-    
-    let html = `
-      <div style="overflow-x: auto;">
-        <table style="width: 100%; border-collapse: collapse;">
-          <thead>
-            <tr style="background: var(--light);">
-              <th style="padding: 0.75rem; text-align: left; border-bottom: 1px solid var(--border);">Data</th>
-              <th style="padding: 0.75rem; text-align: left; border-bottom: 1px solid var(--border);">Descrição</th>
-              <th style="padding: 0.75rem; text-align: right; border-bottom: 1px solid var(--border);">Entrada</th>
-              <th style="padding: 0.75rem; text-align: right; border-bottom: 1px solid var(--border);">Saída</th>
-              <th style="padding: 0.75rem; text-align: right; border-bottom: 1px solid var(--border);">Saldo</th>
-            </tr>
-          </thead>
-          <tbody>
-    `;
-    
-    fluxo.forEach(item => {
-      html += `
-        <tr>
-          <td style="padding: 0.75rem; border-bottom: 1px solid var(--border);">${item.data}</td>
-          <td style="padding: 0.75rem; border-bottom: 1px solid var(--border);">${item.descricao}</td>
-          <td style="padding: 0.75rem; text-align: right; border-bottom: 1px solid var(--border); color: var(--success);">
-            ${item.entrada > 0 ? this.formatarMoeda(item.entrada) : '-'}
-          </td>
-          <td style="padding: 0.75rem; text-align: right; border-bottom: 1px solid var(--border); color: var(--danger);">
-            ${item.saida > 0 ? this.formatarMoeda(item.saida) : '-'}
-          </td>
-          <td style="padding: 0.75rem; text-align: right; border-bottom: 1px solid var(--border); font-weight: bold; color: ${item.saldo >= 0 ? 'var(--success)' : 'var(--danger)'};">
-            ${this.formatarMoeda(item.saldo)}
-          </td>
-        </tr>
-      `;
-    });
-    
-    html += `
-          </tbody>
-        </table>
-      </div>
-    `;
-    
-    container.innerHTML = html;
-  },
-  
-  exportarRelatorio: function() {
-    this.mostrarToast('Gerando relatório financeiro...', 'info');
-    
-    setTimeout(() => {
-      // Simulação de exportação
-      const dataStr = "data:text/csv;charset=utf-8," + encodeURIComponent(this.gerarCSV());
-      const link = document.createElement('a');
-      link.href = dataStr;
-      link.download = `relatorio-financeiro-${new Date().toISOString().split('T')[0]}.csv`;
-      link.click();
-      
-      this.mostrarToast('Relatório exportado com sucesso!', 'success');
-    }, 1000);
-  },
-  
-  gerarCSV: function() {
-    const data = financeiroData;
-    let csv = 'Relatório Financeiro - Artesanal Blend\\n\\n';
-    csv += 'Métrica,Valor\\n';
-    csv += `Total Vendas,${data.totalVendas}\\n`;
-    csv += `Total Custos,${data.totalCustos}\\n`;
-    csv += `Lucro Líquido,${data.lucro}\\n`;
-    csv += `Margem de Lucro,${data.margemLucro}%\\n`;
-    csv += `Ticket Médio,${data.stats.ticketMedio}\\n`;
-    return csv;
-  },
-  
-  formatarMoeda: function(valor) {
-    return new Intl.NumberFormat('pt-BR', {
-      style: 'currency',
-      currency: 'BRL'
-    }).format(valor);
-  },
-  
-  formatarStatus: function(status) {
-    const statusMap = {
-      'entregue': 'Entregue',
-      'pronto': 'Pronto',
-      'preparando': 'Preparando',
-      'pendente': 'Pendente'
-    };
-    return statusMap[status] || status;
-  },
-  
-  mostrarToast: function(mensagem, tipo) {
-    // Usa o sistema de toast existente do seu dashboard
-    if (typeof window.mostrarToast === 'function') {
-      window.mostrarToast(mensagem, tipo);
-    } else {
-      console.log(`[${tipo}] ${mensagem}`);
-    }
-  }
-};
 
-// Inicializa quando a aba for carregada
-document.addEventListener('DOMContentLoaded', function() {
-  const financeiroTab = document.getElementById('financeiroTab');
-  const observer = new MutationObserver(function(mutations) {
-    mutations.forEach(function(mutation) {
-      if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
-        if (financeiroTab.classList.contains('active')) {
-          dashboard.initFinanceiro();
-        }
-      }
-    });
-  });
-  
-  observer.observe(financeiroTab, { attributes: true });
-});
-</script>
+      <div class="filters">
+        <select id="filtroCategoria" onchange="dashboard.filtrarProdutos()">
+          <option value="">Todas as categorias</option>
+          <option value="Hambúrgueres">Hambúrgueres</option>
+          <option value="Combos">Combos</option>
+          <option value="Acompanhamentos">Acompanhamentos</option>
+          <option value="Adicionais">Adicionais</option>
+          <option value="Bebidas">Bebidas</option>
+        </select>
+
+        <select id="filtroStatus" onchange="dashboard.filtrarProdutos()">
+          <option value="">Todos os status</option>
+          <option value="disponivel">Disponíveis</option>
+          <option value="indisponivel">Indisponíveis</option>
+        </select>
+
+        <input id="buscaProdutos" placeholder="Buscar produto..." oninput="dashboard.filtrarProdutos()" />
+      </div>
+
+      <div id="produtosContainer" class="produtos-grid"></div>
+    </section>
+
+    <!-- Pedidos -->
+    <section id="pedidosTab" class="tab-content">
+      <div class="section-header">
+        <h2>Pedidos Recebidos</h2>
+        <div class="actions">
+          <button class="btn secondary" onclick="dashboard.atualizarPedidos()">🔄 Atualizar</button>
+          <button class="btn primary" onclick="dashboard.abrirModalPedido()">➕ Adicionar Pedido</button>
+        </div>
+      </div>
+
+      <div id="pedidosContainer"></div>
+    </section>
+
+    <!-- Insumos -->
+    <section id="insumosTab" class="tab-content">
+      <div class="section-header">
+        <h2>Gerenciar Insumos</h2>
+        <div class="actions">
+          <button class="btn primary" onclick="dashboard.abrirModalInsumo()">➕ Novo Insumo</button>
+        </div>
+      </div>
+
+      <div id="insumosContainer"></div>
+    </section>
+
+    <!-- Financeiro PROFISSIONAL -->
+    <section id="financeiroTab" class="tab-content">
+      <div class="section-header">
+        <h2>📊 Dashboard Financeiro</h2>
+        <div class="actions">
+          <button class="btn secondary" onclick="dashboard.updateFinanceiro()">🔄 Atualizar</button>
+          <button class="btn primary" onclick="dashboard.exportarRelatorio()">📄 Exportar</button>
+        </div>
+      </div>
+
+      <!-- Filtros -->
+      <div class="financeiro-filters">
+        <select id="filtroPeriodo" onchange="dashboard.filtrarFinanceiro()">
+          <option value="hoje">Hoje</option>
+          <option value="semana">Esta Semana</option>
+          <option value="mes" selected>Este Mês</option>
+          <option value="trimestre">Este Trimestre</option>
+          <option value="ano">Este Ano</option>
+          <option value="personalizado">Personalizado</option>
+        </select>
+        
+        <select id="filtroCategoria" onchange="dashboard.filtrarFinanceiro()">
+          <option value="">Todas Categorias</option>
+          <option value="hamburgueres">Hambúrgueres</option>
+          <option value="combos">Combos</option>
+          <option value="bebidas">Bebidas</option>
+          <option value="acompanhamentos">Acompanhamentos</option>
+        </select>
+        
+        <div class="periodo-personalizado">
+          <input type="date" id="dataInicio" onchange="dashboard.filtrarFinanceiro()">
+          <span>até</span>
+          <input type="date" id="dataFim" onchange="dashboard.filtrarFinanceiro()">
+        </div>
+      </div>
+
+      <!-- Cards Principais 2x2 -->
+      <div class="financeiro-cards">
+        <div class="finance-card">
+          <h3>💰 Total Vendas</h3>
+          <p id="totalVendas">R$ 0,00</p>
+          <small id="variacaoVendas" class="positive">+0%</small>
+        </div>
+        <div class="finance-card">
+          <h3>📉 Total Custos</h3>
+          <p id="totalCustos">R$ 0,00</p>
+          <small id="variacaoCustos" class="positive">+0%</small>
+        </div>
+        <div class="finance-card">
+          <h3>💸 Lucro Líquido</h3>
+          <p id="lucro">R$ 0,00</p>
+          <small id="variacaoLucro" class="positive">+0%</small>
+        </div>
+        <div class="finance-card">
+          <h3>📊 Margem</h3>
+          <p id="margemLucro">0%</p>
+          <small>Lucratividade</small>
+        </div>
+      </div>
+
+      <!-- Estatísticas Detalhadas -->
+      <div class="stats-cards" id="financeiroStats"></div>
+
+      <!-- Grid Principal -->
+      <div class="financeiro-grid">
+        <!-- Gráfico -->
+        <div class="grafico-section">
+          <h4>📈 Desempenho Mensal</h4>
+          <div id="graficoPedidos" class="empty-grafico"></div>
+        </div>
+
+        <!-- Pedidos Recentes -->
+        <div class="pedidos-recentes">
+          <h4>🕒 Últimos Pedidos</h4>
+          <div id="ultimosPedidos" class="empty-pedidos"></div>
+        </div>
+      </div>
+
+      <!-- Fluxo de Caixa -->
+      <div class="fluxo-caixa-section">
+        <h4>💳 Fluxo de Caixa</h4>
+        <div id="fluxoCaixa" class="empty-fluxo"></div>
+      </div>
+    </section>
+  </main>
+
+  <div id="toast-container" aria-live="polite"></div>
+
+  <script src="dashboard.js"></script>
+</body>
+</html>
