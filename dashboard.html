@@ -114,28 +114,36 @@
 
     <!-- Financeiro -->
     <section id="financeiroTab" class="tab-content">
-      <div class="section-header">
-        <h2>Relatório Financeiro</h2>
-        <div class="actions">
-          <button class="btn secondary" onclick="dashboard.updateFinanceiro()">🔄 Atualizar</button>
-        </div>
-      </div>
+  <div class="section-header">
+    <h2>📊 Dashboard Financeiro</h2>
+    <div class="actions">
+      <button class="btn secondary" onclick="dashboard.updateFinanceiro()">🔄 Atualizar</button>
+    </div>
+  </div>
 
-      <div class="financeiro-cards">
-        <div class="finance-card">
-          <h3>Total Vendas</h3>
-          <p id="totalVendas">R$ 0,00</p>
-        </div>
-        <div class="finance-card">
-          <h3>Total Custos</h3>
-          <p id="totalCustos">R$ 0,00</p>
-        </div>
-        <div class="finance-card">
-          <h3>Lucro</h3>
-          <p id="lucro">R$ 0,00</p>
-        </div>
-      </div>
-    </section>
+  <!-- Cards Principais -->
+  <div class="financeiro-cards">
+    <div class="finance-card">
+      <h3>💰 Total Vendas</h3>
+      <p id="totalVendas">R$ 0,00</p>
+    </div>
+    <div class="finance-card">
+      <h3>📉 Total Custos</h3>
+      <p id="totalCustos">R$ 0,00</p>
+    </div>
+    <div class="finance-card">
+      <h3>💸 Lucro Líquido</h3>
+      <p id="lucro">R$ 0,00</p>
+    </div>
+  </div>
+
+  <!-- Conteúdo Melhorado -->
+  <div id="financeiroStats"></div>
+  <div class="financeiro-grid">
+    <div id="graficoPedidos"></div>
+    <div id="ultimosPedidos"></div>
+  </div>
+</section>
   </main>
 
   <div id="toast-container" aria-live="polite"></div>
@@ -182,3 +190,4 @@
   </script>
 </body>
 </html>
+
