@@ -1,291 +1,80 @@
-:root{
-  --primary:#8B4513;
-  --primary-light:#A0522D;
-  --secondary:#D2691E;
-  --accent:#CD853F;
-  --light:#F5F5DC;
-  --dark:#3E2723;
-  --text:#333;
-  --text-light:#666;
-  --border:#DDD;
-  --success:#27ae60;
-  --warning:#f39c12;
-  --danger:#e74c3c;
-  --shadow: 0 6px 20px rgba(0,0,0,0.08);
-  --radius:10px;
-}
+<section id="financeiroTab" class="tab-content">
+  <div class="section-header">
+    <h2>📊 Dashboard Financeiro</h2>
+    <div class="actions">
+      <button class="btn secondary" onclick="dashboard.updateFinanceiro()">🔄 Atualizar</button>
+      <button class="btn primary" onclick="dashboard.exportarRelatorio()">📄 Exportar</button>
+    </div>
+  </div>
 
-*{box-sizing:border-box;margin:0;padding:0}
-body{font-family:Inter, 'Segoe UI', Roboto, system-ui, -apple-system, sans-serif;background:#f3f4f6;color:var(--text);line-height:1.5}
+  <!-- Filtros -->
+  <div class="financeiro-filters">
+    <select id="filtroPeriodo" onchange="dashboard.filtrarFinanceiro()">
+      <option value="mes" selected>Este Mês</option>
+      <option value="hoje">Hoje</option>
+      <option value="semana">Esta Semana</option>
+      <option value="trimestre">Este Trimestre</option>
+      <option value="ano">Este Ano</option>
+      <option value="personalizado">Personalizado</option>
+    </select>
+    
+    <select id="filtroCategoria" onchange="dashboard.filtrarFinanceiro()">
+      <option value="">Todas Categorias</option>
+      <option value="hamburgueres">Hambúrgueres</option>
+      <option value="combos">Combos</option>
+      <option value="bebidas">Bebidas</option>
+      <option value="acompanhamentos">Acompanhamentos</option>
+    </select>
+    
+    <div class="periodo-personalizado">
+      <input type="date" id="dataInicio" onchange="dashboard.filtrarFinanceiro()">
+      <span>até</span>
+      <input type="date" id="dataFim" onchange="dashboard.filtrarFinanceiro()">
+    </div>
+  </div>
 
-/* Header */
-.dashboard-header{background:linear-gradient(135deg,var(--primary),var(--primary-light));color:#fff;padding:1rem 1.25rem;box-shadow:var(--shadow);position:sticky;top:0;z-index:50}
-.header-content{max-width:1200px;margin:0 auto;display:flex;align-items:center;gap:1rem}
-.logo{width:48px;height:48px;border-radius:8px;object-fit:cover;border:2px solid rgba(255,255,255,0.15)}
-.header-content h1{flex:1;font-size:1.1rem}
+  <!-- Cards Principais 2x2 -->
+  <div class="financeiro-cards">
+    <div class="finance-card">
+      <h3>💰 Total Vendas</h3>
+      <p id="totalVendas">R$ 0,00</p>
+      <small id="variacaoVendas" class="positive">+0%</small>
+    </div>
+    <div class="finance-card">
+      <h3>📉 Total Custos</h3>
+      <p id="totalCustos">R$ 0,00</p>
+      <small id="variacaoCustos" class="positive">+0%</small>
+    </div>
+    <div class="finance-card">
+      <h3>💸 Lucro Líquido</h3>
+      <p id="lucro">R$ 0,00</p>
+      <small id="variacaoLucro" class="positive">+0%</small>
+    </div>
+    <div class="finance-card">
+      <h3>📊 Margem</h3>
+      <p id="margemLucro">0%</p>
+      <small>Lucratividade</small>
+    </div>
+  </div>
 
-/* Tabs */
-.tabs{display:flex;background:#fff;border-bottom:1px solid var(--border);padding:0 1.25rem;max-width:1200px;margin:0 auto}
-.tab-button{padding:0.65rem 1rem;border:0;background:transparent;cursor:pointer;font-size:0.95rem;color:var(--text-light);border-bottom:3px solid transparent}
-.tab-button.active{color:var(--primary);border-bottom-color:var(--primary);background:#fafafa}
+  <!-- Grid Principal -->
+  <div class="financeiro-grid">
+    <!-- Gráfico -->
+    <div class="grafico-section">
+      <h4>📈 Desempenho Mensal</h4>
+      <div id="graficoPedidos" class="empty-grafico"></div>
+    </div>
 
-/* Layout */
-.dashboard-content{max-width:1200px;margin:1rem auto;padding:0 1.25rem}
-.tab-content{display:none}
-.tab-content.active{display:block}
-.section-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;gap:1rem}
-.section-header h2{color:var(--dark);font-size:1.05rem}
-.actions{display:flex;gap:.5rem;align-items:center}
+    <!-- Pedidos Recentes -->
+    <div class="pedidos-recentes">
+      <h4>🕒 Últimos Pedidos</h4>
+      <div id="ultimosPedidos" class="empty-pedidos"></div>
+    </div>
+  </div>
 
-/* Buttons */
-.btn{padding:.5rem .75rem;border-radius:8px;border:0;cursor:pointer;font-size:.95rem}
-.btn.primary{background:var(--primary);color:#fff}
-.btn.secondary{background:#eef2f3;color:var(--dark)}
-
-/* Filters */
-.filters{display:flex;gap:1rem;margin-bottom:1rem;align-items:center}
-.filters select, .filters input{padding:.5rem;border:1px solid var(--border);border-radius:8px}
-#buscaProdutos{min-width:180px}
-
-/* Grid */
-.produtos-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1rem}
-.produto-card{background:#fff;padding:1rem;border-radius:10px;box-shadow:var(--shadow);position:relative;border-left:4px solid var(--primary);transition:transform .18s ease,box-shadow .18s ease}
-.produto-card:hover{transform:translateY(-3px)}
-.produto-card.indisponivel{opacity:.75;background:#fbfbfb}
-.produto-card.estoque-baixo{border-left-color:var(--danger)}
-
-.produto-card h3{color:var(--primary);margin-bottom:.25rem}
-.preco{font-weight:700;color:var(--success);margin-bottom:.5rem}
-.categoria{display:inline-block;background:var(--primary);color:#fff;padding:4px 8px;border-radius:999px;font-size:.75rem}
-.status{position:absolute;top:12px;right:12px;padding:4px 8px;border-radius:6px;font-size:.75rem}
-
-/* Card actions */
-.card-actions{display:flex;gap:.5rem;margin-top:.75rem;flex-wrap:wrap}
-.btn-editar{background:var(--warning);color:#fff;padding:.45rem .65rem;border-radius:8px;border:0}
-.btn-excluir{background:var(--danger);color:#fff;padding:.45rem .65rem;border-radius:8px;border:0}
-.btn-toggle{background:var(--secondary);color:#fff;padding:.45rem .65rem;border-radius:8px;border:0}
-
-/* Insumos & Financeiro */
-.financeiro-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1rem;margin-top:1rem}
-.finance-card{text-align:center;padding:1rem;background:#fff;border-radius:10px;box-shadow:var(--shadow)}
-.empty-state{text-align:center;padding:2rem;background:#fff;border-radius:10px;box-shadow:var(--shadow)}
-/* FINANCEIRO PROFISSIONAL */
-.financeiro-grid {
-  display: grid;
-  grid-template-columns: 2fr 1fr;
-  gap: 1.5rem;
-  margin-top: 1rem;
-}
-
-.stats-cards {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 1rem;
-}
-
-.stat-card {
-  background: white;
-  padding: 1.5rem;
-  border-radius: 12px;
-  border: 1px solid #e1e5e9;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-}
-
-.stat-icon {
-  font-size: 2rem;
-  width: 60px;
-  height: 60px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: #f8f9fa;
-  border-radius: 12px;
-}
-
-.stat-info h4 {
-  margin: 0 0 0.5rem 0;
-  font-size: 0.9rem;
-  color: #6c757d;
-  font-weight: 600;
-}
-
-.stat-value {
-  font-size: 1.3rem;
-  font-weight: bold;
-  margin: 0;
-  color: #2c3e50;
-}
-
-.stat-card small {
-  color: #6c757d;
-  font-size: 0.8rem;
-}
-
-/* Gráfico */
-.grafico-section {
-  background: white;
-  padding: 1.5rem;
-  border-radius: 12px;
-  border: 1px solid #e1e5e9;
-  margin-bottom: 1.5rem;
-}
-
-.grafico-section h4 {
-  margin: 0 0 1rem 0;
-  color: #2c3e50;
-}
-
-.grafico-barras {
-  display: flex;
-  align-items: end;
-  gap: 0.5rem;
-  height: 200px;
-  padding: 1rem 0;
-}
-
-.barra-container {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  height: 100%;
-}
-
-.barra {
-  background: linear-gradient(to top, #3498db, #2ecc71);
-  width: 30px;
-  border-radius: 4px 4px 0 0;
-  position: relative;
-  transition: height 0.3s ease;
-  min-height: 5px;
-}
-
-.barra-valor {
-  position: absolute;
-  top: -25px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: rgba(0,0,0,0.8);
-  color: white;
-  padding: 2px 6px;
-  border-radius: 4px;
-  font-size: 0.7rem;
-  white-space: nowrap;
-  opacity: 0;
-  transition: opacity 0.3s ease;
-}
-
-.barra-container:hover .barra-valor {
-  opacity: 1;
-}
-
-.barra-label {
-  margin-top: 0.5rem;
-  font-size: 0.8rem;
-  color: #6c757d;
-  text-align: center;
-}
-
-/* Pedidos Recentes */
-.pedidos-recentes {
-  background: white;
-  padding: 1.5rem;
-  border-radius: 12px;
-  border: 1px solid #e1e5e9;
-}
-
-.pedido-resumo {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0.75rem 0;
-  border-bottom: 1px solid #f1f3f4;
-}
-
-.pedido-resumo:last-child {
-  border-bottom: none;
-}
-
-.pedido-info {
-  flex: 1;
-}
-
-.pedido-info strong {
-  display: block;
-  font-size: 0.9rem;
-  color: #2c3e50;
-}
-
-.cliente {
-  font-size: 0.8rem;
-  color: #6c757d;
-}
-
-.pedido-info small {
-  font-size: 0.7rem;
-  color: #95a5a6;
-}
-
-.pedido-detalhes {
-  text-align: right;
-}
-
-.pedido-detalhes .total {
-  display: block;
-  font-weight: bold;
-  color: #27ae60;
-  font-size: 0.9rem;
-}
-
-.pedido-detalhes .status {
-  font-size: 0.7rem;
-  padding: 2px 8px;
-  border-radius: 12px;
-  background: #f39c12;
-  color: white;
-  text-transform: uppercase;
-}
-
-.status.entregue { background: #27ae60; }
-.status.pronto { background: #3498db; }
-.status.preparando { background: #f39c12; }
-.status.pendente { background: #95a5a6; }
-
-/* Responsivo */
-@media (max-width: 768px) {
-  .financeiro-grid {
-    grid-template-columns: 1fr;
-  }
-  
-  .stats-cards {
-    grid-template-columns: 1fr;
-  }
-}
-/* Modal */
-.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;z-index:200;padding:1rem}
-.modal{background:#fff;padding:1.25rem;border-radius:10px;max-width:720px;width:100%;box-shadow:var(--shadow);max-height:90vh;overflow:auto}
-.form-row{display:grid;grid-template-columns:1fr 1fr;gap:.75rem}
-.form-group{margin-bottom:.6rem}
-.form-group label{display:block;margin-bottom:.25rem;font-weight:600}
-.form-group input, .form-group select, .form-group textarea{width:100%;padding:.5rem;border:1px solid var(--border);border-radius:8px}
-
-/* Toasts */
-#toast-container{position:fixed;right:16px;bottom:16px;z-index:9999;display:flex;flex-direction:column;gap:.5rem}
-.toast{padding:.6rem .9rem;border-radius:8px;color:#fff;min-width:200px;box-shadow:0 6px 18px rgba(0,0,0,0.12)}
-.toast.success{background:var(--success)}
-.toast.error{background:var(--danger)}
-.toast.info{background:var(--primary)}
-
-/* Responsive */
-@media (max-width:768px){
-  .header-content{flex-direction:column;align-items:flex-start}
-  .tabs{overflow-x:auto}
-  .section-header{flex-direction:column;align-items:flex-start}
-  .produtos-grid{grid-template-columns:1fr}
-  .form-row{grid-template-columns:1fr}
-  .filters{flex-direction:column;align-items:flex-start}
-}
-
+  <!-- Fluxo de Caixa -->
+  <div class="fluxo-caixa-section">
+    <h4>💳 Fluxo de Caixa</h4>
+    <div id="fluxoCaixa" class="empty-fluxo"></div>
+  </div>
+</section>
