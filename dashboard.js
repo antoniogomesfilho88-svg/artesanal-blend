@@ -797,7 +797,304 @@ imprimirCupom(id) {
     console.log('Filtrando financeiro:', { periodo, categoria, dataInicio, dataFim });
     this.updateFinanceiro();
   }
+   renderFinanceiro() {
+  const data = this.financeiroData;
+  
+  const totalVendasEl = document.getElementById('totalVendas');
+  const totalCustosEl = document.getElementById('totalCustos');
+  const lucroEl = document.getElementById('lucro');
+  const margemLucroEl = document.getElementById('margemLucro');
+  
+  if (totalVendasEl) totalVendasEl.textContent = this.formatarMoeda(data.totalVendas);
+  if (totalCustosEl) totalCustosEl.textContent = this.formatarMoeda(data.totalCustos);
+  if (lucroEl) {
+    lucroEl.textContent = this.formatarMoeda(data.lucro);
+    lucroEl.className = data.lucro >= 0 ? 'positive' : 'negative';
+  }
+  if (margemLucroEl) {
+    margemLucroEl.textContent = data.margemLucro + '%';
+    margemLucroEl.className = data.margemLucro >= 0 ? 'positive' : 'negative';
+  }
+  
+  const variacaoVendasEl = document.getElementById('variacaoVendas');
+  const variacaoCustosEl = document.getElementById('variacaoCustos');
+  const variacaoLucroEl = document.getElementById('variacaoLucro');
+  
+  if (variacaoVendasEl) {
+    variacaoVendasEl.textContent = `${data.variacaoVendas >= 0 ? '+' : ''}${data.variacaoVendas}%`;
+    variacaoVendasEl.className = data.variacaoVendas >= 0 ? 'positive' : 'negative';
+  }
+  
+  if (variacaoCustosEl) {
+    variacaoCustosEl.textContent = `${data.variacaoCustos >= 0 ? '+' : ''}${data.variacaoCustos}%`;
+    variacaoCustosEl.className = data.variacaoCustos >= 0 ? 'positive' : 'negative';
+  }
+  
+  if (variacaoLucroEl) {
+    variacaoLucroEl.textContent = `${data.variacaoLucro >= 0 ? '+' : ''}${data.variacaoLucro}%`;
+    variacaoLucroEl.className = data.variacaoLucro >= 0 ? 'positive' : 'negative';
+  }
+}
 
+renderStats() {
+  const container = document.getElementById('financeiroStats');
+  if (!container) return;
+  
+  const stats = this.financeiroData.stats;
+  
+  container.innerHTML = `
+    <div class="stats-cards">
+      <div class="stat-card">
+        <div class="stat-icon">🎫</div>
+        <div class="stat-info">
+          <h4>Ticket Médio</h4>
+          <p class="stat-value">${this.formatarMoeda(stats.ticketMedio)}</p>
+          <small>Por pedido</small>
+        </div>
+      </div>
+      
+      <div class="stat-card">
+        <div class="stat-icon">📈</div>
+        <div class="stat-info">
+          <h4>Vendas/Mês</h4>
+          <p class="stat-value">${stats.vendasMes}</p>
+          <small>Pedidos realizados</small>
+        </div>
+      </div>
+      
+      <div class="stat-card">
+        <div class="stat-icon">👥</div>
+        <div class="stat-info">
+          <h4>Clientes Únicos</h4>
+          <p class="stat-value">${stats.clientesAtendidos}</p>
+          <small>Atendidos</small>
+        </div>
+      </div>
+      
+      <div class="stat-card">
+        <div class="stat-icon">⏱️</div>
+        <div class="stat-info">
+          <h4>Tempo Médio</h4>
+          <p class="stat-value">${stats.tempoMedioPreparo}</p>
+          <small>Preparação</small>
+        </div>
+      </div>
+      
+      <div class="stat-card">
+        <div class="stat-icon">📊</div>
+        <div class="stat-info">
+          <h4>Custo Médio</h4>
+          <p class="stat-value">${this.formatarMoeda(stats.custoMedio)}</p>
+          <small>Por pedido</small>
+        </div>
+      </div>
+      
+      <div class="stat-card">
+        <div class="stat-icon">❌</div>
+        <div class="stat-info">
+          <h4>Pedidos Cancel.</h4>
+          <p class="stat-value ${stats.pedidosCancelados > 5 ? 'negative' : 'positive'}">${stats.pedidosCancelados}</p>
+          <small>Este mês</small>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+renderGrafico() {
+  const container = document.getElementById('graficoPedidos');
+  if (!container) {
+    console.error('Container do gráfico não encontrado');
+    return;
+  }
+  
+  const dados = this.financeiroData.vendasMensais;
+  
+  if (!dados || dados.length === 0) {
+    container.innerHTML = '<div class="empty-state">Sem dados para exibir</div>';
+    return;
+  }
+  
+  const maxVendas = Math.max(...dados.map(d => d.vendas)) || 100;
+  
+  let html = '';
+  dados.forEach(item => {
+    const alturaVendas = (item.vendas / maxVendas) * 100;
+    const alturaCustos = (item.custos / maxVendas) * 100;
+    
+    html += `
+      <div class="barra-container">
+        <div class="barra-valor">${this.formatarMoeda(item.vendas)}</div>
+        <div class="barra" style="height: ${alturaVendas}%; background: linear-gradient(to top, var(--primary), var(--primary-light))"></div>
+        <div class="barra" style="height: ${alturaCustos}%; background: linear-gradient(to top, var(--danger), #ff6b6b); margin-top: 2px"></div>
+        <div class="barra-label">${item.mes}</div>
+      </div>
+    `;
+  });
+  
+  container.innerHTML = html;
+}
+
+renderUltimosPedidos() {
+  const container = document.getElementById('ultimosPedidos');
+  if (!container) {
+    console.error('Container de últimos pedidos não encontrado');
+    return;
+  }
+  
+  const ultimosPedidos = [...this.pedidos]
+    .sort((a, b) => new Date(b.createdAt || b.data) - new Date(a.createdAt || a.data))
+    .slice(0, 5);
+
+  if (ultimosPedidos.length === 0) {
+    container.innerHTML = '<p class="empty-state">Nenhum pedido recente</p>';
+    return;
+  }
+
+  let html = '';
+  ultimosPedidos.forEach(pedido => {
+    html += `
+      <div class="pedido-resumo">
+        <div class="pedido-info">
+          <strong>${pedido._id?.slice(-6) || 'N/A'}</strong>
+          <span class="cliente">${pedido.cliente || 'Cliente'}</span>
+          <small>${new Date(pedido.createdAt || pedido.data).toLocaleDateString('pt-BR')}</small>
+        </div>
+        <div class="pedido-detalhes">
+          <span class="total">${this.formatarMoeda(pedido.total || 0)}</span>
+          <span class="status ${pedido.status}">${this.formatarStatus(pedido.status)}</span>
+        </div>
+      </div>
+    `;
+  });
+  
+  container.innerHTML = html;
+}
+
+renderFluxoCaixa() {
+  const container = document.getElementById('fluxoCaixa');
+  if (!container) return;
+  
+  const fluxo = this.gerarFluxoCaixa();
+  
+  let html = `
+    <div style="overflow-x: auto;">
+      <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem;">
+        <thead>
+          <tr style="background: var(--light);">
+            <th style="padding: 0.75rem; text-align: left; border-bottom: 1px solid var(--border);">Data</th>
+            <th style="padding: 0.75rem; text-align: left; border-bottom: 1px solid var(--border);">Descrição</th>
+            <th style="padding: 0.75rem; text-align: right; border-bottom: 1px solid var(--border);">Entrada</th>
+            <th style="padding: 0.75rem; text-align: right; border-bottom: 1px solid var(--border);">Saída</th>
+            <th style="padding: 0.75rem; text-align: right; border-bottom: 1px solid var(--border);">Saldo</th>
+          </tr>
+        </thead>
+        <tbody>
+  `;
+  
+  fluxo.forEach(item => {
+    html += `
+      <tr>
+        <td style="padding: 0.75rem; border-bottom: 1px solid var(--border);">${item.data}</td>
+        <td style="padding: 0.75rem; border-bottom: 1px solid var(--border);">${item.descricao}</td>
+        <td style="padding: 0.75rem; text-align: right; border-bottom: 1px solid var(--border); color: var(--success);">
+          ${item.entrada > 0 ? this.formatarMoeda(item.entrada) : '-'}
+        </td>
+        <td style="padding: 0.75rem; text-align: right; border-bottom: 1px solid var(--border); color: var(--danger);">
+          ${item.saida > 0 ? this.formatarMoeda(item.saida) : '-'}
+        </td>
+        <td style="padding: 0.75rem; text-align: right; border-bottom: 1px solid var(--border); font-weight: bold; color: ${item.saldo >= 0 ? 'var(--success)' : 'var(--danger)'};">
+          ${this.formatarMoeda(item.saldo)}
+        </td>
+      </tr>
+    `;
+  });
+  
+  html += `
+        </tbody>
+      </table>
+    </div>
+  `;
+  
+  container.innerHTML = html;
+}
+
+gerarFluxoCaixa() {
+  const pedidosEntregues = this.pedidos.filter(p => p.status === 'entregue');
+  const fluxo = [];
+  let saldo = 0;
+  
+  const pedidosPorData = {};
+  pedidosEntregues.forEach(pedido => {
+    const data = new Date(pedido.createdAt || pedido.data).toLocaleDateString('pt-BR');
+    if (!pedidosPorData[data]) {
+      pedidosPorData[data] = 0;
+    }
+    pedidosPorData[data] += parseFloat(pedido.total) || 0;
+  });
+  
+  Object.entries(pedidosPorData).forEach(([data, total]) => {
+    saldo += total;
+    fluxo.push({
+      data: data,
+      descricao: 'Vendas do dia',
+      entrada: total,
+      saida: 0,
+      saldo: saldo
+    });
+  });
+  
+  return fluxo.sort((a, b) => new Date(a.data.split('/').reverse().join('-')) - new Date(b.data.split('/').reverse().join('-')));
+}
+
+formatarMoeda(valor) {
+  return new Intl.NumberFormat('pt-BR', {
+    style: 'currency',
+    currency: 'BRL'
+  }).format(valor || 0);
+}
+
+formatarStatus(status) {
+  const statusMap = {
+    'entregue': 'Entregue',
+    'pronto': 'Pronto', 
+    'preparando': 'Preparando',
+    'pendente': 'Pendente',
+    'cancelado': 'Cancelado'
+  };
+  return statusMap[status] || status;
+}
+
+// AGORA O MÉTODO updateFinanceiro CORRETO:
+async updateFinanceiro() {
+  const btn = document.querySelector('#financeiroTab .btn.secondary');
+  if (btn) {
+    btn.innerHTML = '⏳ Atualizando...';
+    btn.disabled = true;
+  }
+
+  try {
+    // 1. Primeiro calcula os dados
+    this.calcularFinanceiroLocal();
+    
+    // 2. Depois renderiza na ordem correta
+    this.renderFinanceiro();
+    this.renderStats();
+    this.renderGrafico();
+    this.renderUltimosPedidos();
+    this.renderFluxoCaixa();
+    
+    if (btn) {
+      btn.innerHTML = '🔄 Atualizar';
+      btn.disabled = false;
+    }
+    
+    this.showToast('Dados financeiros atualizados!', 'success');
+  } catch (error) {
+    console.error('Erro no financeiro:', error);
+    this.showToast('Erro ao carregar dados financeiros', 'error');
+  }
+}
   async updateFinanceiro() {
   const btn = document.querySelector('#financeiroTab .btn.secondary');
   if (btn) {
@@ -1085,5 +1382,6 @@ renderUltimosPedidos() {
 document.addEventListener('DOMContentLoaded', () => {
   window.dashboard = new Dashboard();
 });
+
 
 
