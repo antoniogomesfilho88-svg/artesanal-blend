@@ -1,13 +1,52 @@
 // server.js
+import express from "express";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
+import cors from "cors";
 
+const app = express();
+const PORT = process.env.PORT || 3000;
+
+app.use(cors()); // permite requisições do front-end
+app.use(express.json()); // permite ler JSON do body
+
+// Chave secreta para JWT
 const SECRET_KEY = process.env.JWT_SECRET || "segredo-artesanal-blend";
 
+// Usuário admin com senha criptografada
 const admin = {
   username: "admin",
-  passwordHash: bcrypt.hashSync("123456", 10), // senha padrão
+  passwordHash: bcrypt.hashSync("123456", 10),
 };
+
+// Rota de login
+app.post("/api/login", (req, res) => {
+  const { username, password } = req.body;
+
+  if (!username || !password) {
+    return res.status(400).json({ message: "Usuário e senha obrigatórios" });
+  }
+
+  if (username !== admin.username) {
+    return res.status(401).json({ message: "Usuário ou senha inválidos" });
+  }
+
+  const isPasswordValid = bcrypt.compareSync(password, admin.passwordHash);
+
+  if (!isPasswordValid) {
+    return res.status(401).json({ message: "Usuário ou senha inválidos" });
+  }
+
+  // Gerar token JWT válido por 1 hora
+  const token = jwt.sign({ username: admin.username }, SECRET_KEY, { expiresIn: "1h" });
+
+  return res.json({ token });
+});
+
+// Iniciar servidor
+app.listen(PORT, () => {
+  console.log(`Servidor rodando na porta ${PORT}`);
+});
 
 
 import express from 'express';
@@ -273,4 +312,5 @@ app.listen(PORT, () => {
     console.log(`📱 Cardápio: https://artesanal-blend.onrender.com`);
     console.log(`📊 Dashboard: https://artesanal-blend.onrender.com/dashboard`);
 });
+
 
