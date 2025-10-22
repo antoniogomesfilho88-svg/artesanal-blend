@@ -1169,20 +1169,20 @@ renderGrafico() {
     console.error('Container do gráfico não encontrado');
     return;
   }
-  
+
   const dados = this.financeiroData.vendasMensais;
-  
+
   if (!dados || dados.length === 0) {
     container.innerHTML = '<div class="empty-state">📊 Aguardando dados para exibir o gráfico</div>';
     return;
   }
-  
+
   // Calcular totais para legendas
   const totalVendas = dados.reduce((sum, item) => sum + item.vendas, 0);
   const totalCustos = dados.reduce((sum, item) => sum + item.custos, 0);
   const totalLucro = totalVendas - totalCustos;
   const maxValor = Math.max(...dados.map(d => Math.max(d.vendas, d.custos))) || 100;
-  
+
   let html = `
     <div class="grafico-header">
       <div class="grafico-legendas">
@@ -1200,41 +1200,38 @@ renderGrafico() {
         </div>
       </div>
     </div>
-    
+
     <div class="grafico-barras-melhorado">
       <div class="grafico-eixo-y">
         ${this.gerarEscalaEixoY(maxValor)}
       </div>
-      
+
       <div class="grafico-barras-container">
   `;
-  
+
   dados.forEach(item => {
     const alturaVendas = (item.vendas / maxValor) * 100;
     const alturaCustos = (item.custos / maxValor) * 100;
     const lucro = item.vendas - item.custos;
     const alturaLucro = (Math.max(0, lucro) / maxValor) * 100;
     const corLucro = lucro >= 0 ? 'var(--success)' : 'var(--danger)';
-    
+
     html += `
       <div class="mes-container">
         <div class="barras-mes">
-          <!-- Barra de Lucro (verde/vermelho) -->
           <div class="barra-lucro" style="height: ${alturaLucro}%; background: ${corLucro}">
             <div class="barra-valor">${this.formatarMoeda(lucro)}</div>
           </div>
-          
-          <!-- Barra de Custos (vermelho) -->
+
           <div class="barra-custos" style="height: ${alturaCustos}%; background: linear-gradient(to top, var(--danger), #ff6b6b)">
             <div class="barra-valor">${this.formatarMoeda(item.custos)}</div>
           </div>
-          
-          <!-- Barra de Vendas (marrom) -->
+
           <div class="barra-vendas" style="height: ${alturaVendas}%; background: linear-gradient(to top, var(--primary), var(--primary-light))">
             <div class="barra-valor">${this.formatarMoeda(item.vendas)}</div>
           </div>
         </div>
-        
+
         <div class="mes-info">
           <div class="mes-nome">${item.mes}</div>
           <div class="mes-detalhes">
@@ -1246,11 +1243,11 @@ renderGrafico() {
       </div>
     `;
   });
-  
+
   html += `
       </div>
     </div>
-    
+
     <div class="grafico-footer">
       <div class="indicadores">
         <div class="indicador">
@@ -1266,15 +1263,14 @@ renderGrafico() {
       </div>
     </div>
   `;
-  
-  container.innerHTML = html;
-},
 
-// Funções auxiliares para o gráfico melhorado
+  container.innerHTML = html;
+}
+
 gerarEscalaEixoY(maxValor) {
   const escalas = [];
   const numEscalas = 5;
-  
+
   for (let i = numEscalas; i >= 0; i--) {
     const valor = (maxValor / numEscalas) * i;
     escalas.push(`
@@ -1284,209 +1280,52 @@ gerarEscalaEixoY(maxValor) {
       </div>
     `);
   }
-  
+
   return escalas.join('');
-},
+}
 
 obterMelhorMes(dados) {
   if (!dados.length) return '-';
-  const melhorMes = dados.reduce((prev, current) => 
+  const melhorMes = dados.reduce((prev, current) =>
     (prev.vendas > current.vendas) ? prev : current
   );
   return melhorMes.mes;
-},
+}
 
 calcularCrescimento(dados) {
   if (dados.length < 2) return 0;
   const primeiro = dados[0].vendas;
   const ultimo = dados[dados.length - 1].vendas;
-  
   if (primeiro === 0) return 0;
   return (((ultimo - primeiro) / primeiro) * 100).toFixed(1);
-},
-
-// Adicione também um fallback para quando não há dados
-renderUltimosPedidos() {
-  const container = document.getElementById('ultimosPedidos');
-  if (!container) {
-    console.error('Container de últimos pedidos não encontrado');
-    return;
-  }
-  
-  const ultimosPedidos = [...this.pedidos]
-    .sort((a, b) => new Date(b.createdAt || b.data) - new Date(a.createdAt || a.data))
-    .slice(0, 5);
-
-  if (ultimosPedidos.length === 0) {
-    container.innerHTML = '<p class="empty-state">Nenhum pedido recente</p>';
-    return;
-  }
-
-  let html = '';
-  ultimosPedidos.forEach(pedido => {
-    html += `
-      <div class="pedido-resumo">
-        <div class="pedido-info">
-          <strong>${pedido._id?.slice(-6) || 'N/A'}</strong>
-          <span class="cliente">${pedido.cliente || 'Cliente'}</span>
-          <small>${new Date(pedido.createdAt || pedido.data).toLocaleDateString('pt-BR')}</small>
-        </div>
-        <div class="pedido-detalhes">
-          <span class="total">${this.formatarMoeda(pedido.total || 0)}</span>
-          <span class="status ${pedido.status}">${this.formatarStatus(pedido.status)}</span>
-        </div>
-      </div>
-    `;
-  });
-  
-  container.innerHTML = html;
 }
-  renderFluxoCaixa() {
-    const container = document.getElementById('fluxoCaixa');
-    if (!container) return;
-    
-    const fluxo = this.gerarFluxoCaixa();
-    
-    let html = `
-      <div style="overflow-x: auto;">
-        <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem;">
-          <thead>
-            <tr style="background: var(--light);">
-              <th style="padding: 0.75rem; text-align: left; border-bottom: 1px solid var(--border);">Data</th>
-              <th style="padding: 0.75rem; text-align: left; border-bottom: 1px solid var(--border);">Descrição</th>
-              <th style="padding: 0.75rem; text-align: right; border-bottom: 1px solid var(--border);">Entrada</th>
-              <th style="padding: 0.75rem; text-align: right; border-bottom: 1px solid var(--border);">Saída</th>
-              <th style="padding: 0.75rem; text-align: right; border-bottom: 1px solid var(--border);">Saldo</th>
-            </tr>
-          </thead>
-          <tbody>
-    `;
-    
-    fluxo.forEach(item => {
-      html += `
-        <tr>
-          <td style="padding: 0.75rem; border-bottom: 1px solid var(--border);">${item.data}</td>
-          <td style="padding: 0.75rem; border-bottom: 1px solid var(--border);">${item.descricao}</td>
-          <td style="padding: 0.75rem; text-align: right; border-bottom: 1px solid var(--border); color: var(--success);">
-            ${item.entrada > 0 ? this.formatarMoeda(item.entrada) : '-'}
-          </td>
-          <td style="padding: 0.75rem; text-align: right; border-bottom: 1px solid var(--border); color: var(--danger);">
-            ${item.saida > 0 ? this.formatarMoeda(item.saida) : '-'}
-          </td>
-          <td style="padding: 0.75rem; text-align: right; border-bottom: 1px solid var(--border); font-weight: bold; color: ${item.saldo >= 0 ? 'var(--success)' : 'var(--danger)'};">
-            ${this.formatarMoeda(item.saldo)}
-          </td>
-        </tr>
-      `;
-    });
-    
-    html += `
-          </tbody>
-        </table>
-      </div>
-    `;
-    
-    container.innerHTML = html;
-  }
 
-  gerarFluxoCaixa() {
-    const pedidosEntregues = this.pedidos.filter(p => p.status === 'entregue');
-    const fluxo = [];
-    let saldo = 0;
-    
-    const pedidosPorData = {};
-    pedidosEntregues.forEach(pedido => {
-      const data = new Date(pedido.createdAt || pedido.data).toLocaleDateString('pt-BR');
-      if (!pedidosPorData[data]) {
-        pedidosPorData[data] = 0;
-      }
-      pedidosPorData[data] += parseFloat(pedido.total) || 0;
-    });
-    
-    Object.entries(pedidosPorData).forEach(([data, total]) => {
-      saldo += total;
-      fluxo.push({
-        data: data,
-        descricao: 'Vendas do dia',
-        entrada: total,
-        saida: 0,
-        saldo: saldo
-      });
-    });
-    
-    return fluxo.sort((a, b) => new Date(a.data.split('/').reverse().join('-')) - new Date(b.data.split('/').reverse().join('-')));
-  }
+/* ================= UTILITÁRIOS ================= */
+showToast(mensagem, tipo = 'success', timeout = 2500) {
+  const container = document.getElementById('toast-container');
+  const t = document.createElement('div');
+  t.className = `toast ${tipo === 'error' ? 'error' : tipo === 'info' ? 'info' : 'success'}`;
+  t.textContent = mensagem;
+  container.appendChild(t);
+  setTimeout(() => { 
+    t.style.opacity = '0'; 
+    setTimeout(() => t.remove(), 400); 
+  }, timeout);
+}
 
-  exportarRelatorio() {
-    this.showToast('Gerando relatório financeiro...', 'info');
-    
-    setTimeout(() => {
-      try {
-        const dataStr = "data:text/csv;charset=utf-8," + encodeURIComponent(this.gerarCSV());
-        const link = document.createElement('a');
-        link.href = dataStr;
-        link.download = `relatorio-financeiro-${new Date().toISOString().split('T')[0]}.csv`;
-        link.click();
-        
-        this.showToast('Relatório exportado com sucesso!', 'success');
-      } catch (error) {
-        console.error('Erro ao exportar relatório:', error);
-        this.showToast('Erro ao exportar relatório', 'error');
-      }
-    }, 1000);
+_formatImageSrc(src) {
+  if (!src) return '';
+  try {
+    const u = new URL(src);
+    return src;
+  } catch (e) {
+    if (src.startsWith('/')) return src;
+    return src;
   }
-
-  gerarCSV() {
-    const data = this.financeiroData;
-    let csv = 'Relatório Financeiro - Artesanal Blend\n\n';
-    csv += `Período: ${new Date().toLocaleDateString('pt-BR')}\n\n`;
-    csv += 'Métrica,Valor\n';
-    csv += `Total Vendas,${data.totalVendas}\n`;
-    csv += `Total Custos,${data.totalCustos}\n`;
-    csv += `Lucro Líquido,${data.lucro}\n`;
-    csv += `Margem de Lucro,${data.margemLucro}%\n`;
-    csv += `Ticket Médio,${data.stats.ticketMedio}\n`;
-    csv += `Vendas no Mês,${data.stats.vendasMes}\n`;
-    csv += `Clientes Atendidos,${data.stats.clientesAtendidos}\n`;
-    csv += `Pedidos Cancelados,${data.stats.pedidosCancelados}\n`;
-    return csv;
-  }
-
-  formatarMoeda(valor) {
-    return new Intl.NumberFormat('pt-BR', {
-      style: 'currency',
-      currency: 'BRL'
-    }).format(valor || 0);
-  }
-
-  /* ================= UTILITÁRIOS ================= */
-  showToast(mensagem, tipo = 'success', timeout = 2500) {
-    const container = document.getElementById('toast-container');
-    const t = document.createElement('div');
-    t.className = `toast ${tipo === 'error' ? 'error' : tipo === 'info' ? 'info' : 'success'}`;
-    t.textContent = mensagem;
-    container.appendChild(t);
-    setTimeout(() => { t.style.opacity = '0'; setTimeout(() => t.remove(), 400); }, timeout);
-  }
-
-  _formatImageSrc(src) {
-    if (!src) return '';
-    try {
-      const u = new URL(src);
-      return src;
-    } catch (e) {
-      if (src.startsWith('/')) return src;
-      return src;
-    }
-  }
+}
 }
 
 // Inicialização correta
 document.addEventListener('DOMContentLoaded', () => {
   window.dashboard = new Dashboard();
 });
-
-
-
-
-
