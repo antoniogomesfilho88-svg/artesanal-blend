@@ -17,27 +17,39 @@ class Dashboard {
   }
 
   async carregarDados() {
-    try {
-      this.showToast('Carregando dados...', 'info', 900);
-      const [produtosRes, pedidosRes, insumosRes] = await Promise.all([
-        fetch(`${this.baseURL}/api/menu`).then(r => r.ok ? r.json() : []),
-        fetch(`${this.baseURL}/api/orders`).then(r => r.ok ? r.json() : []),
-        fetch(`${this.baseURL}/api/insumos`).then(r => r.ok ? r.json() : [])
-      ]);
-
-      this.produtos = produtosRes || [];
-      this.pedidos = pedidosRes || [];
-      this.insumos = insumosRes || [];
-
-      console.log('Dados carregados:', this.produtos.length, 'produtos,', this.pedidos.length, 'pedidos,', this.insumos.length, 'insumos');
-    } catch (err) {
-      console.error('Erro ao carregar dados', err);
-      this.produtos = this.produtos || [];
-      this.pedidos = this.pedidos || [];
-      this.insumos = this.insumos || [];
-      this.showToast('Erro ao carregar dados', 'error');
+  try {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      window.location.href = '/login';
+      return;
     }
+
+    const [produtosRes, pedidosRes, insumosRes] = await Promise.all([
+      fetch(`${this.baseURL}/api/menu`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      }).then(r => r.json()),
+      fetch(`${this.baseURL}/api/orders`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      }).then(r => r.json()),
+      fetch(`${this.baseURL}/api/insumos`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      }).then(r => r.json())
+    ]);
+
+    this.produtos = produtosRes || [];
+    this.pedidos = pedidosRes || [];
+    this.insumos = insumosRes || [];
+
+    console.log('✅ Dados carregados:', this.produtos.length, this.pedidos.length, this.insumos.length);
+  } catch (err) {
+    console.error('⚠️ Erro ao carregar dados:', err);
+    this.produtos = this.produtos || [];
+    this.pedidos = this.pedidos || [];
+    this.insumos = this.insumos || [];
+    this.showToast('Erro ao carregar dados', 'error');
   }
+}
+
 
   setupEventListeners() {
     document.querySelectorAll('.tab-button').forEach(btn => {
@@ -1329,3 +1341,4 @@ _formatImageSrc(src) {
 document.addEventListener('DOMContentLoaded', () => {
   window.dashboard = new Dashboard();
 });
+
