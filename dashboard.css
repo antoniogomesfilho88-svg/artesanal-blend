@@ -69,7 +69,201 @@ body{font-family:Inter, 'Segoe UI', Roboto, system-ui, -apple-system, sans-serif
 .financeiro-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1rem;margin-top:1rem}
 .finance-card{text-align:center;padding:1rem;background:#fff;border-radius:10px;box-shadow:var(--shadow)}
 .empty-state{text-align:center;padding:2rem;background:#fff;border-radius:10px;box-shadow:var(--shadow)}
+/* FINANCEIRO PROFISSIONAL */
+.financeiro-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 1.5rem;
+  margin-top: 1rem;
+}
 
+.stats-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1rem;
+}
+
+.stat-card {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 12px;
+  border: 1px solid #e1e5e9;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.stat-icon {
+  font-size: 2rem;
+  width: 60px;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f8f9fa;
+  border-radius: 12px;
+}
+
+.stat-info h4 {
+  margin: 0 0 0.5rem 0;
+  font-size: 0.9rem;
+  color: #6c757d;
+  font-weight: 600;
+}
+
+.stat-value {
+  font-size: 1.3rem;
+  font-weight: bold;
+  margin: 0;
+  color: #2c3e50;
+}
+
+.stat-card small {
+  color: #6c757d;
+  font-size: 0.8rem;
+}
+
+/* Gráfico */
+.grafico-section {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 12px;
+  border: 1px solid #e1e5e9;
+  margin-bottom: 1.5rem;
+}
+
+.grafico-section h4 {
+  margin: 0 0 1rem 0;
+  color: #2c3e50;
+}
+
+.grafico-barras {
+  display: flex;
+  align-items: end;
+  gap: 0.5rem;
+  height: 200px;
+  padding: 1rem 0;
+}
+
+.barra-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  height: 100%;
+}
+
+.barra {
+  background: linear-gradient(to top, #3498db, #2ecc71);
+  width: 30px;
+  border-radius: 4px 4px 0 0;
+  position: relative;
+  transition: height 0.3s ease;
+  min-height: 5px;
+}
+
+.barra-valor {
+  position: absolute;
+  top: -25px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0,0,0,0.8);
+  color: white;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  white-space: nowrap;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.barra-container:hover .barra-valor {
+  opacity: 1;
+}
+
+.barra-label {
+  margin-top: 0.5rem;
+  font-size: 0.8rem;
+  color: #6c757d;
+  text-align: center;
+}
+
+/* Pedidos Recentes */
+.pedidos-recentes {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 12px;
+  border: 1px solid #e1e5e9;
+}
+
+.pedido-resumo {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid #f1f3f4;
+}
+
+.pedido-resumo:last-child {
+  border-bottom: none;
+}
+
+.pedido-info {
+  flex: 1;
+}
+
+.pedido-info strong {
+  display: block;
+  font-size: 0.9rem;
+  color: #2c3e50;
+}
+
+.cliente {
+  font-size: 0.8rem;
+  color: #6c757d;
+}
+
+.pedido-info small {
+  font-size: 0.7rem;
+  color: #95a5a6;
+}
+
+.pedido-detalhes {
+  text-align: right;
+}
+
+.pedido-detalhes .total {
+  display: block;
+  font-weight: bold;
+  color: #27ae60;
+  font-size: 0.9rem;
+}
+
+.pedido-detalhes .status {
+  font-size: 0.7rem;
+  padding: 2px 8px;
+  border-radius: 12px;
+  background: #f39c12;
+  color: white;
+  text-transform: uppercase;
+}
+
+.status.entregue { background: #27ae60; }
+.status.pronto { background: #3498db; }
+.status.preparando { background: #f39c12; }
+.status.pendente { background: #95a5a6; }
+
+/* Responsivo */
+@media (max-width: 768px) {
+  .financeiro-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .stats-cards {
+    grid-template-columns: 1fr;
+  }
+}
 /* Modal */
 .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;z-index:200;padding:1rem}
 .modal{background:#fff;padding:1.25rem;border-radius:10px;max-width:720px;width:100%;box-shadow:var(--shadow);max-height:90vh;overflow:auto}
@@ -94,3 +288,4 @@ body{font-family:Inter, 'Segoe UI', Roboto, system-ui, -apple-system, sans-serif
   .form-row{grid-template-columns:1fr}
   .filters{flex-direction:column;align-items:flex-start}
 }
+
