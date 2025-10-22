@@ -1,9 +1,15 @@
+// ===============================
+// dashboard.js - versão final estável e integrada
+// ===============================
+
+// 🔐 Verifica se há token válido
 const token = localStorage.getItem('token');
 if (!token) {
-  window.location.href = '/';
+  document.getElementById('loginOverlay')?.classList.remove('hidden');
 }
+
 // ===============================
-// dashboard.js - versão final profissional e segura
+// 📊 Classe principal do Dashboard
 // ===============================
 class Dashboard {
   constructor() {
@@ -11,83 +17,88 @@ class Dashboard {
     this.pedidos = [];
     this.insumos = [];
     this.financeiroData = {};
-    this.baseURL = 'https://artesanal-blend.onrender.com';
+    this.baseURL = window.location.origin; // 🔧 usa o domínio atual (Render ou local)
     this.init();
   }
 
   // ===================== Fetch autenticado com JWT =====================
-  async fetchAutenticado(url, options = {}) {
+  async fetchAutenticado(endpoint, options = {}) {
     const token = localStorage.getItem('token');
-    if (!token) {
-      window.location.href = '/login';
-      return;
+    if (!token) throw new Error('Token ausente');
+
+    const res = await fetch(`${this.baseURL}${endpoint}`, {
+      ...options,
+      headers: {
+        ...(options.headers || {}),
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': options.headers?.['Content-Type'] || 'application/json',
+      },
+    });
+
+    // Validação da resposta
+    const tipo = res.headers.get('content-type') || '';
+    if (!tipo.includes('application/json')) {
+      const txt = await res.text();
+      console.error('❌ Resposta não JSON recebida:', txt.slice(0, 200));
+      throw new Error(`Resposta inválida (${res.status})`);
     }
 
-    const headers = {
-      ...(options.headers || {}),
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': options.headers?.['Content-Type'] || 'application/json'
-    };
+    if (res.status === 403) {
+      localStorage.removeItem('token');
+      document.getElementById('loginOverlay')?.classList.remove('hidden');
+      throw new Error('Token inválido ou expirado');
+    }
 
-    return fetch(url, { ...options, headers });
+    return res.json();
   }
 
   // ===================== Inicialização =====================
   async init() {
-    await this.carregarDados();
-    this.setupEventListeners();
-    this.renderProdutos();
-    this.renderInsumos();
-    this.renderPedidos();
-  }
-
-  // ===================== Carregar dados (seguro) =====================
-  async carregarDados() {
     try {
-      this.showToast('Carregando dados...', 'info', 800);
-
-      const [menuRes, pedidosRes, insumosRes] = await Promise.all([
-        this.fetchAutenticado(`${this.baseURL}/api/menu`),
-        this.fetchAutenticado(`${this.baseURL}/api/orders`),
-        this.fetchAutenticado(`${this.baseURL}/api/insumos`)
-      ]);
-
-      const validar = async (res) => {
-        const tipo = res.headers.get('content-type') || '';
-        if (!res.ok || !tipo.includes('application/json')) {
-          const txt = await res.text();
-          console.error('❌ Resposta inválida:', txt.slice(0, 200));
-          throw new Error(`Resposta inválida (${res.status})`);
-        }
-        return res.json();
-      };
-
-      const [menu, pedidos, insumos] = await Promise.all([
-        validar(menuRes),
-        validar(pedidosRes),
-        validar(insumosRes)
-      ]);
-
-      this.produtos = menu || [];
-      this.pedidos = pedidos || [];
-      this.insumos = insumos || [];
-
-      console.log('✅ Dados carregados com sucesso');
+      await this.carregarDados();
+      this.setupEventListeners();
+      this.renderProdutos();
+      this.renderPedidos();
+      this.renderInsumos();
+      console.log('✅ Dashboard iniciado com sucesso');
     } catch (err) {
-      console.error('⚠️ Erro ao carregar dados:', err);
-      this.showToast('Erro ao carregar dados', 'error');
+      console.error('⚠️ Erro na inicialização:', err);
+      this.showToast('Erro ao inicializar painel', 'error');
     }
   }
 
-  // ===================== EVENTOS =====================
+  // ===================== Carregar dados =====================
+  async carregarDados() {
+    try {
+      this.showToast('Carregando dados...', 'info', 800);
+      const [menu, pedidos, insumos] = await Promise.all([
+        this.fetchAutenticado('/api/menu'),
+        this.fetchAutenticado('/api/orders'),
+        this.fetchAutenticado('/api/insumos'),
+      ]);
+
+      this.produtos = menu;
+      this.pedidos = pedidos;
+      this.insumos = insumos;
+      this.calcularFinanceiroLocal();
+      console.log('📦 Dados carregados com sucesso');
+    } catch (err) {
+      console.error('⚠️ Erro ao carregar dados:', err);
+      this.showToast('Falha ao carregar dados', 'error');
+    }
+  }
+
+  // ===================== Eventos =====================
   setupEventListeners() {
-    document.querySelectorAll('.tab-button').forEach(btn => {
+    document.querySelectorAll('.tab-button').forEach((btn) => {
       btn.addEventListener('click', () => {
-        document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
-        document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tab-button').forEach((b) => b.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach((t) => t.classList.remove('active'));
         btn.classList.add('active');
-        document.getElementById(btn.dataset.tab).classList.add('active');
-        if (btn.dataset.tab === 'financeiroTab') this.initFinanceiro();
+        const tab = document.getElementById(btn.dataset.tab);
+        tab?.classList.add('active');
+
+        if (btn.dataset.tab === 'financeiroTab') this.renderFinanceiro();
       });
     });
 
@@ -96,138 +107,35 @@ class Dashboard {
     });
   }
 
-  // ===================== MODAL UNIVERSAL (sem IDs duplicados) =====================
-  criarModal(html) {
-    document.querySelectorAll('.modal-overlay').forEach(m => m.remove());
-    const overlay = document.createElement('div');
-    overlay.className = 'modal-overlay';
-    overlay.innerHTML = html;
-    document.body.appendChild(overlay);
-    return overlay;
+  // ===================== Renderizações =====================
+  renderProdutos() {
+    const container = document.querySelector('#produtosTab') || document.createElement('div');
+    if (!container) return;
+    container.innerHTML = `
+      <h2>Produtos</h2>
+      <ul>${this.produtos.map(p => `<li>${p.nome} — ${this.formatarMoeda(p.preco)}</li>`).join('')}</ul>
+    `;
   }
 
-  fecharModal() {
-    document.querySelectorAll('.modal-overlay').forEach(m => m.remove());
+  renderPedidos() {
+    const container = document.querySelector('#pedidosTab') || document.createElement('div');
+    container.innerHTML = `
+      <h2>Pedidos</h2>
+      <ul>${this.pedidos.map(p => `<li>${p.cliente} — ${this.formatarMoeda(p.total)} (${p.status})</li>`).join('')}</ul>
+    `;
   }
 
-  // ===================== PRODUTOS =====================
-  abrirModalProduto(produto = null) {
-    const uid = Date.now();
-    const modal = this.criarModal(`
-      <div class="modal">
-        <h3>${produto ? 'Editar' : 'Novo'} Produto</h3>
-        <form id="formProduto-${uid}">
-          <input type="hidden" id="produtoId-${uid}" value="${produto?._id || ''}">
-          <div class="form-group">
-            <label>Nome</label>
-            <input id="produtoNome-${uid}" value="${produto?.nome || ''}" required>
-          </div>
-          <div class="form-group">
-            <label>Categoria</label>
-            <select id="produtoCategoria-${uid}">
-              <option value="Hambúrgueres">Hambúrgueres</option>
-              <option value="Combos">Combos</option>
-              <option value="Acompanhamentos">Acompanhamentos</option>
-              <option value="Adicionais">Adicionais</option>
-              <option value="Bebidas">Bebidas</option>
-            </select>
-          </div>
-          <div class="form-row">
-            <input id="produtoPreco-${uid}" type="number" step="0.01" value="${produto?.preco ?? ''}" placeholder="Preço (R$)">
-            <input id="produtoImagem-${uid}" value="${produto?.imagem || ''}" placeholder="URL da imagem">
-          </div>
-          <textarea id="produtoDescricao-${uid}" rows="2" placeholder="Descrição">${produto?.descricao || ''}</textarea>
-          <label><input type="checkbox" id="produtoDisponivel-${uid}" ${produto?.disponivel !== false ? 'checked' : ''}> Disponível</label>
-          <div class="modal-actions">
-            <button type="submit" class="btn primary">Salvar</button>
-            <button type="button" class="btn secondary" id="cancelar-${uid}">Cancelar</button>
-          </div>
-        </form>
-      </div>
-    `);
-
-    modal.querySelector(`#cancelar-${uid}`).addEventListener('click', () => this.fecharModal());
-    modal.querySelector(`#formProduto-${uid}`).addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const data = {
-        nome: document.getElementById(`produtoNome-${uid}`).value,
-        categoria: document.getElementById(`produtoCategoria-${uid}`).value,
-        preco: parseFloat(document.getElementById(`produtoPreco-${uid}`).value) || 0,
-        descricao: document.getElementById(`produtoDescricao-${uid}`).value,
-        imagem: document.getElementById(`produtoImagem-${uid}`).value,
-        disponivel: document.getElementById(`produtoDisponivel-${uid}`).checked
-      };
-      const id = document.getElementById(`produtoId-${uid}`).value;
-      await this.salvarProduto(data, id);
-    });
+  renderInsumos() {
+    const container = document.querySelector('#insumosTab') || document.createElement('div');
+    container.innerHTML = `
+      <h2>Insumos</h2>
+      <ul>${this.insumos.map(i => `<li>${i.nome} — ${i.quantidade}un x ${this.formatarMoeda(i.preco)}</li>`).join('')}</ul>
+    `;
   }
 
-  async salvarProduto(data, id) {
-    const url = id ? `${this.baseURL}/api/menu/item/${id}` : `${this.baseURL}/api/menu/item`;
-    const method = id ? 'PUT' : 'POST';
-    const res = await this.fetchAutenticado(url, { method, body: JSON.stringify(data) });
-    if (res.ok) {
-      this.showToast('Produto salvo!', 'success');
-      this.fecharModal();
-      await this.carregarDados();
-      this.renderProdutos();
-    } else this.showToast('Erro ao salvar produto', 'error');
-  }
-
-  // ===================== INSUMOS =====================
-  abrirModalInsumo(insumo = null) {
-    const uid = Date.now();
-    const modal = this.criarModal(`
-      <div class="modal">
-        <h3>${insumo ? 'Editar' : 'Novo'} Insumo</h3>
-        <form id="formInsumo-${uid}">
-          <input type="hidden" id="insumoId-${uid}" value="${insumo?._id || ''}">
-          <input id="insumoNome-${uid}" value="${insumo?.nome || ''}" placeholder="Nome">
-          <input id="insumoQuantidade-${uid}" type="number" value="${insumo?.quantidade || 0}" placeholder="Qtd">
-          <input id="insumoPreco-${uid}" type="number" step="0.01" value="${insumo?.preco || 0}" placeholder="Preço">
-          <div class="modal-actions">
-            <button type="submit" class="btn primary">Salvar</button>
-            <button type="button" class="btn secondary" id="cancelarInsumo-${uid}">Cancelar</button>
-          </div>
-        </form>
-      </div>
-    `);
-    modal.querySelector(`#cancelarInsumo-${uid}`).addEventListener('click', () => this.fecharModal());
-    modal.querySelector(`#formInsumo-${uid}`).addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const data = {
-        nome: document.getElementById(`insumoNome-${uid}`).value,
-        quantidade: parseInt(document.getElementById(`insumoQuantidade-${uid}`).value) || 0,
-        preco: parseFloat(document.getElementById(`insumoPreco-${uid}`).value) || 0
-      };
-      const id = document.getElementById(`insumoId-${uid}`).value;
-      await this.salvarInsumo(data, id);
-    });
-  }
-
-  async salvarInsumo(data, id) {
-    const url = id ? `${this.baseURL}/api/insumos/${id}` : `${this.baseURL}/api/insumos`;
-    const method = id ? 'PUT' : 'POST';
-    const res = await this.fetchAutenticado(url, { method, body: JSON.stringify(data) });
-    if (res.ok) {
-      this.showToast('Insumo salvo!', 'success');
-      this.fecharModal();
-      await this.carregarDados();
-      this.renderInsumos();
-    } else this.showToast('Erro ao salvar insumo', 'error');
-  }
-
-  // ===================== FINANCEIRO =====================
-  initFinanceiro() {
-    this.calcularFinanceiroLocal();
-    this.renderFinanceiro();
-    this.renderStats();
-    this.renderGrafico();
-    this.renderFluxoCaixa();
-  }
-
+  // ===================== Financeiro =====================
   calcularFinanceiroLocal() {
-    const pedidosEntregues = this.pedidos.filter(p => p.status === 'entregue');
+    const pedidosEntregues = this.pedidos.filter((p) => p.status === 'entregue');
     const totalVendas = pedidosEntregues.reduce((s, p) => s + (parseFloat(p.total) || 0), 0);
     const totalCustos = totalVendas * 0.6;
     const lucro = totalVendas - totalCustos;
@@ -241,20 +149,25 @@ class Dashboard {
   }
 
   renderFinanceiro() {
-    const d = this.financeiroData;
-    document.getElementById('totalVendas').textContent = this.formatarMoeda(d.totalVendas);
-    document.getElementById('totalCustos').textContent = this.formatarMoeda(d.totalCustos);
-    document.getElementById('lucro').textContent = this.formatarMoeda(d.lucro);
-    document.getElementById('margemLucro').textContent = `${d.margemLucro}%`;
+    const f = this.financeiroData;
+    const tab = document.querySelector('#financeiroTab');
+    if (tab) {
+      tab.innerHTML = `
+        <h2>Financeiro</h2>
+        <p>Total de Vendas: ${this.formatarMoeda(f.totalVendas)}</p>
+        <p>Custos: ${this.formatarMoeda(f.totalCustos)}</p>
+        <p>Lucro: ${this.formatarMoeda(f.lucro)}</p>
+        <p>Margem: ${f.margemLucro}%</p>
+      `;
+    }
   }
 
-  renderStats() { /* idem versão anterior */ }
-  renderGrafico() { /* idem versão anterior */ }
-  renderFluxoCaixa() { /* idem versão anterior */ }
-
-  // ===================== UTILITÁRIOS =====================
+  // ===================== Utilitários =====================
   formatarMoeda(v) {
-    return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v || 0);
+    return new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency: 'BRL',
+    }).format(v || 0);
   }
 
   showToast(mensagem, tipo = 'success', tempo = 2500) {
@@ -276,18 +189,23 @@ class Dashboard {
     toast.style.borderRadius = '6px';
     toast.style.color = '#fff';
     toast.style.background =
-      tipo === 'error' ? '#e74c3c' :
-      tipo === 'info' ? '#3498db' : '#27ae60';
+      tipo === 'error'
+        ? '#e74c3c'
+        : tipo === 'info'
+        ? '#3498db'
+        : '#27ae60';
     toast.style.transition = 'opacity 0.4s';
     toast.style.fontWeight = 'bold';
     container.appendChild(toast);
 
-    setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 400); }, tempo);
+    setTimeout(() => {
+      toast.style.opacity = '0';
+      setTimeout(() => toast.remove(), 400);
+    }, tempo);
   }
 }
 
-// ===================== Inicialização =====================
+// ===================== Inicialização global =====================
 document.addEventListener('DOMContentLoaded', () => {
   window.dashboard = new Dashboard();
 });
-
