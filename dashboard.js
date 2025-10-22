@@ -1,3 +1,7 @@
+const token = localStorage.getItem('token');
+if (!token) {
+  window.location.href = '/';
+}
 // ===============================
 // dashboard.js - versão final profissional e segura
 // ===============================
@@ -286,3 +290,4 @@ class Dashboard {
 document.addEventListener('DOMContentLoaded', () => {
   window.dashboard = new Dashboard();
 });
+
