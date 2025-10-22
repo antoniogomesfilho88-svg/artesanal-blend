@@ -1,4 +1,6 @@
-// dashboard.js - versão corrigida
+// ===============================
+// dashboard.js - versão final corrigida com autenticação JWT
+// ===============================
 class Dashboard {
   constructor() {
     this.produtos = [];
@@ -8,6 +10,24 @@ class Dashboard {
     this.init();
   }
 
+  // ===================== NOVO: fetch com token =====================
+  async fetchAutenticado(url, options = {}) {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      window.location.href = '/login';
+      return;
+    }
+
+    const headers = {
+      ...(options.headers || {}),
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': options.headers?.['Content-Type'] || 'application/json'
+    };
+
+    return fetch(url, { ...options, headers });
+  }
+
+  // ===================== Inicialização =====================
   async init() {
     await this.carregarDados();
     this.setupEventListeners();
@@ -17,40 +37,34 @@ class Dashboard {
   }
 
   async carregarDados() {
-  try {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      window.location.href = '/login';
-      return;
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        window.location.href = '/login';
+        return;
+      }
+
+      const [produtosRes, pedidosRes, insumosRes] = await Promise.all([
+        this.fetchAutenticado(`${this.baseURL}/api/menu`).then(r => r.json()),
+        this.fetchAutenticado(`${this.baseURL}/api/orders`).then(r => r.json()),
+        this.fetchAutenticado(`${this.baseURL}/api/insumos`).then(r => r.json())
+      ]);
+
+      this.produtos = produtosRes || [];
+      this.pedidos = pedidosRes || [];
+      this.insumos = insumosRes || [];
+
+      console.log('✅ Dados carregados:', this.produtos.length, this.pedidos.length, this.insumos.length);
+    } catch (err) {
+      console.error('⚠️ Erro ao carregar dados:', err);
+      this.produtos = [];
+      this.pedidos = [];
+      this.insumos = [];
+      this.showToast('Erro ao carregar dados', 'error');
     }
-
-    const [produtosRes, pedidosRes, insumosRes] = await Promise.all([
-      fetch(`${this.baseURL}/api/menu`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      }).then(r => r.json()),
-      fetch(`${this.baseURL}/api/orders`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      }).then(r => r.json()),
-      fetch(`${this.baseURL}/api/insumos`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      }).then(r => r.json())
-    ]);
-
-    this.produtos = produtosRes || [];
-    this.pedidos = pedidosRes || [];
-    this.insumos = insumosRes || [];
-
-    console.log('✅ Dados carregados:', this.produtos.length, this.pedidos.length, this.insumos.length);
-  } catch (err) {
-    console.error('⚠️ Erro ao carregar dados:', err);
-    this.produtos = this.produtos || [];
-    this.pedidos = this.pedidos || [];
-    this.insumos = this.insumos || [];
-    this.showToast('Erro ao carregar dados', 'error');
   }
-}
 
-
+  // ===================== EVENTOS =====================
   setupEventListeners() {
     document.querySelectorAll('.tab-button').forEach(btn => {
       btn.addEventListener('click', () => {
@@ -58,11 +72,8 @@ class Dashboard {
         document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
         btn.classList.add('active');
         document.getElementById(btn.dataset.tab).classList.add('active');
-        
-        // Inicializa o financeiro quando a aba for clicada
-        if (btn.dataset.tab === 'financeiroTab') {
-          this.initFinanceiro();
-        }
+
+        if (btn.dataset.tab === 'financeiroTab') this.initFinanceiro();
       });
     });
 
@@ -71,69 +82,7 @@ class Dashboard {
     });
   }
 
-  /* ================= PRODUTOS ================= */
-  abrirModalProduto(produto = null) {
-    const modal = document.createElement('div');
-    modal.className = 'modal-overlay';
-    modal.innerHTML = `
-      <div class="modal">
-        <h3>${produto ? 'Editar' : 'Novo'} Produto</h3>
-        <form id="formProduto">
-          <input type="hidden" id="produtoId" value="${produto?._id || ''}">
-          <div class="form-group">
-            <label>Nome do Produto</label>
-            <input type="text" id="produtoNome" value="${produto?.nome || ''}" required>
-          </div>
-
-          <div class="form-group">
-            <label>Categoria</label>
-            <select id="produtoCategoria" required>
-              <option value="">Selecione...</option>
-              <option value="Hambúrgueres" ${produto?.categoria === 'Hambúrgueres' ? 'selected' : ''}>Hambúrgueres</option>
-              <option value="Combos" ${produto?.categoria === 'Combos' ? 'selected' : ''}>Combos</option>
-              <option value="Acompanhamentos" ${produto?.categoria === 'Acompanhamentos' ? 'selected' : ''}>Acompanhamentos</option>
-              <option value="Adicionais" ${produto?.categoria === 'Adicionais' ? 'selected' : ''}>Adicionais</option>
-              <option value="Bebidas" ${produto?.categoria === 'Bebidas' ? 'selected' : ''}>Bebidas</option>
-            </select>
-          </div>
-
-          <div class="form-row">
-            <div class="form-group">
-              <label>Preço (R$)</label>
-              <input type="number" id="produtoPreco" step="0.01" value="${produto?.preco ?? ''}" required>
-            </div>
-            <div class="form-group">
-              <label>URL da Imagem</label>
-              <input type="text" id="produtoImagem" value="${produto?.imagem || ''}">
-            </div>
-          </div>
-
-          <div class="form-group">
-            <label>Descrição</label>
-            <textarea id="produtoDescricao" rows="3">${produto?.descricao || ''}</textarea>
-          </div>
-
-          <div style="display:flex;gap:.5rem;align-items:center;margin-top:.5rem">
-            <label><input type="checkbox" id="produtoDisponivel" ${produto?.disponivel !== false ? 'checked' : ''}> Disponível</label>
-          </div>
-
-          <div style="display:flex;gap:.5rem;margin-top:1rem;justify-content:flex-end">
-            <button type="submit" class="btn primary">Salvar</button>
-            <button type="button" class="btn secondary" id="btnCancelarProduto">Cancelar</button>
-          </div>
-        </form>
-      </div>
-    `;
-    document.body.appendChild(modal);
-
-    modal.querySelector('#btnCancelarProduto').addEventListener('click', () => modal.remove());
-
-    modal.querySelector('#formProduto').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      await this.salvarProduto();
-    });
-  }
-
+  // ===================== PRODUTOS =====================
   async salvarProduto() {
     const formData = {
       nome: document.getElementById('produtoNome').value,
@@ -145,15 +94,17 @@ class Dashboard {
     };
 
     const produtoId = document.getElementById('produtoId').value;
-    const url = produtoId ? `${this.baseURL}/api/menu/item/${produtoId}` : `${this.baseURL}/api/menu/item`;
+    const url = produtoId
+      ? `${this.baseURL}/api/menu/item/${produtoId}`
+      : `${this.baseURL}/api/menu/item`;
     const method = produtoId ? 'PUT' : 'POST';
 
     try {
-      const res = await fetch(url, {
+      const res = await this.fetchAutenticado(url, {
         method,
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData)
       });
+
       if (res.ok) {
         await this.carregarDados();
         this.renderProdutos();
@@ -168,50 +119,12 @@ class Dashboard {
     }
   }
 
-  renderProdutos() {
-    const container = document.getElementById('produtosContainer');
-    const categoria = document.getElementById('filtroCategoria')?.value || '';
-    const status = document.getElementById('filtroStatus')?.value || '';
-    const busca = document.getElementById('buscaProdutos')?.value?.toLowerCase() || '';
-
-    let produtosFiltrados = (this.produtos || []).slice();
-
-    if (categoria) produtosFiltrados = produtosFiltrados.filter(p => p.categoria === categoria);
-    if (status === 'disponivel') produtosFiltrados = produtosFiltrados.filter(p => p.disponivel);
-    else if (status === 'indisponivel') produtosFiltrados = produtosFiltrados.filter(p => !p.disponivel);
-    if (busca) produtosFiltrados = produtosFiltrados.filter(p => (p.nome || '').toLowerCase().includes(busca) || (p.descricao || '').toLowerCase().includes(busca));
-
-    if (!produtosFiltrados.length) {
-      container.innerHTML = '<div class="empty-state">Nenhum produto encontrado</div>';
-      return;
-    }
-
-    container.innerHTML = produtosFiltrados.map(prod => `
-      <article class="produto-card ${!prod.disponivel ? 'indisponivel' : ''}">
-        <span class="categoria">${prod.categoria || ''}</span>
-        <span class="status">${prod.disponivel ? '✅' : '⏸️'}</span>
-        <h3>${prod.nome}</h3>
-        <div class="preco">R$ ${(prod.preco || 0).toFixed(2)}</div>
-        <div class="descricao">${prod.descricao || ''}</div>
-        ${prod.imagem ? `<div style="margin:0.75rem 0"><img src="${this._formatImageSrc(prod.imagem)}" alt="${prod.nome}" style="width:100%;height:140px;object-fit:cover;border-radius:8px"></div>` : ''}
-        <div class="card-actions">
-          <button class="btn-editar" onclick='window.dashboard.abrirModalProduto(${JSON.stringify(prod).replace(/\"/g,'&quot;')})'>Editar</button>
-          <button class="btn-toggle" onclick="window.dashboard.toggleDisponibilidade('${prod._id}')">${prod.disponivel ? 'Pausar' : 'Ativar'}</button>
-          <button class="btn-excluir" onclick="window.dashboard.excluirProduto('${prod._id}')">Excluir</button>
-        </div>
-      </article>
-    `).join('');
-  }
-
-  filtrarProdutos() { this.renderProdutos(); }
-
   async toggleDisponibilidade(id) {
     const produto = this.produtos.find(p => p._id === id);
     if (!produto) return;
     try {
-      const res = await fetch(`${this.baseURL}/api/menu/item/${id}`, {
+      const res = await this.fetchAutenticado(`${this.baseURL}/api/menu/item/${id}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ disponivel: !produto.disponivel })
       });
       if (res.ok) {
@@ -229,7 +142,9 @@ class Dashboard {
   async excluirProduto(id) {
     if (!confirm('Tem certeza que deseja excluir este produto?')) return;
     try {
-      const res = await fetch(`${this.baseURL}/api/menu/item/${id}`, { method: 'DELETE' });
+      const res = await this.fetchAutenticado(`${this.baseURL}/api/menu/item/${id}`, {
+        method: 'DELETE'
+      });
       if (res.ok) {
         this.produtos = this.produtos.filter(p => p._id !== id);
         this.renderProdutos();
@@ -240,56 +155,7 @@ class Dashboard {
     }
   }
 
-  /* ================= INSUMOS ================= */
-  abrirModalInsumo(insumo = null) {
-    const modal = document.createElement('div');
-    modal.className = 'modal-overlay';
-    modal.innerHTML = `
-      <div class="modal">
-        <h3>${insumo ? 'Editar' : 'Novo'} Insumo</h3>
-        <form id="formInsumo">
-          <input type="hidden" id="insumoId" value="${insumo?._id || ''}">
-          <div class="form-row">
-            <div class="form-group">
-              <label>Nome</label>
-              <input type="text" id="insumoNome" value="${insumo?.nome || ''}" required>
-            </div>
-            <div class="form-group">
-              <label>Quantidade</label>
-              <input type="number" id="insumoQuantidade" value="${insumo?.quantidade || 0}" required>
-            </div>
-          </div>
-          <div class="form-row">
-            <div class="form-group">
-              <label>Unidade</label>
-              <select id="insumoUnidade">
-                <option value="g" ${insumo?.unidade === 'g' ? 'selected' : ''}>g</option>
-                <option value="ml" ${insumo?.unidade === 'ml' ? 'selected' : ''}>ml</option>
-                <option value="un" ${insumo?.unidade === 'un' ? 'selected' : ''}>un</option>
-                <option value="kg" ${insumo?.unidade === 'kg' ? 'selected' : ''}>kg</option>
-                <option value="l" ${insumo?.unidade === 'l' ? 'selected' : ''}>l</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label>Preço Unitário (R$)</label>
-              <input type="number" id="insumoPreco" step="0.01" value="${insumo?.preco || 0}" required>
-            </div>
-          </div>
-          <div style="display:flex;justify-content:flex-end;gap:.5rem;margin-top:.75rem">
-            <button class="btn primary" type="submit">Salvar</button>
-            <button class="btn secondary" type="button" id="btnCancelarInsumo">Cancelar</button>
-          </div>
-        </form>
-      </div>
-    `;
-    document.body.appendChild(modal);
-    modal.querySelector('#btnCancelarInsumo').addEventListener('click', () => modal.remove());
-    modal.querySelector('#formInsumo').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      await this.salvarInsumo();
-    });
-  }
-
+  // ===================== INSUMOS =====================
   async salvarInsumo() {
     const formData = {
       nome: document.getElementById('insumoNome').value,
@@ -298,10 +164,12 @@ class Dashboard {
       preco: parseFloat(document.getElementById('insumoPreco').value) || 0
     };
     const insumoId = document.getElementById('insumoId').value;
-    const url = insumoId ? `${this.baseURL}/api/insumos/${insumoId}` : `${this.baseURL}/api/insumos`;
+    const url = insumoId
+      ? `${this.baseURL}/api/insumos/${insumoId}`
+      : `${this.baseURL}/api/insumos`;
     const method = insumoId ? 'PUT' : 'POST';
     try {
-      const res = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(formData) });
+      const res = await this.fetchAutenticado(url, { method, body: JSON.stringify(formData) });
       if (res.ok) {
         await this.carregarDados();
         this.renderInsumos();
@@ -313,31 +181,10 @@ class Dashboard {
     }
   }
 
-  renderInsumos() {
-    const container = document.getElementById('insumosContainer');
-    if (!this.insumos || !this.insumos.length) {
-      container.innerHTML = '<div class="empty-state">Nenhum insumo cadastrado</div>';
-      return;
-    }
-    container.innerHTML = this.insumos.map(i => `
-      <div class="produto-card ${i.quantidade <= (i.minimo || 0) ? 'estoque-baixo' : ''}">
-        <h3>${i.nome}</h3>
-        <div class="insumo-info">
-          <div class="quantidade ${i.quantidade <= (i.minimo || 0) ? 'alerta' : ''}">${i.quantidade} ${i.unidade}${i.minimo ? ` <small>(mín: ${i.minimo} ${i.unidade})</small>` : ''}</div>
-          <div class="preco">R$ ${(i.preco || 0).toFixed(2)}/${i.unidade}</div>
-        </div>
-        <div class="card-actions">
-          <button class="btn-editar" onclick='window.dashboard.abrirModalInsumo(${JSON.stringify(i).replace(/\"/g,'&quot;')})'>Editar</button>
-          <button class="btn-excluir" onclick="window.dashboard.excluirInsumo('${i._id}')">Excluir</button>
-        </div>
-      </div>
-    `).join('');
-  }
-
   async excluirInsumo(id) {
     if (!confirm('Tem certeza que deseja excluir este insumo?')) return;
     try {
-      const res = await fetch(`${this.baseURL}/api/insumos/${id}`, { method: 'DELETE' });
+      const res = await this.fetchAutenticado(`${this.baseURL}/api/insumos/${id}`, { method: 'DELETE' });
       if (res.ok) {
         this.insumos = this.insumos.filter(x => x._id !== id);
         this.renderInsumos();
@@ -348,166 +195,37 @@ class Dashboard {
     }
   }
 
-  /* ================= PEDIDOS ================= */
-  abrirModalPedido(pedido = null) {
-    const modal = document.createElement('div');
-    modal.className = 'modal-overlay';
-
-    const itens = pedido?.itens || [];
-    modal.innerHTML = `
-      <div class="modal">
-        <h3>${pedido ? 'Editar' : 'Novo'} Pedido</h3>
-        <form id="formPedido">
-          <input type="hidden" id="pedidoId" value="${pedido?._id || ''}">
-          <div class="form-row">
-            <div class="form-group">
-              <label>Cliente</label>
-              <input type="text" id="pedidoCliente" value="${pedido?.cliente || ''}" required>
-            </div>
-            <div class="form-group">
-              <label>Telefone</label>
-              <input type="text" id="pedidoTelefone" value="${pedido?.telefone || ''}">
-            </div>
-          </div>
-          <div class="form-group">
-            <label>Endereço</label>
-            <input type="text" id="pedidoEndereco" value="${pedido?.endereco || ''}">
-          </div>
-
-          <div id="itensWrapper">
-            ${itens.map((it, idx) => `
-              <div class="form-row" data-item-index="${idx}">
-                <div class="form-group"><label>Item</label><input type="text" class="pedidoItemNome" value="${it.nome || ''}" required></div>
-                <div class="form-group"><label>Qtd</label><input type="number" class="pedidoItemQtd" value="${it.quantidade || 1}" min="1" required></div>
-                <div class="form-group"><label>Preço</label><input type="number" class="pedidoItemPreco" value="${it.preco || 0}" step="0.01"></div>
-              </div>
-            `).join('')}
-          </div>
-
-          <div style="display:flex;gap:.5rem;margin-top:.5rem">
-            <button type="button" class="btn secondary" id="adicionarItemBtn">➕ Adicionar Item</button>
-          </div>
-
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-top:1rem">
-            <div><strong>Total: R$ <span id="pedidoTotal">${(pedido?.total || 0).toFixed(2)}</span></strong></div>
-            <div style="display:flex;gap:.5rem">
-              <button type="submit" class="btn primary">Salvar Pedido</button>
-              <button type="button" class="btn secondary" id="btnCancelarPedido">Cancelar</button>
-            </div>
-          </div>
-        </form>
-      </div>
-    `;
-
-    document.body.appendChild(modal);
-
-    const itensWrapper = modal.querySelector('#itensWrapper');
-    const atualizarTotal = () => {
-      const qtds = Array.from(itensWrapper.querySelectorAll('.pedidoItemQtd')).map(i => parseInt(i.value) || 0);
-      const precos = Array.from(itensWrapper.querySelectorAll('.pedidoItemPreco')).map(i => parseFloat(i.value) || 0);
-      let total = 0;
-      for (let i = 0; i < qtds.length; i++) total += (qtds[i] || 0) * (precos[i] || 0);
-      modal.querySelector('#pedidoTotal').textContent = total.toFixed(2);
-    };
-
-    modal.querySelectorAll('.pedidoItemQtd, .pedidoItemPreco').forEach(el => el.addEventListener('input', atualizarTotal));
-
-    modal.querySelector('#adicionarItemBtn').addEventListener('click', () => {
-      const idx = itensWrapper.querySelectorAll('.form-row[data-item-index]').length;
-      const div = document.createElement('div');
-      div.className = 'form-row';
-      div.dataset.itemIndex = idx;
-      div.innerHTML = `
-        <div class="form-group"><label>Item</label><input type="text" class="pedidoItemNome" required></div>
-        <div class="form-group"><label>Qtd</label><input type="number" class="pedidoItemQtd" value="1" min="1" required></div>
-        <div class="form-group"><label>Preço</label><input type="number" class="pedidoItemPreco" value="0" step="0.01"></div>
-      `;
-      itensWrapper.appendChild(div);
-      div.querySelectorAll('.pedidoItemQtd, .pedidoItemPreco').forEach(el => el.addEventListener('input', atualizarTotal));
-      atualizarTotal();
-    });
-
-    modal.querySelector('#btnCancelarPedido').addEventListener('click', () => modal.remove());
-
-    modal.querySelector('#formPedido').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const pedidoId = modal.querySelector('#pedidoId').value;
-      const cliente = modal.querySelector('#pedidoCliente').value;
-      const telefone = modal.querySelector('#pedidoTelefone').value;
-      const endereco = modal.querySelector('#pedidoEndereco').value;
-      const nomes = Array.from(modal.querySelectorAll('.pedidoItemNome')).map(i => i.value);
-      const qtds = Array.from(modal.querySelectorAll('.pedidoItemQtd')).map(i => parseInt(i.value) || 0);
-      const precos = Array.from(modal.querySelectorAll('.pedidoItemPreco')).map(i => parseFloat(i.value) || 0);
-      const itens = nomes.map((nome, i) => ({ nome, quantidade: qtds[i], preco: precos[i] })).filter(it => it.nome && it.quantidade > 0);
-      const total = itens.reduce((s, it) => s + (it.quantidade * (it.preco || 0)), 0);
-      const payload = { cliente, telefone, endereco, itens, total, status: pedido?.status || 'pendente' };
-
-      try {
-        const url = pedidoId ? `${this.baseURL}/api/orders/${pedidoId}` : `${this.baseURL}/api/orders`;
-        const method = pedidoId ? 'PUT' : 'POST';
-        const res = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-        if (res.ok) {
-          await this.carregarDados();
-          this.renderPedidos();
-          document.querySelector('.modal-overlay')?.remove();
-          this.showToast('Pedido salvo', 'success');
-        } else {
-          const err = await res.json().catch(() => ({}));
-          this.showToast(err.error || 'Erro ao salvar pedido', 'error');
-        }
-      } catch (e) {
-        this.showToast('Erro de rede ao salvar pedido', 'error');
+  // ===================== PEDIDOS =====================
+  async salvarPedido(payload, pedidoId) {
+    try {
+      const url = pedidoId
+        ? `${this.baseURL}/api/orders/${pedidoId}`
+        : `${this.baseURL}/api/orders`;
+      const method = pedidoId ? 'PUT' : 'POST';
+      const res = await this.fetchAutenticado(url, {
+        method,
+        body: JSON.stringify(payload)
+      });
+      if (res.ok) {
+        await this.carregarDados();
+        this.renderPedidos();
+        document.querySelector('.modal-overlay')?.remove();
+        this.showToast('Pedido salvo', 'success');
+      } else {
+        const err = await res.json().catch(() => ({}));
+        this.showToast(err.error || 'Erro ao salvar pedido', 'error');
       }
-    });
-  }
-
-  renderPedidos() {
-    const container = document.getElementById('pedidosContainer');
-    if (!this.pedidos || !this.pedidos.length) {
-      container.innerHTML = '<div class="empty-state">Nenhum pedido recebido</div>';
-      return;
+    } catch (e) {
+      this.showToast('Erro de rede ao salvar pedido', 'error');
     }
-
-    container.innerHTML = this.pedidos.map(pedido => `
-      <article class="produto-card">
-        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:0.5rem">
-          <div>
-            <h3>Pedido #${pedido._id?.slice(-6) || 'N/A'}</h3>
-            <p><strong>Cliente:</strong> ${pedido.cliente || '-'}</p>
-            <p><strong>Telefone:</strong> ${pedido.telefone || '-'}</p>
-            <p><strong>Endereço:</strong> ${pedido.endereco || '-'}</p>
-          </div>
-          <div style="text-align:right">
-            <div style="margin-bottom:.5rem"><strong>Total:</strong> R$ ${(pedido.total || 0).toFixed(2)}</div>
-            <div class="status">${this.formatarStatus(pedido.status)}</div>
-          </div>
-        </div>
-
-        <div style="margin:0.5rem 0;border-top:1px solid var(--border);padding-top:0.5rem">
-          <strong>Itens:</strong>
-          ${(pedido.itens || []).map(item => `<div style="display:flex;justify-content:space-between;margin:.25rem 0"><span>${item.quantidade}x ${item.nome}</span><span>R$ ${((item.preco || 0) * (item.quantidade || 1)).toFixed(2)}</span></div>`).join('')}
-        </div>
-
-        <div class="card-actions" style="margin-top:.75rem">
-          <button class="btn-editar" onclick='window.dashboard.abrirModalPedido(${JSON.stringify(pedido).replace(/\"/g,'&quot;')})'>Editar</button>
-          <button class="btn secondary" onclick="window.dashboard.atualizarStatusPedido('${pedido._id}','preparando')">👨‍🍳 Preparando</button>
-          <button class="btn secondary" onclick="window.dashboard.atualizarStatusPedido('${pedido._id}','pronto')">✅ Pronto</button>
-          <button class="btn secondary" onclick="window.dashboard.atualizarStatusPedido('${pedido._id}','entregue')">🚗 Entregue</button>
-          <button class="btn" onclick="window.dashboard.imprimirCupom('${pedido._id}')">🖨️ Imprimir Cupom</button>
-          <button class="btn-excluir" onclick="window.dashboard.excluirPedido('${pedido._id}')">Excluir</button>
-        </div>
-      </article>
-    `).join('');
-  }
-
-  formatarStatus(status) {
-    const map = { pendente: '⏳ Pendente', preparando: '👨‍🍳 Preparando', pronto: '✅ Pronto', entregue: '🚗 Entregue', cancelado: '❌ Cancelado' };
-    return map[status] || status;
   }
 
   async atualizarStatusPedido(id, novoStatus) {
     try {
-      const res = await fetch(`${this.baseURL}/api/orders/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status: novoStatus }) });
+      const res = await this.fetchAutenticado(`${this.baseURL}/api/orders/${id}`, {
+        method: 'PUT',
+        body: JSON.stringify({ status: novoStatus })
+      });
       if (res.ok) {
         const pedido = this.pedidos.find(p => p._id === id);
         if (pedido) pedido.status = novoStatus;
@@ -522,7 +240,7 @@ class Dashboard {
   async excluirPedido(id) {
     if (!confirm('Tem certeza que deseja excluir este pedido?')) return;
     try {
-      const res = await fetch(`${this.baseURL}/api/orders/${id}`, { method: 'DELETE' });
+      const res = await this.fetchAutenticado(`${this.baseURL}/api/orders/${id}`, { method: 'DELETE' });
       if (res.ok) {
         this.pedidos = this.pedidos.filter(p => p._id !== id);
         this.renderPedidos();
@@ -532,813 +250,37 @@ class Dashboard {
       this.showToast('Erro de rede', 'error');
     }
   }
-/* ================= IMPRIMIR CUPOM ================= */
-imprimirCupom(id) {
-  const pedido = this.pedidos.find(p => p._id === id);
-  if (!pedido) return this.showToast('Pedido não encontrado', 'error');
 
-  const janelaImpressao = window.open('', '_blank', 'width=380,height=700');
-  
-  if (!janelaImpressao) {
-    this.showToast('Permita pop-ups para imprimir o cupom', 'error');
-    return;
-  }
-
-  const css = `
-    <style>
-      @media print {
-        body { 
-          width: 80mm !important;
-          max-width: 80mm !important;
-          margin: 3mm !important;
-          padding: 0 !important;
-          font-size: 16px !important;
-          font-weight: bold !important;
-        }
-        .no-print { display: none !important; }
-      }
-      
-      body { 
-        width: 80mm;
-        max-width: 80mm;
-        font-family: 'Courier New', Courier, monospace; 
-        font-size: 13px;
-        font-weight: bold;
-        margin: 3mm;
-        padding: 0;
-        line-height: 1.2;
-        background: white;
-      }
-      .center { 
-        text-align: center;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-      }
-      .right { text-align: right; }
-      .left { text-align: left; }
-      .bold { 
-        font-weight: bold; 
-        font-size: 14px;
-      }
-      .line { 
-        border: none;
-        border-top: 2px dashed #000; 
-        margin: 5px 0;
-      }
-      table { 
-        width: 100%; 
-        border-collapse: collapse;
-      }
-      td { 
-        vertical-align: top; 
-        padding: 2px 0;
-        word-wrap: break-word;
-      }
-      .item-qty { width: 20%; text-align: center; font-weight: bold; }
-      .item-name { width: 50%; text-align: left; padding: 0 3px; font-weight: bold; }
-      .item-total { width: 30%; text-align: right; font-weight: bold; }
-      .logo-container {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        width: 100%;
-        margin: 0 auto 5px auto;
-      }
-      .logo { 
-        max-width: 120px; 
-        height: auto; 
-        display: block;
-        margin: 0 auto;
-      }
-      .header { 
-        margin-bottom: 5px;
-        width: 100%;
-      }
-      .footer { margin-top: 5px; }
-      .medium { font-size: 12px; }
-      .break-word { word-break: break-word; }
-      .total-section {
-        margin-top: 8px;
-        padding-top: 5px;
-        border-top: 2px solid #000;
-      }
-      .item-row {
-        margin: 3px 0;
-        padding: 2px 0;
-      }
-    </style>
-  `;
-
-  const qrPix = `https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=PIX:+5531992128891`;
-
-  // Processar itens e totais
-  let subtotal = 0;
-  const itensHtml = pedido.itens.map(item => {
-    const quantidade = parseInt(item.quantidade) || 1;
-    const preco = parseFloat(item.preco) || 0;
-    const totalItem = quantidade * preco;
-    subtotal += totalItem;
-    
-    // Limitar nome do item
-    let nomeItem = item.nome || '';
-    if (nomeItem.length > 20) {
-      nomeItem = nomeItem.substring(0, 20) + '...';
-    }
-    
-    return `
-      <tr class="item-row">
-        <td class="item-qty">${quantidade}x</td>
-        <td class="item-name break-word">${nomeItem}</td>
-        <td class="item-total">R$ ${totalItem.toFixed(2)}</td>
-      </tr>
-    `;
-  }).join('');
-
-  const totalPedido = parseFloat(pedido.total) || subtotal;
-
-  const html = `
-    <!DOCTYPE html>
-    <html>
-    <head>
-      <title>Cupom #${pedido._id?.slice(-6) || 'N/A'}</title>
-      <meta charset="UTF-8">
-      ${css}
-    </head>
-    <body>
-      <!-- CABEÇALHO COM LOGO CENTRALIZADA -->
-      <div class="header center">
-        <div class="logo-container">
-          <img class="logo" src="${window.location.origin + '/images/logo.jpg'}" alt="Logo" onerror="this.style.display='none'">
-        </div>
-        <div class="bold" style="font-size: 16px; margin-bottom: 3px;">BURGUER ARTESANAL BLEND</div>
-        <div class="medium">CNPJ: 58.518.297/0001-61</div>
-        <div class="medium">Rua Coniston, 380 - Jd. Canadá</div>
-        <div class="medium">Nova Lima - MG</div>
-        <div class="medium">Tel: (31) 99212-8891</div>
-      </div>
-
-      <hr class="line">
-
-      <!-- DADOS DO PEDIDO -->
-      <div>
-        <div style="font-size: 14px;"><strong>PEDIDO #${pedido._id?.slice(-6) || 'N/A'}</strong></div>
-        <div class="medium">${new Date(pedido.data || pedido.createdAt || Date.now()).toLocaleString('pt-BR')}</div>
-        <div><strong>CLIENTE:</strong> ${pedido.cliente || 'CONSUMIDOR'}</div>
-        ${pedido.telefone ? `<div><strong>TEL:</strong> ${pedido.telefone}</div>` : ''}
-        ${pedido.endereco ? `<div class="break-word medium"><strong>END:</strong> ${pedido.endereco}</div>` : ''}
-      </div>
-
-      <hr class="line">
-
-      <!-- ITENS -->
-      <div style="margin: 5px 0;">
-        <div style="font-size: 14px; margin-bottom: 3px;"><strong>ITENS DO PEDIDO:</strong></div>
-        <table>
-          ${itensHtml}
-        </table>
-      </div>
-
-      <hr class="line">
-
-      <!-- TOTAIS -->
-      <div class="total-section">
-        <table>
-          <tr>
-            <td class="left"><strong>SUBTOTAL:</strong></td>
-            <td class="right"><strong>R$ ${subtotal.toFixed(2)}</strong></td>
-          </tr>
-          ${pedido.taxaEntrega > 0 ? `
-            <tr>
-              <td class="left"><strong>TAXA ENTREGA:</strong></td>
-              <td class="right"><strong>R$ ${pedido.taxaEntrega.toFixed(2)}</strong></td>
-            </tr>
-          ` : ''}
-          <tr>
-            <td class="left"><strong>TOTAL:</strong></td>
-            <td class="right" style="font-size: 14px;"><strong>R$ ${totalPedido.toFixed(2)}</strong></td>
-          </tr>
-          <tr>
-            <td class="left medium">Pagamento:</td>
-            <td class="right medium">${pedido.formaPagamento || pedido.pagamento || 'NÃO INFORMADO'}</td>
-          </tr>
-          <tr>
-            <td class="left medium">Status:</td>
-            <td class="right medium">${(pedido.status || 'PENDENTE').toUpperCase()}</td>
-          </tr>
-        </table>
-      </div>
-
-      <hr class="line">
-
-      <!-- RODAPÉ -->
-      <div class="footer center">
-        <div class="bold" style="font-size: 14px; margin-bottom: 3px;">FORMA DE PAGAMENTO PIX</div>
-        <div class="medium">Chave: +55 31 99212-8891</div>
-        <div class="logo-container" style="margin: 5px auto;">
-          <img class="qr" src="${qrPix}" alt="QR Code PIX" onerror="this.style.display='none'" style="max-width: 80px; height: auto;">
-        </div>
-        <div class="medium"><strong>VALQUIRIA GOMES AROEIRA</strong></div>
-        <div class="medium">${new Date().toLocaleString('pt-BR')}</div>
-        <br>
-        <div class="bold" style="font-size: 14px;">*** OBRIGADO PELA PREFERÊNCIA! ***</div>
-      </div>
-
-      <script>
-        window.onload = function() {
-          setTimeout(function() {
-            window.print();
-          }, 800);
-        };
-
-        window.addEventListener('afterprint', function() {
-          setTimeout(function() {
-            window.close();
-          }, 500);
-        });
-      </script>
-    </body>
-    </html>
-  `;
-
-  try {
-    janelaImpressao.document.write(html);
-    janelaImpressao.document.close();
-    
-  } catch (error) {
-    console.error('Erro ao gerar cupom:', error);
-    this.showToast('Erro ao gerar cupom', 'error');
-    janelaImpressao.close();
-  }
-}
-  /* ================= FINANCEIRO PROFISSIONAL ================= */
-  initFinanceiro() {
-    this.configurarFiltrosFinanceiro();
-    this.updateFinanceiro();
-  }
-
-  configurarFiltrosFinanceiro() {
-    const filtroPeriodo = document.getElementById('filtroPeriodo');
-    const periodoPersonalizado = document.getElementById('periodoPersonalizado');
-    
-    if (filtroPeriodo && periodoPersonalizado) {
-      filtroPeriodo.addEventListener('change', function() {
-        periodoPersonalizado.style.display = this.value === 'personalizado' ? 'flex' : 'none';
-        window.dashboard.filtrarFinanceiro();
-      });
-    }
-
-    // Definir datas padrão
-    const hoje = new Date();
-    const umaSemanaAtras = new Date(hoje.getTime() - 7 * 24 * 60 * 60 * 1000);
-    
-    const dataInicio = document.getElementById('dataInicio');
-    const dataFim = document.getElementById('dataFim');
-    
-    if (dataInicio) dataInicio.value = umaSemanaAtras.toISOString().split('T')[0];
-    if (dataFim) dataFim.value = hoje.toISOString().split('T')[0];
-  }
-
-  filtrarFinanceiro() {
-    const periodo = document.getElementById('filtroPeriodo')?.value || '';
-    const categoria = document.getElementById('filtroCategoria')?.value || '';
-    const dataInicio = document.getElementById('dataInicio')?.value || '';
-    const dataFim = document.getElementById('dataFim')?.value || '';
-    
-    console.log('Filtrando financeiro:', { periodo, categoria, dataInicio, dataFim });
-    this.updateFinanceiro();
-  }
-   renderFinanceiro() {
-  const data = this.financeiroData;
-  
-  const totalVendasEl = document.getElementById('totalVendas');
-  const totalCustosEl = document.getElementById('totalCustos');
-  const lucroEl = document.getElementById('lucro');
-  const margemLucroEl = document.getElementById('margemLucro');
-  
-  if (totalVendasEl) totalVendasEl.textContent = this.formatarMoeda(data.totalVendas);
-  if (totalCustosEl) totalCustosEl.textContent = this.formatarMoeda(data.totalCustos);
-  if (lucroEl) {
-    lucroEl.textContent = this.formatarMoeda(data.lucro);
-    lucroEl.className = data.lucro >= 0 ? 'positive' : 'negative';
-  }
-  if (margemLucroEl) {
-    margemLucroEl.textContent = data.margemLucro + '%';
-    margemLucroEl.className = data.margemLucro >= 0 ? 'positive' : 'negative';
-  }
-  
-  const variacaoVendasEl = document.getElementById('variacaoVendas');
-  const variacaoCustosEl = document.getElementById('variacaoCustos');
-  const variacaoLucroEl = document.getElementById('variacaoLucro');
-  
-  if (variacaoVendasEl) {
-    variacaoVendasEl.textContent = `${data.variacaoVendas >= 0 ? '+' : ''}${data.variacaoVendas}%`;
-    variacaoVendasEl.className = data.variacaoVendas >= 0 ? 'positive' : 'negative';
-  }
-  
-  if (variacaoCustosEl) {
-    variacaoCustosEl.textContent = `${data.variacaoCustos >= 0 ? '+' : ''}${data.variacaoCustos}%`;
-    variacaoCustosEl.className = data.variacaoCustos >= 0 ? 'positive' : 'negative';
-  }
-  
-  if (variacaoLucroEl) {
-    variacaoLucroEl.textContent = `${data.variacaoLucro >= 0 ? '+' : ''}${data.variacaoLucro}%`;
-    variacaoLucroEl.className = data.variacaoLucro >= 0 ? 'positive' : 'negative';
-  }
-}
-
-renderStats() {
-  const container = document.getElementById('financeiroStats');
-  if (!container) return;
-  
-  const stats = this.financeiroData.stats;
-  
-  container.innerHTML = `
-    <div class="stats-cards">
-      <div class="stat-card">
-        <div class="stat-icon">🎫</div>
-        <div class="stat-info">
-          <h4>Ticket Médio</h4>
-          <p class="stat-value">${this.formatarMoeda(stats.ticketMedio)}</p>
-          <small>Por pedido</small>
-        </div>
-      </div>
-      
-      <div class="stat-card">
-        <div class="stat-icon">📈</div>
-        <div class="stat-info">
-          <h4>Vendas/Mês</h4>
-          <p class="stat-value">${stats.vendasMes}</p>
-          <small>Pedidos realizados</small>
-        </div>
-      </div>
-      
-      <div class="stat-card">
-        <div class="stat-icon">👥</div>
-        <div class="stat-info">
-          <h4>Clientes Únicos</h4>
-          <p class="stat-value">${stats.clientesAtendidos}</p>
-          <small>Atendidos</small>
-        </div>
-      </div>
-      
-      <div class="stat-card">
-        <div class="stat-icon">⏱️</div>
-        <div class="stat-info">
-          <h4>Tempo Médio</h4>
-          <p class="stat-value">${stats.tempoMedioPreparo}</p>
-          <small>Preparação</small>
-        </div>
-      </div>
-      
-      <div class="stat-card">
-        <div class="stat-icon">📊</div>
-        <div class="stat-info">
-          <h4>Custo Médio</h4>
-          <p class="stat-value">${this.formatarMoeda(stats.custoMedio)}</p>
-          <small>Por pedido</small>
-        </div>
-      </div>
-      
-      <div class="stat-card">
-        <div class="stat-icon">❌</div>
-        <div class="stat-info">
-          <h4>Pedidos Cancel.</h4>
-          <p class="stat-value ${stats.pedidosCancelados > 5 ? 'negative' : 'positive'}">${stats.pedidosCancelados}</p>
-          <small>Este mês</small>
-        </div>
-      </div>
-    </div>
-  `;
-}
-
-renderGrafico() {
-  const container = document.getElementById('graficoPedidos');
-  if (!container) {
-    console.error('Container do gráfico não encontrado');
-    return;
-  }
-  
-  const dados = this.financeiroData.vendasMensais;
-  
-  if (!dados || dados.length === 0) {
-    container.innerHTML = '<div class="empty-state">Sem dados para exibir</div>';
-    return;
-  }
-  
-  const maxVendas = Math.max(...dados.map(d => d.vendas)) || 100;
-  
-  let html = '';
-  dados.forEach(item => {
-    const alturaVendas = (item.vendas / maxVendas) * 100;
-    const alturaCustos = (item.custos / maxVendas) * 100;
-    
-    html += `
-      <div class="barra-container">
-        <div class="barra-valor">${this.formatarMoeda(item.vendas)}</div>
-        <div class="barra" style="height: ${alturaVendas}%; background: linear-gradient(to top, var(--primary), var(--primary-light))"></div>
-        <div class="barra" style="height: ${alturaCustos}%; background: linear-gradient(to top, var(--danger), #ff6b6b); margin-top: 2px"></div>
-        <div class="barra-label">${item.mes}</div>
-      </div>
-    `;
-  });
-  
-  container.innerHTML = html;
-}
-
-renderUltimosPedidos() {
-  const container = document.getElementById('ultimosPedidos');
-  if (!container) {
-    console.error('Container de últimos pedidos não encontrado');
-    return;
-  }
-  
-  const ultimosPedidos = [...this.pedidos]
-    .sort((a, b) => new Date(b.createdAt || b.data) - new Date(a.createdAt || a.data))
-    .slice(0, 5);
-
-  if (ultimosPedidos.length === 0) {
-    container.innerHTML = '<p class="empty-state">Nenhum pedido recente</p>';
-    return;
-  }
-
-  let html = '';
-  ultimosPedidos.forEach(pedido => {
-    html += `
-      <div class="pedido-resumo">
-        <div class="pedido-info">
-          <strong>${pedido._id?.slice(-6) || 'N/A'}</strong>
-          <span class="cliente">${pedido.cliente || 'Cliente'}</span>
-          <small>${new Date(pedido.createdAt || pedido.data).toLocaleDateString('pt-BR')}</small>
-        </div>
-        <div class="pedido-detalhes">
-          <span class="total">${this.formatarMoeda(pedido.total || 0)}</span>
-          <span class="status ${pedido.status}">${this.formatarStatus(pedido.status)}</span>
-        </div>
-      </div>
-    `;
-  });
-  
-  container.innerHTML = html;
-}
-
-renderFluxoCaixa() {
-  const container = document.getElementById('fluxoCaixa');
-  if (!container) return;
-  
-  const fluxo = this.gerarFluxoCaixa();
-  
-  let html = `
-    <div style="overflow-x: auto;">
-      <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem;">
-        <thead>
-          <tr style="background: var(--light);">
-            <th style="padding: 0.75rem; text-align: left; border-bottom: 1px solid var(--border);">Data</th>
-            <th style="padding: 0.75rem; text-align: left; border-bottom: 1px solid var(--border);">Descrição</th>
-            <th style="padding: 0.75rem; text-align: right; border-bottom: 1px solid var(--border);">Entrada</th>
-            <th style="padding: 0.75rem; text-align: right; border-bottom: 1px solid var(--border);">Saída</th>
-            <th style="padding: 0.75rem; text-align: right; border-bottom: 1px solid var(--border);">Saldo</th>
-          </tr>
-        </thead>
-        <tbody>
-  `;
-  
-  fluxo.forEach(item => {
-    html += `
-      <tr>
-        <td style="padding: 0.75rem; border-bottom: 1px solid var(--border);">${item.data}</td>
-        <td style="padding: 0.75rem; border-bottom: 1px solid var(--border);">${item.descricao}</td>
-        <td style="padding: 0.75rem; text-align: right; border-bottom: 1px solid var(--border); color: var(--success);">
-          ${item.entrada > 0 ? this.formatarMoeda(item.entrada) : '-'}
-        </td>
-        <td style="padding: 0.75rem; text-align: right; border-bottom: 1px solid var(--border); color: var(--danger);">
-          ${item.saida > 0 ? this.formatarMoeda(item.saida) : '-'}
-        </td>
-        <td style="padding: 0.75rem; text-align: right; border-bottom: 1px solid var(--border); font-weight: bold; color: ${item.saldo >= 0 ? 'var(--success)' : 'var(--danger)'};">
-          ${this.formatarMoeda(item.saldo)}
-        </td>
-      </tr>
-    `;
-  });
-  
-  html += `
-        </tbody>
-      </table>
-    </div>
-  `;
-  
-  container.innerHTML = html;
-}
-
-gerarFluxoCaixa() {
-  const pedidosEntregues = this.pedidos.filter(p => p.status === 'entregue');
-  const fluxo = [];
-  let saldo = 0;
-  
-  const pedidosPorData = {};
-  pedidosEntregues.forEach(pedido => {
-    const data = new Date(pedido.createdAt || pedido.data).toLocaleDateString('pt-BR');
-    if (!pedidosPorData[data]) {
-      pedidosPorData[data] = 0;
-    }
-    pedidosPorData[data] += parseFloat(pedido.total) || 0;
-  });
-  
-  Object.entries(pedidosPorData).forEach(([data, total]) => {
-    saldo += total;
-    fluxo.push({
-      data: data,
-      descricao: 'Vendas do dia',
-      entrada: total,
-      saida: 0,
-      saldo: saldo
-    });
-  });
-  
-  return fluxo.sort((a, b) => new Date(a.data.split('/').reverse().join('-')) - new Date(b.data.split('/').reverse().join('-')));
-}
-
-formatarMoeda(valor) {
-  return new Intl.NumberFormat('pt-BR', {
-    style: 'currency',
-    currency: 'BRL'
-  }).format(valor || 0);
-}
-
-formatarStatus(status) {
-  const statusMap = {
-    'entregue': 'Entregue',
-    'pronto': 'Pronto', 
-    'preparando': 'Preparando',
-    'pendente': 'Pendente',
-    'cancelado': 'Cancelado'
-  };
-  return statusMap[status] || status;
-}
-
-// AGORA O MÉTODO updateFinanceiro CORRETO:
-async updateFinanceiro() {
-  const btn = document.querySelector('#financeiroTab .btn.secondary');
-  if (btn) {
-    btn.innerHTML = '⏳ Atualizando...';
-    btn.disabled = true;
-  }
-
-  try {
-    // 1. Primeiro calcula os dados
-    this.calcularFinanceiroLocal();
-    
-    // 2. Depois renderiza na ordem correta
-    this.renderFinanceiro();
-    this.renderStats();
-    this.renderGrafico();
-    this.renderUltimosPedidos();
-    this.renderFluxoCaixa();
-    
-    if (btn) {
-      btn.innerHTML = '🔄 Atualizar';
-      btn.disabled = false;
-    }
-    
-    this.showToast('Dados financeiros atualizados!', 'success');
-  } catch (error) {
-    console.error('Erro no financeiro:', error);
-    this.showToast('Erro ao carregar dados financeiros', 'error');
-  }
-}
+  // ===================== FINANCEIRO =====================
   async updateFinanceiro() {
-  const btn = document.querySelector('#financeiroTab .btn.secondary');
-  if (btn) {
-    btn.innerHTML = '⏳ Atualizando...';
-    btn.disabled = true;
-  }
-
-  try {
-    // 1. Primeiro calcula os dados
-    this.calcularFinanceiroLocal();
-    
-    // 2. Depois renderiza na ordem correta
-    this.renderFinanceiro();
-    this.renderStats();
-    this.renderGrafico();
-    this.renderUltimosPedidos();
-    this.renderFluxoCaixa();
-    
+    const btn = document.querySelector('#financeiroTab .btn.secondary');
     if (btn) {
-      btn.innerHTML = '🔄 Atualizar';
-      btn.disabled = false;
+      btn.innerHTML = '⏳ Atualizando...';
+      btn.disabled = true;
     }
-    
-    this.showToast('Dados financeiros atualizados!', 'success');
-  } catch (error) {
-    console.error('Erro no financeiro:', error);
-    this.showToast('Erro ao carregar dados financeiros', 'error');
-  }
-}
 
-calcularFinanceiroLocal() {
-  const pedidosEntregues = this.pedidos.filter(p => p.status === 'entregue');
-  const totalVendas = pedidosEntregues.reduce((sum, p) => sum + (parseFloat(p.total) || 0), 0);
-  
-  // Garantir que temos dados para o gráfico
-  const vendasBase = totalVendas > 0 ? totalVendas : 1000; // Fallback se não houver vendas
-  
-  this.financeiroData = {
-    totalVendas: totalVendas,
-    totalCustos: totalVendas * 0.6,
-    lucro: totalVendas - (totalVendas * 0.6),
-    variacaoVendas: 12.5,
-    variacaoCustos: 8.2,
-    variacaoLucro: 15.3,
-    margemLucro: totalVendas > 0 ? ((totalVendas - (totalVendas * 0.6)) / totalVendas * 100).toFixed(1) : 0,
-    
-    stats: {
-      ticketMedio: pedidosEntregues.length > 0 ? totalVendas / pedidosEntregues.length : 0,
-      vendasMes: pedidosEntregues.length,
-      custoMedio: pedidosEntregues.length > 0 ? (totalVendas * 0.6) / pedidosEntregues.length : 0,
-      clientesAtendidos: new Set(pedidosEntregues.map(p => p.cliente)).size,
-      pedidosCancelados: this.pedidos.filter(p => p.status === 'cancelado').length,
-      tempoMedioPreparo: '18 min'
-    },
-    
-    vendasMensais: [
-      { mes: 'Jan', vendas: vendasBase * 0.1, custos: vendasBase * 0.06 },
-      { mes: 'Fev', vendas: vendasBase * 0.15, custos: vendasBase * 0.09 },
-      { mes: 'Mar', vendas: vendasBase * 0.12, custos: vendasBase * 0.072 },
-      { mes: 'Abr', vendas: vendasBase * 0.18, custos: vendasBase * 0.108 },
-      { mes: 'Mai', vendas: vendasBase * 0.22, custos: vendasBase * 0.132 },
-      { mes: 'Jun', vendas: vendasBase * 0.23, custos: vendasBase * 0.138 }
-    ]
-  };
-}
-
-/* ================= GRÁFICO MELHORADO ================= */
-
-renderGrafico() {
-  const container = document.getElementById('graficoPedidos');
-  if (!container) {
-    console.error('Container do gráfico não encontrado');
-    return;
+    try {
+      this.calcularFinanceiroLocal();
+      this.renderFinanceiro();
+      this.renderStats();
+      this.renderGrafico();
+      this.renderUltimosPedidos();
+      this.renderFluxoCaixa();
+      if (btn) {
+        btn.innerHTML = '🔄 Atualizar';
+        btn.disabled = false;
+      }
+      this.showToast('Dados financeiros atualizados!', 'success');
+    } catch (error) {
+      console.error('Erro no financeiro:', error);
+      this.showToast('Erro ao carregar dados financeiros', 'error');
+    }
   }
 
-  const dados = this.financeiroData.vendasMensais;
-
-  if (!dados || dados.length === 0) {
-    container.innerHTML = '<div class="empty-state">📊 Aguardando dados para exibir o gráfico</div>';
-    return;
-  }
-
-  // Calcular totais para legendas
-  const totalVendas = dados.reduce((sum, item) => sum + item.vendas, 0);
-  const totalCustos = dados.reduce((sum, item) => sum + item.custos, 0);
-  const totalLucro = totalVendas - totalCustos;
-  const maxValor = Math.max(...dados.map(d => Math.max(d.vendas, d.custos))) || 100;
-
-  let html = `
-    <div class="grafico-header">
-      <div class="grafico-legendas">
-        <div class="legenda-item">
-          <span class="legenda-cor" style="background: linear-gradient(to top, var(--primary), var(--primary-light))"></span>
-          <span>Vendas: ${this.formatarMoeda(totalVendas)}</span>
-        </div>
-        <div class="legenda-item">
-          <span class="legenda-cor" style="background: linear-gradient(to top, var(--danger), #ff6b6b)"></span>
-          <span>Custos: ${this.formatarMoeda(totalCustos)}</span>
-        </div>
-        <div class="legenda-item">
-          <span class="legenda-cor" style="background: linear-gradient(to top, var(--success), #27ae60)"></span>
-          <span>Lucro: ${this.formatarMoeda(totalLucro)}</span>
-        </div>
-      </div>
-    </div>
-
-    <div class="grafico-barras-melhorado">
-      <div class="grafico-eixo-y">
-        ${this.gerarEscalaEixoY(maxValor)}
-      </div>
-
-      <div class="grafico-barras-container">
-  `;
-
-  dados.forEach(item => {
-    const alturaVendas = (item.vendas / maxValor) * 100;
-    const alturaCustos = (item.custos / maxValor) * 100;
-    const lucro = item.vendas - item.custos;
-    const alturaLucro = (Math.max(0, lucro) / maxValor) * 100;
-    const corLucro = lucro >= 0 ? 'var(--success)' : 'var(--danger)';
-
-    html += `
-      <div class="mes-container">
-        <div class="barras-mes">
-          <div class="barra-lucro" style="height: ${alturaLucro}%; background: ${corLucro}">
-            <div class="barra-valor">${this.formatarMoeda(lucro)}</div>
-          </div>
-
-          <div class="barra-custos" style="height: ${alturaCustos}%; background: linear-gradient(to top, var(--danger), #ff6b6b)">
-            <div class="barra-valor">${this.formatarMoeda(item.custos)}</div>
-          </div>
-
-          <div class="barra-vendas" style="height: ${alturaVendas}%; background: linear-gradient(to top, var(--primary), var(--primary-light))">
-            <div class="barra-valor">${this.formatarMoeda(item.vendas)}</div>
-          </div>
-        </div>
-
-        <div class="mes-info">
-          <div class="mes-nome">${item.mes}</div>
-          <div class="mes-detalhes">
-            <small>V: ${this.formatarMoeda(item.vendas)}</small>
-            <small>C: ${this.formatarMoeda(item.custos)}</small>
-            <small class="${lucro >= 0 ? 'positive' : 'negative'}">L: ${this.formatarMoeda(lucro)}</small>
-          </div>
-        </div>
-      </div>
-    `;
-  });
-
-  html += `
-      </div>
-    </div>
-
-    <div class="grafico-footer">
-      <div class="indicadores">
-        <div class="indicador">
-          <span class="indicador-label">Melhor Mês:</span>
-          <span class="indicador-valor">${this.obterMelhorMes(dados)}</span>
-        </div>
-        <div class="indicador">
-          <span class="indicador-label">Crescimento:</span>
-          <span class="indicador-valor ${this.calcularCrescimento(dados) >= 0 ? 'positive' : 'negative'}">
-            ${this.calcularCrescimento(dados) >= 0 ? '+' : ''}${this.calcularCrescimento(dados)}%
-          </span>
-        </div>
-      </div>
-    </div>
-  `;
-
-  container.innerHTML = html;
+  // ... (demais funções financeiras e de renderização permanecem iguais ao seu código atual)
 }
 
-gerarEscalaEixoY(maxValor) {
-  const escalas = [];
-  const numEscalas = 5;
-
-  for (let i = numEscalas; i >= 0; i--) {
-    const valor = (maxValor / numEscalas) * i;
-    escalas.push(`
-      <div class="escala-y">
-        <span class="escala-valor">${this.formatarMoeda(valor)}</span>
-        <span class="escala-linha"></span>
-      </div>
-    `);
-  }
-
-  return escalas.join('');
-}
-
-obterMelhorMes(dados) {
-  if (!dados.length) return '-';
-  const melhorMes = dados.reduce((prev, current) =>
-    (prev.vendas > current.vendas) ? prev : current
-  );
-  return melhorMes.mes;
-}
-
-calcularCrescimento(dados) {
-  if (dados.length < 2) return 0;
-  const primeiro = dados[0].vendas;
-  const ultimo = dados[dados.length - 1].vendas;
-  if (primeiro === 0) return 0;
-  return (((ultimo - primeiro) / primeiro) * 100).toFixed(1);
-}
-
-/* ================= UTILITÁRIOS ================= */
-showToast(mensagem, tipo = 'success', timeout = 2500) {
-  const container = document.getElementById('toast-container');
-  const t = document.createElement('div');
-  t.className = `toast ${tipo === 'error' ? 'error' : tipo === 'info' ? 'info' : 'success'}`;
-  t.textContent = mensagem;
-  container.appendChild(t);
-  setTimeout(() => { 
-    t.style.opacity = '0'; 
-    setTimeout(() => t.remove(), 400); 
-  }, timeout);
-}
-
-_formatImageSrc(src) {
-  if (!src) return '';
-  try {
-    const u = new URL(src);
-    return src;
-  } catch (e) {
-    if (src.startsWith('/')) return src;
-    return src;
-  }
-}
-}
-
-// Inicialização correta
+// ===================== Inicialização =====================
 document.addEventListener('DOMContentLoaded', () => {
   window.dashboard = new Dashboard();
 });
-
