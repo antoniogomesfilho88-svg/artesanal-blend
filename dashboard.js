@@ -1170,33 +1170,138 @@ renderGrafico() {
   
   const dados = this.financeiroData.vendasMensais;
   
-  // Verificar se temos dados válidos
   if (!dados || dados.length === 0) {
-    container.innerHTML = '<div class="empty-state">Sem dados para exibir</div>';
+    container.innerHTML = '<div class="empty-state">📊 Aguardando dados para exibir o gráfico</div>';
     return;
   }
   
-  const maxVendas = Math.max(...dados.map(d => d.vendas)) || 100; // Fallback mínimo
+  // Calcular totais para legendas
+  const totalVendas = dados.reduce((sum, item) => sum + item.vendas, 0);
+  const totalCustos = dados.reduce((sum, item) => sum + item.custos, 0);
+  const totalLucro = totalVendas - totalCustos;
+  const maxValor = Math.max(...dados.map(d => Math.max(d.vendas, d.custos))) || 100;
   
-  console.log('Renderizando gráfico com dados:', dados);
-  console.log('Max vendas:', maxVendas);
-  
-  let html = '';
-  dados.forEach(item => {
-    const alturaVendas = (item.vendas / maxVendas) * 100;
-    const alturaCustos = (item.custos / maxVendas) * 100;
+  let html = `
+    <div class="grafico-header">
+      <div class="grafico-legendas">
+        <div class="legenda-item">
+          <span class="legenda-cor" style="background: linear-gradient(to top, var(--primary), var(--primary-light))"></span>
+          <span>Vendas: ${this.formatarMoeda(totalVendas)}</span>
+        </div>
+        <div class="legenda-item">
+          <span class="legenda-cor" style="background: linear-gradient(to top, var(--danger), #ff6b6b)"></span>
+          <span>Custos: ${this.formatarMoeda(totalCustos)}</span>
+        </div>
+        <div class="legenda-item">
+          <span class="legenda-cor" style="background: linear-gradient(to top, var(--success), #27ae60)"></span>
+          <span>Lucro: ${this.formatarMoeda(totalLucro)}</span>
+        </div>
+      </div>
+    </div>
     
-    console.log(`Mês: ${item.mes}, Vendas: ${item.vendas}, Altura: ${alturaVendas}%`);
+    <div class="grafico-barras-melhorado">
+      <div class="grafico-eixo-y">
+        ${this.gerarEscalaEixoY(maxValor)}
+      </div>
+      
+      <div class="grafico-barras-container">
+  `;
+  
+  dados.forEach(item => {
+    const alturaVendas = (item.vendas / maxValor) * 100;
+    const alturaCustos = (item.custos / maxValor) * 100;
+    const lucro = item.vendas - item.custos;
+    const alturaLucro = (Math.max(0, lucro) / maxValor) * 100;
+    const corLucro = lucro >= 0 ? 'var(--success)' : 'var(--danger)';
     
     html += `
-      <div class="barra-container">
-        <div class="barra-valor">${this.formatarMoeda(item.vendas)}</div>
-        <div class="barra" style="height: ${alturaVendas}%; background: linear-gradient(to top, var(--primary), var(--primary-light))"></div>
-        <div class="barra" style="height: ${alturaCustos}%; background: linear-gradient(to top, var(--danger), #ff6b6b); margin-top: 2px"></div>
-        <div class="barra-label">${item.mes}</div>
+      <div class="mes-container">
+        <div class="barras-mes">
+          <!-- Barra de Lucro (verde/vermelho) -->
+          <div class="barra-lucro" style="height: ${alturaLucro}%; background: ${corLucro}">
+            <div class="barra-valor">${this.formatarMoeda(lucro)}</div>
+          </div>
+          
+          <!-- Barra de Custos (vermelho) -->
+          <div class="barra-custos" style="height: ${alturaCustos}%; background: linear-gradient(to top, var(--danger), #ff6b6b)">
+            <div class="barra-valor">${this.formatarMoeda(item.custos)}</div>
+          </div>
+          
+          <!-- Barra de Vendas (marrom) -->
+          <div class="barra-vendas" style="height: ${alturaVendas}%; background: linear-gradient(to top, var(--primary), var(--primary-light))">
+            <div class="barra-valor">${this.formatarMoeda(item.vendas)}</div>
+          </div>
+        </div>
+        
+        <div class="mes-info">
+          <div class="mes-nome">${item.mes}</div>
+          <div class="mes-detalhes">
+            <small>V: ${this.formatarMoeda(item.vendas)}</small>
+            <small>C: ${this.formatarMoeda(item.custos)}</small>
+            <small class="${lucro >= 0 ? 'positive' : 'negative'}">L: ${this.formatarMoeda(lucro)}</small>
+          </div>
+        </div>
       </div>
     `;
   });
+  
+  html += `
+      </div>
+    </div>
+    
+    <div class="grafico-footer">
+      <div class="indicadores">
+        <div class="indicador">
+          <span class="indicador-label">Melhor Mês:</span>
+          <span class="indicador-valor">${this.obterMelhorMes(dados)}</span>
+        </div>
+        <div class="indicador">
+          <span class="indicador-label">Crescimento:</span>
+          <span class="indicador-valor ${this.calcularCrescimento(dados) >= 0 ? 'positive' : 'negative'}">
+            ${this.calcularCrescimento(dados) >= 0 ? '+' : ''}${this.calcularCrescimento(dados)}%
+          </span>
+        </div>
+      </div>
+    </div>
+  `;
+  
+  container.innerHTML = html;
+}
+
+// Funções auxiliares para o gráfico melhorado
+gerarEscalaEixoY(maxValor) {
+  const escalas = [];
+  const numEscalas = 5;
+  
+  for (let i = numEscalas; i >= 0; i--) {
+    const valor = (maxValor / numEscalas) * i;
+    escalas.push(`
+      <div class="escala-y">
+        <span class="escala-valor">${this.formatarMoeda(valor)}</span>
+        <span class="escala-linha"></span>
+      </div>
+    `);
+  }
+  
+  return escalas.join('');
+}
+
+obterMelhorMes(dados) {
+  if (!dados.length) return '-';
+  const melhorMes = dados.reduce((prev, current) => 
+    (prev.vendas > current.vendas) ? prev : current
+  );
+  return melhorMes.mes;
+}
+
+calcularCrescimento(dados) {
+  if (dados.length < 2) return 0;
+  const primeiro = dados[0].vendas;
+  const ultimo = dados[dados.length - 1].vendas;
+  
+  if (primeiro === 0) return 0;
+  return (((ultimo - primeiro) / primeiro) * 100).toFixed(1);
+}
   
   container.innerHTML = html;
   console.log('Gráfico renderizado com sucesso');
@@ -1382,6 +1487,7 @@ renderUltimosPedidos() {
 document.addEventListener('DOMContentLoaded', () => {
   window.dashboard = new Dashboard();
 });
+
 
 
 
