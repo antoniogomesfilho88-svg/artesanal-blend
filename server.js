@@ -66,9 +66,16 @@ async function criarAdmin() {
 }
 criarAdmin();
 
-// ===============================
+/ ===============================
 // 🔐 Autenticação (login)
 // ===============================
+
+// Página de login (serve o arquivo login.html)
+app.get('/login', (req, res) => {
+  res.sendFile(path.resolve(__dirname, './login.html'));
+});
+
+// Rota da API para fazer login (POST)
 app.post("/api/auth/login", async (req, res) => {
   try {
     const { email, senha } = req.body;
@@ -336,3 +343,4 @@ app.listen(PORT, () => {
   console.log(`📱 Cardápio: https://artesanal-blend.onrender.com`);
   console.log(`📊 Dashboard: https://artesanal-blend.onrender.com/dashboard`);
 });
+
