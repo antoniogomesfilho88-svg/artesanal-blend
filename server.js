@@ -9,6 +9,9 @@ import mongoose from "mongoose";
 import path from "path";
 import { fileURLToPath } from "url";
 import User from "./models/User.js";
+import dotenv from "dotenv";
+
+dotenv.config();
 
 // ===============================
 // ⚙️ Configuração base
@@ -35,10 +38,8 @@ mongoose
   .catch((err) => console.error("❌ Erro ao conectar MongoDB:", err));
 
 // ===============================
-// 👤 Autenticação e Usuários
+// 👤 Cria admin se não existir
 // ===============================
-
-// Cria usuário admin automaticamente se não existir
 async function criarAdmin() {
   const adminExiste = await User.findOne({ email: "admin@blend.com" });
   if (!adminExiste) {
@@ -54,7 +55,9 @@ async function criarAdmin() {
 }
 criarAdmin();
 
-// Middleware de autenticação
+// ===============================
+// 🔐 Middleware de autenticação
+// ===============================
 function autenticarToken(req, res, next) {
   const token = req.headers.authorization?.split(" ")[1];
   if (!token) return res.status(401).json({ error: "Acesso negado" });
@@ -67,7 +70,7 @@ function autenticarToken(req, res, next) {
 }
 
 // ===============================
-// 🔐 Rotas de autenticação
+// 🔑 Rotas de autenticação
 // ===============================
 app.post("/api/auth/login", async (req, res) => {
   try {
@@ -113,32 +116,9 @@ app.post("/api/auth/register", autenticarToken, async (req, res) => {
   }
 });
 
-// Listar usuários (somente admin)
-app.get("/api/users", autenticarToken, async (req, res) => {
-  try {
-    if (req.user.cargo !== "admin")
-      return res
-        .status(403)
-        .json({ error: "Apenas administradores podem listar usuários" });
-
-    const users = await User.find({}, "-senhaHash");
-    res.json(users);
-  } catch (err) {
-    console.error("❌ Erro ao listar usuários:", err);
-    res.status(500).json({ error: "Erro ao listar usuários" });
-  }
-});
-
 // ===============================
-// 💰 Rotas de dados financeiros e operacionais
+// 💰 Rotas simuladas (menu, pedidos, insumos)
 // ===============================
-app.get("/api/stats", autenticarToken, (req, res) => {
-  const vendas = 12890;
-  const gastos = 7890;
-  res.json({ vendas, gastos, lucro: vendas - gastos });
-});
-
-// Exemplos temporários — depois podem ser substituídos por coleções Mongo
 app.get("/api/menu", autenticarToken, (req, res) => {
   res.json([
     { id: 1, nome: "Burger Artesanal", preco: 29.9, disponivel: true },
@@ -160,31 +140,31 @@ app.get("/api/insumos", autenticarToken, (req, res) => {
   ]);
 });
 
-// ===============================
-// 🗂️ Servir arquivos estáticos (HTML, JS, CSS, imagens)
-// ===============================
-app.use(express.static(__dirname));
+app.get("/api/stats", autenticarToken, (req, res) => {
+  const vendas = 12890;
+  const gastos = 7890;
+  res.json({ vendas, gastos, lucro: vendas - gastos });
+});
 
-// Página inicial → Login
+// ===============================
+// 🗂️ Servir frontend do diretório /public
+// ===============================
+app.use(express.static(path.join(__dirname, "public")));
+
+// Redireciona "/" para o dashboard.html
 app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "login.html"));
+  res.sendFile(path.join(__dirname, "public", "dashboard.html"));
 });
 
-// Rota direta para o dashboard
-app.get("/dashboard", (req, res) => {
-  res.sendFile(path.join(__dirname, "dashboard.html"));
-});
-
-// ⚠️ Fallback — sempre o último
-app.get("*", (req, res) => {
+// Fallback — rota não encontrada
+app.use((req, res) => {
   res.status(404).json({ error: "Rota não encontrada" });
 });
 
 // ===============================
-// 🚀 Iniciar Servidor (Render usa variável PORT automaticamente)
+// 🚀 Inicialização do servidor
 // ===============================
 app.listen(PORT, () => {
   console.log(`🚀 Servidor rodando na porta ${PORT}`);
-  console.log(`📱 Login: http://localhost:${PORT}`);
-  console.log(`📊 Dashboard: http://localhost:${PORT}/dashboard`);
+  console.log(`📊 Dashboard: http://localhost:${PORT}`);
 });
