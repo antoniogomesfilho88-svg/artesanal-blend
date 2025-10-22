@@ -145,22 +145,20 @@ app.get("/api/stats", autenticarToken, (req, res) => {
 });
 
 // ===============================
-// 🗂️ Servir frontend direto da raiz
+// 🗂️ Servir arquivos estáticos direto da raiz
+// ===============================
 app.use(express.static(__dirname));
 
-// Redireciona "/" para dashboard.html (na raiz)
+// Página inicial → Dashboard
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "dashboard.html"));
 });
-// Redireciona "/" para o dashboard.html
-app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "public", "dashboard.html"));
-});
 
-// Fallback — rota não encontrada
+// ⚠️ Fallback — sempre o último
 app.use((req, res) => {
   res.status(404).json({ error: "Rota não encontrada" });
 });
+
 
 // ===============================
 // 🚀 Inicialização do servidor
@@ -169,5 +167,6 @@ app.listen(PORT, () => {
   console.log(`🚀 Servidor rodando na porta ${PORT}`);
   console.log(`📊 Dashboard: http://localhost:${PORT}`);
 });
+
 
 
