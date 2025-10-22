@@ -1,742 +1,412 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Dashboard - Artesanal Blend</title>
-  <style>
-    /* ESTILOS GERAIS DO DASHBOARD */
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
+<section id="financeiroTab" class="tab-content">
+  <div class="section-header">
+    <h2>📊 Dashboard Financeiro</h2>
+    <div class="actions">
+      <button class="btn secondary" onclick="dashboard.updateFinanceiro()">🔄 Atualizar</button>
+      <button class="btn primary" onclick="dashboard.exportarRelatorio()">📄 Exportar</button>
+    </div>
+  </div>
 
-    body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background: #f8f9fa;
-      color: #333;
-    }
+  <!-- Filtros -->
+  <div class="filters">
+    <select id="filtroPeriodo" onchange="dashboard.filtrarFinanceiro()">
+      <option value="hoje">Hoje</option>
+      <option value="semana">Esta Semana</option>
+      <option value="mes" selected>Este Mês</option>
+      <option value="trimestre">Este Trimestre</option>
+      <option value="ano">Este Ano</option>
+    </select>
+    
+    <select id="filtroCategoria" onchange="dashboard.filtrarFinanceiro()">
+      <option value="">Todas Categorias</option>
+      <option value="hamburgueres">Hambúrgueres</option>
+      <option value="combos">Combos</option>
+      <option value="bebidas">Bebidas</option>
+      <option value="acompanhamentos">Acompanhamentos</option>
+    </select>
+    
+    <input type="date" id="dataInicio" onchange="dashboard.filtrarFinanceiro()">
+    <input type="date" id="dataFim" onchange="dashboard.filtrarFinanceiro()">
+  </div>
 
-    .dashboard-header {
-      background: #8B4513;
-      color: white;
-      padding: 1rem 2rem;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-    }
+  <!-- Cards Principais -->
+  <div class="financeiro-cards">
+    <div class="finance-card">
+      <h3>💰 Total Vendas</h3>
+      <p id="totalVendas">R$ 0,00</p>
+      <small id="variacaoVendas" class="positive">+0%</small>
+    </div>
+    <div class="finance-card">
+      <h3>📉 Total Custos</h3>
+      <p id="totalCustos">R$ 0,00</p>
+      <small id="variacaoCustos" class="positive">+0%</small>
+    </div>
+    <div class="finance-card">
+      <h3>💸 Lucro Líquido</h3>
+      <p id="lucro">R$ 0,00</p>
+      <small id="variacaoLucro" class="positive">+0%</small>
+    </div>
+    <div class="finance-card">
+      <h3>📊 Margem</h3>
+      <p id="margemLucro">0%</p>
+      <small>Lucratividade</small>
+    </div>
+  </div>
 
-    .header-content {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      max-width: 1200px;
-      margin: 0 auto;
-    }
+  <!-- Estatísticas Detalhadas -->
+  <div class="stats-cards" id="financeiroStats">
+    <!-- Será preenchido via JavaScript -->
+  </div>
 
-    .logo {
-      width: 50px;
-      height: 50px;
-      border-radius: 50%;
-      border: 2px solid white;
-    }
-
-    .tabs {
-      display: flex;
-      background: white;
-      border-bottom: 1px solid #ddd;
-      padding: 0 2rem;
-      max-width: 1200px;
-      margin: 0 auto;
-    }
-
-    .tab-button {
-      padding: 1rem 2rem;
-      border: none;
-      background: none;
-      cursor: pointer;
-      border-bottom: 3px solid transparent;
-      transition: all 0.3s;
-    }
-
-    .tab-button.active {
-      border-bottom-color: #8B4513;
-      color: #8B4513;
-      font-weight: 600;
-    }
-
-    .dashboard-content {
-      max-width: 1200px;
-      margin: 2rem auto;
-      padding: 0 2rem;
-    }
-
-    .tab-content {
-      display: none;
-    }
-
-    .tab-content.active {
-      display: block;
-    }
-
-    .section-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 2rem;
-    }
-
-    .btn {
-      padding: 0.7rem 1.5rem;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      font-weight: 600;
-      transition: all 0.3s;
-    }
-
-    .btn.primary {
-      background: #8B4513;
-      color: white;
-    }
-
-    .btn.secondary {
-      background: #6c757d;
-      color: white;
-    }
-
-    .btn:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-    }
-
-    /* ESTILOS ESPECÍFICOS DO FINANCEIRO */
-    .financeiro-cards {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-      gap: 1.5rem;
-      margin-bottom: 2rem;
-    }
-
-    .finance-card {
-      background: white;
-      padding: 2rem;
-      border-radius: 12px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-      border-left: 4px solid #8B4513;
-      transition: transform 0.3s;
-    }
-
-    .finance-card:hover {
-      transform: translateY(-5px);
-    }
-
-    .finance-card h3 {
-      font-size: 1rem;
-      color: #666;
-      margin-bottom: 0.5rem;
-    }
-
-    .finance-card p {
-      font-size: 2rem;
-      font-weight: 700;
-      color: #333;
-    }
-
-    .financeiro-grid {
-      display: grid;
-      grid-template-columns: 2fr 1fr;
-      gap: 2rem;
-      margin-top: 2rem;
-    }
-
-    @media (max-width: 768px) {
-      .financeiro-grid {
-        grid-template-columns: 1fr;
-      }
-    }
-
-    .chart-container, .table-container {
-      background: white;
-      padding: 1.5rem;
-      border-radius: 12px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-    }
-
-    .chart-container h3, .table-container h3 {
-      margin-bottom: 1rem;
-      color: #8B4513;
-      font-size: 1.2rem;
-    }
-
-    .stats-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 1rem;
-      margin-bottom: 2rem;
-    }
-
-    .stat-card {
-      background: white;
-      padding: 1.5rem;
-      border-radius: 8px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-      text-align: center;
-    }
-
-    .stat-card h4 {
-      font-size: 0.9rem;
-      color: #666;
-      margin-bottom: 0.5rem;
-    }
-
-    .stat-card p {
-      font-size: 1.5rem;
-      font-weight: 700;
-      color: #333;
-    }
-
-    .positive {
-      color: #28a745;
-    }
-
-    .negative {
-      color: #dc3545;
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-    }
-
-    th, td {
-      padding: 0.75rem;
-      text-align: left;
-      border-bottom: 1px solid #ddd;
-    }
-
-    th {
-      background: #f8f9fa;
-      font-weight: 600;
-      color: #666;
-    }
-
-    .status {
-      padding: 0.25rem 0.75rem;
-      border-radius: 20px;
-      font-size: 0.8rem;
-      font-weight: 600;
-    }
-
-    .status.pago {
-      background: #d4edda;
-      color: #155724;
-    }
-
-    .status.pendente {
-      background: #fff3cd;
-      color: #856404;
-    }
-
-    .status.atrasado {
-      background: #f8d7da;
-      color: #721c24;
-    }
-
-    .loading {
-      opacity: 0.7;
-      pointer-events: none;
-    }
-
-    .pulse {
-      animation: pulse 1.5s infinite;
-    }
-
-    @keyframes pulse {
-      0% { opacity: 1; }
-      50% { opacity: 0.5; }
-      100% { opacity: 1; }
-    }
-
-    /* Filtros do Financeiro */
-    .filters {
-      display: flex;
-      gap: 1rem;
-      margin-bottom: 2rem;
-      flex-wrap: wrap;
-    }
-
-    .filters select, .filters input {
-      padding: 0.7rem;
-      border: 1px solid #ddd;
-      border-radius: 8px;
-      background: white;
-    }
-
-    .periodo-filtro {
-      display: flex;
-      gap: 0.5rem;
-      align-items: center;
-    }
-  </style>
-</head>
-<body>
-
-  <!-- ESTRUTURA DO FINANCEIRO PROFISSIONAL -->
-  <section id="financeiroTab" class="tab-content">
-    <div class="section-header">
-      <h2>📊 Dashboard Financeiro</h2>
-      <div class="actions">
-        <button class="btn secondary" onclick="dashboard.updateFinanceiro()">
-          <span class="refresh-icon">🔄</span> Atualizar
-        </button>
-        <button class="btn primary" onclick="dashboard.exportarRelatorio()">
-          📄 Exportar Relatório
-        </button>
+  <!-- Gráficos e Tabelas -->
+  <div class="financeiro-grid">
+    <!-- Gráfico de Desempenho -->
+    <div class="grafico-section">
+      <h4>📈 Desempenho Mensal</h4>
+      <div class="grafico-barras" id="graficoPedidos">
+        <!-- Gráfico será renderizado aqui -->
       </div>
     </div>
 
-    <!-- Filtros Avançados -->
-    <div class="filters">
-      <select id="filtroPeriodo" onchange="dashboard.filtrarFinanceiro()">
-        <option value="hoje">Hoje</option>
-        <option value="semana">Esta Semana</option>
-        <option value="mes" selected>Este Mês</option>
-        <option value="trimestre">Este Trimestre</option>
-        <option value="ano">Este Ano</option>
-        <option value="personalizado">Personalizado</option>
-      </select>
-
-      <div class="periodo-filtro" id="periodoPersonalizado" style="display: none;">
-        <input type="date" id="dataInicio" onchange="dashboard.filtrarFinanceiro()">
-        <span>até</span>
-        <input type="date" id="dataFim" onchange="dashboard.filtrarFinanceiro()">
-      </div>
-
-      <select id="filtroCategoria" onchange="dashboard.filtrarFinanceiro()">
-        <option value="">Todas as Categorias</option>
-        <option value="hamburgueres">Hambúrgueres</option>
-        <option value="combos">Combos</option>
-        <option value="bebidas">Bebidas</option>
-        <option value="acompanhamentos">Acompanhamentos</option>
-      </select>
-    </div>
-
-    <!-- Cards Principais -->
-    <div class="financeiro-cards">
-      <div class="finance-card">
-        <h3>💰 Total Vendas</h3>
-        <p id="totalVendas">R$ 0,00</p>
-        <small id="variacaoVendas" class="positive">+0% vs período anterior</small>
-      </div>
-      <div class="finance-card">
-        <h3>📉 Total Custos</h3>
-        <p id="totalCustos">R$ 0,00</p>
-        <small id="variacaoCustos" class="positive">+0% vs período anterior</small>
-      </div>
-      <div class="finance-card">
-        <h3>💸 Lucro Líquido</h3>
-        <p id="lucro">R$ 0,00</p>
-        <small id="variacaoLucro" class="positive">+0% vs período anterior</small>
+    <!-- Pedidos Recentes -->
+    <div class="pedidos-recentes">
+      <h4>🕒 Últimos Pedidos</h4>
+      <div id="ultimosPedidos">
+        <!-- Pedidos serão renderizados aqui -->
       </div>
     </div>
+  </div>
 
-    <!-- Estatísticas Detalhadas -->
-    <div class="stats-grid" id="financeiroStats">
-      <!-- Será preenchido via JavaScript -->
+  <!-- Fluxo de Caixa -->
+  <div class="grafico-section">
+    <h4>💳 Fluxo de Caixa</h4>
+    <div id="fluxoCaixa">
+      <!-- Tabela de fluxo será renderizada aqui -->
     </div>
+  </div>
+</section>
 
-    <!-- Gráficos e Tabelas -->
-    <div class="financeiro-grid">
-      <div class="chart-container">
-        <h3>📈 Desempenho Financeiro Mensal</h3>
-        <canvas id="graficoPedidos" height="250"></canvas>
-      </div>
+<script>
+// Dados de exemplo para demonstração
+const financeiroData = {
+  totalVendas: 125430.50,
+  totalCustos: 78420.30,
+  lucro: 47010.20,
+  variacaoVendas: 12.5,
+  variacaoCustos: 8.2,
+  variacaoLucro: 15.3,
+  margemLucro: 37.5,
+  
+  stats: {
+    ticketMedio: 245.80,
+    vendasMes: 42,
+    custoMedio: 186.70,
+    clientesAtendidos: 128,
+    pedidosCancelados: 3,
+    tempoMedioPreparo: '18 min'
+  },
+  
+  vendasMensais: [
+    { mes: 'Jan', vendas: 8500, custos: 6200 },
+    { mes: 'Fev', vendas: 9200, custos: 6800 },
+    { mes: 'Mar', vendas: 10200, custos: 7500 },
+    { mes: 'Abr', vendas: 11500, custos: 8200 },
+    { mes: 'Mai', vendas: 12300, custos: 8800 },
+    { mes: 'Jun', vendas: 13200, custos: 9200 }
+  ],
+  
+  ultimosPedidos: [
+    { id: 'P00123', cliente: 'João Silva', valor: 320.50, data: '15/10/2023', status: 'entregue' },
+    { id: 'P00122', cliente: 'Maria Santos', valor: 185.00, data: '14/10/2023', status: 'pronto' },
+    { id: 'P00121', cliente: 'Carlos Oliveira', valor: 420.75, data: '14/10/2023', status: 'preparando' },
+    { id: 'P00120', cliente: 'Ana Costa', valor: 210.30, data: '13/10/2023', status: 'entregue' },
+    { id: 'P00119', cliente: 'Pedro Alves', valor: 150.00, data: '12/10/2023', status: 'pendente' }
+  ],
+  
+  fluxoCaixa: [
+    { data: '01/10/2023', descricao: 'Vendas do dia', entrada: 1250.00, saida: 0, saldo: 1250.00 },
+    { data: '01/10/2023', descricao: 'Compra de insumos', entrada: 0, saida: 450.00, saldo: 800.00 },
+    { data: '02/10/2023', descricao: 'Vendas do dia', entrada: 980.00, saida: 0, saldo: 1780.00 },
+    { data: '02/10/2023', descricao: 'Manutenção equipamentos', entrada: 0, saida: 120.00, saldo: 1660.00 }
+  ]
+};
+
+// Funções do Financeiro
+const dashboard = {
+  initFinanceiro: function() {
+    this.renderFinanceiro();
+    this.renderStats();
+    this.renderGrafico();
+    this.renderUltimosPedidos();
+    this.renderFluxoCaixa();
+    this.configurarDatas();
+  },
+  
+  configurarDatas: function() {
+    const hoje = new Date();
+    const umaSemanaAtras = new Date(hoje.getTime() - 7 * 24 * 60 * 60 * 1000);
+    
+    document.getElementById('dataInicio').value = umaSemanaAtras.toISOString().split('T')[0];
+    document.getElementById('dataFim').value = hoje.toISOString().split('T')[0];
+  },
+  
+  filtrarFinanceiro: function() {
+    const periodo = document.getElementById('filtroPeriodo').value;
+    const categoria = document.getElementById('filtroCategoria').value;
+    const dataInicio = document.getElementById('dataInicio').value;
+    const dataFim = document.getElementById('dataFim').value;
+    
+    console.log('Filtrando:', { periodo, categoria, dataInicio, dataFim });
+    this.updateFinanceiro();
+  },
+  
+  updateFinanceiro: function() {
+    const btn = document.querySelector('#financeiroTab .btn.secondary');
+    btn.innerHTML = '⏳ Atualizando...';
+    btn.disabled = true;
+    
+    // Simula carregamento
+    setTimeout(() => {
+      // Atualiza dados (simulação)
+      financeiroData.totalVendas += Math.random() * 1000;
+      financeiroData.totalCustos += Math.random() * 600;
+      financeiroData.lucro = financeiroData.totalVendas - financeiroData.totalCustos;
+      financeiroData.margemLucro = (financeiroData.lucro / financeiroData.totalVendas * 100).toFixed(1);
       
-      <div class="table-container">
-        <h3>🕒 Últimos Pedidos</h3>
-        <div id="ultimosPedidos">
-          <!-- Será preenchido via JavaScript -->
+      this.renderFinanceiro();
+      this.renderStats();
+      this.renderGrafico();
+      
+      btn.innerHTML = '🔄 Atualizar';
+      btn.disabled = false;
+      
+      this.mostrarToast('Dados atualizados com sucesso!', 'success');
+    }, 1500);
+  },
+  
+  renderFinanceiro: function() {
+    const data = financeiroData;
+    
+    document.getElementById('totalVendas').textContent = this.formatarMoeda(data.totalVendas);
+    document.getElementById('totalCustos').textContent = this.formatarMoeda(data.totalCustos);
+    document.getElementById('lucro').textContent = this.formatarMoeda(data.lucro);
+    document.getElementById('margemLucro').textContent = data.margemLucro + '%';
+    
+    // Variações
+    document.getElementById('variacaoVendas').textContent = 
+      `${data.variacaoVendas >= 0 ? '+' : ''}${data.variacaoVendas}%`;
+    document.getElementById('variacaoVendas').className = data.variacaoVendas >= 0 ? 'positive' : 'negative';
+    
+    document.getElementById('variacaoCustos').textContent = 
+      `${data.variacaoCustos >= 0 ? '+' : ''}${data.variacaoCustos}%`;
+    document.getElementById('variacaoCustos').className = data.variacaoCustos >= 0 ? 'positive' : 'negative';
+    
+    document.getElementById('variacaoLucro').textContent = 
+      `${data.variacaoLucro >= 0 ? '+' : ''}${data.variacaoLucro}%`;
+    document.getElementById('variacaoLucro').className = data.variacaoLucro >= 0 ? 'positive' : 'negative';
+  },
+  
+  renderStats: function() {
+    const container = document.getElementById('financeiroStats');
+    const stats = financeiroData.stats;
+    
+    container.innerHTML = `
+      <div class="stat-card">
+        <div class="stat-icon">🎫</div>
+        <div class="stat-info">
+          <h4>Ticket Médio</h4>
+          <p class="stat-value">${this.formatarMoeda(stats.ticketMedio)}</p>
+          <small>Por pedido</small>
         </div>
       </div>
-    </div>
-
-    <!-- Tabela de Fluxo de Caixa -->
-    <div class="chart-container" style="margin-top: 2rem;">
-      <h3>💳 Fluxo de Caixa Detalhado</h3>
-      <div id="fluxoCaixa">
-        <!-- Será preenchido via JavaScript -->
+      <div class="stat-card">
+        <div class="stat-icon">📈</div>
+        <div class="stat-info">
+          <h4>Vendas/Mês</h4>
+          <p class="stat-value">${stats.vendasMes}</p>
+          <small>Pedidos realizados</small>
+        </div>
       </div>
-    </div>
-  </section>
-
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script>
-    const dashboard = {
-      // Dados do financeiro
-      financeiroData: {
-        totalVendas: 125430.50,
-        totalCustos: 78420.30,
-        lucro: 47010.20,
-        variacaoVendas: 12.5,
-        variacaoCustos: 8.2,
-        variacaoLucro: 15.3,
-        stats: {
-          ticketMedio: 245.80,
-          vendasMes: 42,
-          custoMedio: 186.70,
-          margemLucro: 37.5,
-          clientesAtendidos: 128,
-          pedidosCancelados: 3
-        },
-        vendasMensais: {
-          labels: ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'],
-          valores: [8500, 9200, 10200, 11500, 12300, 13200, 14200, 13800, 14500, 15200, 16800, 18200],
-          custos: [6200, 6800, 7500, 8200, 8800, 9200, 9800, 9500, 10200, 10800, 11500, 12000]
-        },
-        ultimosPedidos: [
-          { id: 'P00123', cliente: 'João Silva', valor: 320.50, data: '15/10/2023', status: 'pago' },
-          { id: 'P00122', cliente: 'Maria Santos', valor: 185.00, data: '14/10/2023', status: 'pago' },
-          { id: 'P00121', cliente: 'Carlos Oliveira', valor: 420.75, data: '14/10/2023', status: 'pendente' },
-          { id: 'P00120', cliente: 'Ana Costa', valor: 210.30, data: '13/10/2023', status: 'pago' },
-          { id: 'P00119', cliente: 'Pedro Alves', valor: 150.00, data: '12/10/2023', status: 'atrasado' }
-        ],
-        fluxoCaixa: [
-          { data: '01/10/2023', descricao: 'Vendas do dia', entrada: 1250.00, saida: 0, saldo: 1250.00 },
-          { data: '01/10/2023', descricao: 'Compra de insumos', entrada: 0, saida: 450.00, saldo: 800.00 },
-          { data: '02/10/2023', descricao: 'Vendas do dia', entrada: 980.00, saida: 0, saldo: 1780.00 },
-          { data: '02/10/2023', descricao: 'Manutenção equipamentos', entrada: 0, saida: 120.00, saldo: 1660.00 }
-        ]
-      },
-
-      // Inicialização do financeiro
-      initFinanceiro: function() {
-        this.renderFinanceiro();
-        this.renderStats();
-        this.renderGrafico();
-        this.renderUltimosPedidos();
-        this.renderFluxoCaixa();
-        this.configurarFiltros();
-      },
-
-      // Configuração dos filtros
-      configurarFiltros: function() {
-        const filtroPeriodo = document.getElementById('filtroPeriodo');
-        const periodoPersonalizado = document.getElementById('periodoPersonalizado');
-        
-        filtroPeriodo.addEventListener('change', function() {
-          periodoPersonalizado.style.display = this.value === 'personalizado' ? 'flex' : 'none';
-          dashboard.filtrarFinanceiro();
-        });
-
-        // Definir datas padrão
-        const hoje = new Date();
-        const umaSemanaAtras = new Date(hoje.getTime() - 7 * 24 * 60 * 60 * 1000);
-        
-        document.getElementById('dataInicio').value = umaSemanaAtras.toISOString().split('T')[0];
-        document.getElementById('dataFim').value = hoje.toISOString().split('T')[0];
-      },
-
-      // Filtragem dos dados
-      filtrarFinanceiro: function() {
-        // Simulação de filtragem - na prática, faria uma requisição à API
-        const periodo = document.getElementById('filtroPeriodo').value;
-        const categoria = document.getElementById('filtroCategoria').value;
-        
-        console.log('Filtrando por:', periodo, categoria);
-        this.updateFinanceiro();
-      },
-
-      // Atualização dos dados
-      updateFinanceiro: function() {
-        const btn = document.querySelector('#financeiroTab .btn.secondary');
-        const icon = btn.querySelector('.refresh-icon');
-        
-        btn.classList.add('loading');
-        icon.textContent = '⏳';
-
-        // Simula carregamento
-        setTimeout(() => {
-          // Atualiza dados (simulação)
-          this.financeiroData.totalVendas += Math.random() * 1000;
-          this.financeiroData.totalCustos += Math.random() * 600;
-          this.financeiroData.lucro = this.financeiroData.totalVendas - this.financeiroData.totalCustos;
-          
-          this.renderFinanceiro();
-          this.renderStats();
-          this.renderGrafico();
-          
-          btn.classList.remove('loading');
-          icon.textContent = '🔄';
-          
-          // Feedback visual
-          this.mostrarToast('Dados financeiros atualizados com sucesso!', 'success');
-        }, 1500);
-      },
-
-      // Renderização dos cards principais
-      renderFinanceiro: function() {
-        const data = this.financeiroData;
-        
-        document.getElementById('totalVendas').textContent = this.formatarMoeda(data.totalVendas);
-        document.getElementById('totalCustos').textContent = this.formatarMoeda(data.totalCustos);
-        
-        const lucroElement = document.getElementById('lucro');
-        lucroElement.textContent = this.formatarMoeda(data.lucro);
-        lucroElement.className = data.lucro >= 0 ? 'positive' : 'negative';
-
-        // Variações
-        document.getElementById('variacaoVendas').textContent = 
-          `${data.variacaoVendas >= 0 ? '+' : ''}${data.variacaoVendas}% vs período anterior`;
-        document.getElementById('variacaoVendas').className = data.variacaoVendas >= 0 ? 'positive' : 'negative';
-
-        document.getElementById('variacaoCustos').textContent = 
-          `${data.variacaoCustos >= 0 ? '+' : ''}${data.variacaoCustos}% vs período anterior`;
-        document.getElementById('variacaoCustos').className = data.variacaoCustos >= 0 ? 'positive' : 'negative';
-
-        document.getElementById('variacaoLucro').textContent = 
-          `${data.variacaoLucro >= 0 ? '+' : ''}${data.variacaoLucro}% vs período anterior`;
-        document.getElementById('variacaoLucro').className = data.variacaoLucro >= 0 ? 'positive' : 'negative';
-      },
-
-      // Renderização das estatísticas
-      renderStats: function() {
-        const statsContainer = document.getElementById('financeiroStats');
-        const stats = this.financeiroData.stats;
-        
-        statsContainer.innerHTML = `
-          <div class="stat-card">
-            <h4>🎫 Ticket Médio</h4>
-            <p>${this.formatarMoeda(stats.ticketMedio)}</p>
-          </div>
-          <div class="stat-card">
-            <h4>📈 Vendas no Mês</h4>
-            <p>${stats.vendasMes}</p>
-          </div>
-          <div class="stat-card">
-            <h4>📊 Custo Médio</h4>
-            <p>${this.formatarMoeda(stats.custoMedio)}</p>
-          </div>
-          <div class="stat-card">
-            <h4>📐 Margem de Lucro</h4>
-            <p class="${stats.margemLucro > 0 ? 'positive' : 'negative'}">${stats.margemLucro}%</p>
-          </div>
-          <div class="stat-card">
-            <h4>👥 Clientes Atendidos</h4>
-            <p>${stats.clientesAtendidos}</p>
-          </div>
-          <div class="stat-card">
-            <h4>❌ Pedidos Cancelados</h4>
-            <p class="${stats.pedidosCancelados > 5 ? 'negative' : 'positive'}">${stats.pedidosCancelados}</p>
-          </div>
-        `;
-      },
-
-      // Renderização do gráfico
-      renderGrafico: function() {
-        const ctx = document.getElementById('graficoPedidos').getContext('2d');
-        const data = this.financeiroData.vendasMensais;
-        
-        // Destrói gráfico existente
-        if (this.chartInstance) {
-          this.chartInstance.destroy();
-        }
-        
-        this.chartInstance = new Chart(ctx, {
-          type: 'bar',
-          data: {
-            labels: data.labels,
-            datasets: [
-              {
-                label: 'Vendas',
-                data: data.valores,
-                backgroundColor: 'rgba(139, 69, 19, 0.8)',
-                borderColor: 'rgba(139, 69, 19, 1)',
-                borderWidth: 1
-              },
-              {
-                label: 'Custos',
-                data: data.custos,
-                backgroundColor: 'rgba(220, 53, 69, 0.8)',
-                borderColor: 'rgba(220, 53, 69, 1)',
-                borderWidth: 1
-              }
-            ]
-          },
-          options: {
-            responsive: true,
-            plugins: {
-              legend: {
-                position: 'top',
-              },
-              tooltip: {
-                callbacks: {
-                  label: function(context) {
-                    return `R$ ${context.parsed.y.toFixed(2)}`;
-                  }
-                }
-              }
-            },
-            scales: {
-              y: {
-                beginAtZero: true,
-                ticks: {
-                  callback: function(value) {
-                    return 'R$ ' + value;
-                  }
-                }
-              }
-            }
-          }
-        });
-      },
-
-      // Renderização dos últimos pedidos
-      renderUltimosPedidos: function() {
-        const container = document.getElementById('ultimosPedidos');
-        const pedidos = this.financeiroData.ultimosPedidos;
-        
-        let html = `
-          <table>
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>Cliente</th>
-                <th>Valor</th>
-                <th>Data</th>
-                <th>Status</th>
-              </tr>
-            </thead>
-            <tbody>
-        `;
-        
-        pedidos.forEach(pedido => {
-          html += `
-            <tr>
-              <td>${pedido.id}</td>
-              <td>${pedido.cliente}</td>
-              <td>${this.formatarMoeda(pedido.valor)}</td>
-              <td>${pedido.data}</td>
-              <td><span class="status ${pedido.status}">${this.formatarStatus(pedido.status)}</span></td>
-            </tr>
-          `;
-        });
-        
-        html += `
-            </tbody>
-          </table>
-        `;
-        
-        container.innerHTML = html;
-      },
-
-      // Renderização do fluxo de caixa
-      renderFluxoCaixa: function() {
-        const container = document.getElementById('fluxoCaixa');
-        const fluxo = this.financeiroData.fluxoCaixa;
-        
-        let html = `
-          <table>
-            <thead>
-              <tr>
-                <th>Data</th>
-                <th>Descrição</th>
-                <th>Entrada</th>
-                <th>Saída</th>
-                <th>Saldo</th>
-              </tr>
-            </thead>
-            <tbody>
-        `;
-        
-        fluxo.forEach(item => {
-          html += `
-            <tr>
-              <td>${item.data}</td>
-              <td>${item.descricao}</td>
-              <td class="${item.entrada > 0 ? 'positive' : ''}">${item.entrada > 0 ? this.formatarMoeda(item.entrada) : '-'}</td>
-              <td class="${item.saida > 0 ? 'negative' : ''}">${item.saida > 0 ? this.formatarMoeda(item.saida) : '-'}</td>
-              <td class="${item.saldo >= 0 ? 'positive' : 'negative'}">${this.formatarMoeda(item.saldo)}</td>
-            </tr>
-          `;
-        });
-        
-        html += `
-            </tbody>
-          </table>
-        `;
-        
-        container.innerHTML = html;
-      },
-
-      // Exportação de relatório
-      exportarRelatorio: function() {
-        this.mostrarToast('Gerando relatório financeiro...', 'info');
-        
-        // Simulação de geração de relatório
-        setTimeout(() => {
-          const link = document.createElement('a');
-          link.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(this.gerarCSV());
-          link.download = `relatorio-financeiro-${new Date().toISOString().split('T')[0]}.csv`;
-          link.click();
-          
-          this.mostrarToast('Relatório exportado com sucesso!', 'success');
-        }, 1000);
-      },
-
-      // Geração de CSV para relatório
-      gerarCSV: function() {
-        const data = this.financeiroData;
-        let csv = 'Relatório Financeiro - Artesanal Blend\n\n';
-        csv += `Período: ${new Date().toLocaleDateString()}\n\n`;
-        csv += 'Métrica,Valor\n';
-        csv += `Total Vendas,${data.totalVendas}\n`;
-        csv += `Total Custos,${data.totalCustos}\n`;
-        csv += `Lucro Líquido,${data.lucro}\n`;
-        csv += `Ticket Médio,${data.stats.ticketMedio}\n`;
-        csv += `Margem de Lucro,${data.stats.margemLucro}%\n`;
-        return csv;
-      },
-
-      // Utilitários
-      formatarMoeda: function(valor) {
-        return new Intl.NumberFormat('pt-BR', {
-          style: 'currency',
-          currency: 'BRL'
-        }).format(valor);
-      },
-
-      formatarStatus: function(status) {
-        const statusMap = {
-          'pago': 'Pago',
-          'pendente': 'Pendente',
-          'atrasado': 'Atrasado'
-        };
-        return statusMap[status] || status;
-      },
-
-      mostrarToast: function(mensagem, tipo) {
-        // Implementação simples de toast notification
-        console.log(`[${tipo.toUpperCase()}] ${mensagem}`);
-        alert(mensagem); // Substituir por um sistema de toast real
-      }
-    };
-
-    // Inicialização quando a aba financeira for carregada
-    document.addEventListener('DOMContentLoaded', function() {
-      // Simula o carregamento quando a aba financeira for ativada
-      const financeiroTab = document.getElementById('financeiroTab');
-      const observer = new MutationObserver(function(mutations) {
-        mutations.forEach(function(mutation) {
-          if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
-            if (financeiroTab.classList.contains('active')) {
-              dashboard.initFinanceiro();
-            }
-          }
-        });
-      });
+      <div class="stat-card">
+        <div class="stat-icon">👥</div>
+        <div class="stat-info">
+          <h4>Clientes</h4>
+          <p class="stat-value">${stats.clientesAtendidos}</p>
+          <small>Atendidos</small>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">⏱️</div>
+        <div class="stat-info">
+          <h4>Tempo Médio</h4>
+          <p class="stat-value">${stats.tempoMedioPreparo}</p>
+          <small>Preparação</small>
+        </div>
+      </div>
+    `;
+  },
+  
+  renderGrafico: function() {
+    const container = document.getElementById('graficoPedidos');
+    const dados = financeiroData.vendasMensais;
+    
+    const maxVendas = Math.max(...dados.map(d => d.vendas));
+    
+    let html = '';
+    dados.forEach(item => {
+      const alturaVendas = (item.vendas / maxVendas) * 100;
+      const alturaCustos = (item.custos / maxVendas) * 100;
       
-      observer.observe(financeiroTab, { attributes: true });
+      html += `
+        <div class="barra-container">
+          <div class="barra-valor">${this.formatarMoeda(item.vendas)}</div>
+          <div class="barra" style="height: ${alturaVendas}%; background: linear-gradient(to top, var(--primary), var(--primary-light))"></div>
+          <div class="barra" style="height: ${alturaCustos}%; background: linear-gradient(to top, var(--danger), #ff6b6b); margin-top: 2px"></div>
+          <div class="barra-label">${item.mes}</div>
+        </div>
+      `;
     });
-  </script>
-</body>
-</html>
+    
+    container.innerHTML = html;
+  },
+  
+  renderUltimosPedidos: function() {
+    const container = document.getElementById('ultimosPedidos');
+    const pedidos = financeiroData.ultimosPedidos;
+    
+    let html = '';
+    pedidos.forEach(pedido => {
+      html += `
+        <div class="pedido-resumo">
+          <div class="pedido-info">
+            <strong>${pedido.id}</strong>
+            <span class="cliente">${pedido.cliente}</span>
+            <small>${pedido.data}</small>
+          </div>
+          <div class="pedido-detalhes">
+            <span class="total">${this.formatarMoeda(pedido.valor)}</span>
+            <span class="status ${pedido.status}">${this.formatarStatus(pedido.status)}</span>
+          </div>
+        </div>
+      `;
+    });
+    
+    container.innerHTML = html;
+  },
+  
+  renderFluxoCaixa: function() {
+    const container = document.getElementById('fluxoCaixa');
+    const fluxo = financeiroData.fluxoCaixa;
+    
+    let html = `
+      <div style="overflow-x: auto;">
+        <table style="width: 100%; border-collapse: collapse;">
+          <thead>
+            <tr style="background: var(--light);">
+              <th style="padding: 0.75rem; text-align: left; border-bottom: 1px solid var(--border);">Data</th>
+              <th style="padding: 0.75rem; text-align: left; border-bottom: 1px solid var(--border);">Descrição</th>
+              <th style="padding: 0.75rem; text-align: right; border-bottom: 1px solid var(--border);">Entrada</th>
+              <th style="padding: 0.75rem; text-align: right; border-bottom: 1px solid var(--border);">Saída</th>
+              <th style="padding: 0.75rem; text-align: right; border-bottom: 1px solid var(--border);">Saldo</th>
+            </tr>
+          </thead>
+          <tbody>
+    `;
+    
+    fluxo.forEach(item => {
+      html += `
+        <tr>
+          <td style="padding: 0.75rem; border-bottom: 1px solid var(--border);">${item.data}</td>
+          <td style="padding: 0.75rem; border-bottom: 1px solid var(--border);">${item.descricao}</td>
+          <td style="padding: 0.75rem; text-align: right; border-bottom: 1px solid var(--border); color: var(--success);">
+            ${item.entrada > 0 ? this.formatarMoeda(item.entrada) : '-'}
+          </td>
+          <td style="padding: 0.75rem; text-align: right; border-bottom: 1px solid var(--border); color: var(--danger);">
+            ${item.saida > 0 ? this.formatarMoeda(item.saida) : '-'}
+          </td>
+          <td style="padding: 0.75rem; text-align: right; border-bottom: 1px solid var(--border); font-weight: bold; color: ${item.saldo >= 0 ? 'var(--success)' : 'var(--danger)'};">
+            ${this.formatarMoeda(item.saldo)}
+          </td>
+        </tr>
+      `;
+    });
+    
+    html += `
+          </tbody>
+        </table>
+      </div>
+    `;
+    
+    container.innerHTML = html;
+  },
+  
+  exportarRelatorio: function() {
+    this.mostrarToast('Gerando relatório financeiro...', 'info');
+    
+    setTimeout(() => {
+      // Simulação de exportação
+      const dataStr = "data:text/csv;charset=utf-8," + encodeURIComponent(this.gerarCSV());
+      const link = document.createElement('a');
+      link.href = dataStr;
+      link.download = `relatorio-financeiro-${new Date().toISOString().split('T')[0]}.csv`;
+      link.click();
+      
+      this.mostrarToast('Relatório exportado com sucesso!', 'success');
+    }, 1000);
+  },
+  
+  gerarCSV: function() {
+    const data = financeiroData;
+    let csv = 'Relatório Financeiro - Artesanal Blend\\n\\n';
+    csv += 'Métrica,Valor\\n';
+    csv += `Total Vendas,${data.totalVendas}\\n`;
+    csv += `Total Custos,${data.totalCustos}\\n`;
+    csv += `Lucro Líquido,${data.lucro}\\n`;
+    csv += `Margem de Lucro,${data.margemLucro}%\\n`;
+    csv += `Ticket Médio,${data.stats.ticketMedio}\\n`;
+    return csv;
+  },
+  
+  formatarMoeda: function(valor) {
+    return new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency: 'BRL'
+    }).format(valor);
+  },
+  
+  formatarStatus: function(status) {
+    const statusMap = {
+      'entregue': 'Entregue',
+      'pronto': 'Pronto',
+      'preparando': 'Preparando',
+      'pendente': 'Pendente'
+    };
+    return statusMap[status] || status;
+  },
+  
+  mostrarToast: function(mensagem, tipo) {
+    // Usa o sistema de toast existente do seu dashboard
+    if (typeof window.mostrarToast === 'function') {
+      window.mostrarToast(mensagem, tipo);
+    } else {
+      console.log(`[${tipo}] ${mensagem}`);
+    }
+  }
+};
+
+// Inicializa quando a aba for carregada
+document.addEventListener('DOMContentLoaded', function() {
+  const financeiroTab = document.getElementById('financeiroTab');
+  const observer = new MutationObserver(function(mutations) {
+    mutations.forEach(function(mutation) {
+      if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
+        if (financeiroTab.classList.contains('active')) {
+          dashboard.initFinanceiro();
+        }
+      }
+    });
+  });
+  
+  observer.observe(financeiroTab, { attributes: true });
+});
+</script>
