@@ -353,118 +353,189 @@ class Dashboard {
     }
   }
 
-  /* ================= PEDIDOS ================= */
-  abrirModalPedido(pedido = null) {
-    const modal = document.createElement('div');
-    modal.className = 'modal-overlay';
+ /* ================= PEDIDOS ================= */
+abrirModalPedido(pedido = null) {
+  const modal = document.createElement('div');
+  modal.className = 'modal-overlay';
 
-    const itens = pedido?.itens || [];
-    modal.innerHTML = `
-      <div class="modal">
-        <h3>${pedido ? 'Editar' : 'Novo'} Pedido</h3>
-        <form id="formPedido">
-          <input type="hidden" id="pedidoId" value="${pedido?._id || ''}">
-          <div class="form-row">
-            <div class="form-group">
-              <label>Cliente</label>
-              <input type="text" id="pedidoCliente" value="${pedido?.cliente || ''}" required>
-            </div>
-            <div class="form-group">
-              <label>Telefone</label>
-              <input type="text" id="pedidoTelefone" value="${pedido?.telefone || ''}">
-            </div>
+  const itens = pedido?.itens || [];
+  modal.innerHTML = `
+    <div class="modal">
+      <h3>${pedido ? 'Editar' : 'Novo'} Pedido</h3>
+      <form id="formPedido">
+        <input type="hidden" id="pedidoId" value="${pedido?._id || ''}">
+        <div class="form-row">
+          <div class="form-group">
+            <label>Cliente</label>
+            <input type="text" id="pedidoCliente" value="${pedido?.cliente || ''}" required>
           </div>
           <div class="form-group">
-            <label>Endereço</label>
-            <input type="text" id="pedidoEndereco" value="${pedido?.endereco || ''}">
+            <label>Telefone</label>
+            <input type="text" id="pedidoTelefone" value="${pedido?.telefone || ''}">
           </div>
+        </div>
+        <div class="form-group">
+          <label>Endereço</label>
+          <input type="text" id="pedidoEndereco" value="${pedido?.endereco || ''}">
+        </div>
 
-          <div id="itensWrapper">
-            ${itens.map((it, idx) => `
-              <div class="form-row" data-item-index="${idx}">
-                <div class="form-group"><label>Item</label><input type="text" class="pedidoItemNome" value="${it.nome || ''}" required></div>
-                <div class="form-group"><label>Qtd</label><input type="number" class="pedidoItemQtd" value="${it.quantidade || 1}" min="1" required></div>
-                <div class="form-group"><label>Preço</label><input type="number" class="pedidoItemPreco" value="${it.preco || 0}" step="0.01"></div>
+        <div id="itensWrapper">
+          ${itens.map((it, idx) => `
+            <div class="form-row item-row" data-item-index="${idx}">
+              <div class="form-group">
+                <label>Item</label>
+                <select class="pedidoItemSelect" required>
+                  <option value="">Selecione um produto...</option>
+                  ${this.produtos.map(p => `
+                    <option value="${p._id}" data-nome="${p.nome}" data-preco="${p.preco}" ${p.nome === it.nome ? 'selected' : ''}>
+                      ${p.nome} – R$ ${p.preco.toFixed(2)}
+                    </option>`).join('')}
+                </select>
               </div>
-            `).join('')}
-          </div>
-
-          <div style="display:flex;gap:.5rem;margin-top:.5rem">
-            <button type="button" class="btn secondary" id="adicionarItemBtn">➕ Adicionar Item</button>
-          </div>
-
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-top:1rem">
-            <div><strong>Total: R$ <span id="pedidoTotal">${(pedido?.total || 0).toFixed(2)}</span></strong></div>
-            <div style="display:flex;gap:.5rem">
-              <button type="submit" class="btn primary">Salvar Pedido</button>
-              <button type="button" class="btn secondary" id="btnCancelarPedido">Cancelar</button>
+              <div class="form-group">
+                <label>Qtd</label>
+                <input type="number" class="pedidoItemQtd" value="${it.quantidade || 1}" min="1" required>
+              </div>
+              <div class="form-group">
+                <label>Preço</label>
+                <input type="number" class="pedidoItemPreco" value="${it.preco || 0}" step="0.01">
+              </div>
+              <button type="button" class="btn-excluir removerItemBtn" title="Remover">🗑️</button>
             </div>
+          `).join('')}
+        </div>
+
+        <div style="display:flex;gap:.5rem;margin-top:.5rem">
+          <button type="button" class="btn secondary" id="adicionarItemBtn">➕ Adicionar Item</button>
+        </div>
+
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:1rem">
+          <div><strong>Total: R$ <span id="pedidoTotal">${(pedido?.total || 0).toFixed(2)}</span></strong></div>
+          <div style="display:flex;gap:.5rem">
+            <button type="submit" class="btn primary">Salvar Pedido</button>
+            <button type="button" class="btn secondary" id="btnCancelarPedido">Cancelar</button>
           </div>
-        </form>
-      </div>
-    `;
+        </div>
+      </form>
+    </div>
+  `;
 
-    document.body.appendChild(modal);
+  document.body.appendChild(modal);
+  const itensWrapper = modal.querySelector('#itensWrapper');
 
-    const itensWrapper = modal.querySelector('#itensWrapper');
-    const atualizarTotal = () => {
-      const qtds = Array.from(itensWrapper.querySelectorAll('.pedidoItemQtd')).map(i => parseInt(i.value) || 0);
-      const precos = Array.from(itensWrapper.querySelectorAll('.pedidoItemPreco')).map(i => parseFloat(i.value) || 0);
-      let total = 0;
-      for (let i = 0; i < qtds.length; i++) total += (qtds[i] || 0) * (precos[i] || 0);
-      modal.querySelector('#pedidoTotal').textContent = total.toFixed(2);
-    };
+  // ==== Atualiza o total ====
+  const atualizarTotal = () => {
+    const qtds = Array.from(itensWrapper.querySelectorAll('.pedidoItemQtd')).map(i => parseFloat(i.value) || 0);
+    const precos = Array.from(itensWrapper.querySelectorAll('.pedidoItemPreco')).map(i => parseFloat(i.value) || 0);
+    const total = qtds.reduce((sum, q, i) => sum + q * (precos[i] || 0), 0);
+    modal.querySelector('#pedidoTotal').textContent = total.toFixed(2);
+  };
 
-    modal.querySelectorAll('.pedidoItemQtd, .pedidoItemPreco').forEach(el => el.addEventListener('input', atualizarTotal));
+  // ==== Função que liga os eventos de cada item ====
+  const bindItemEvents = (row) => {
+    const select = row.querySelector('.pedidoItemSelect');
+    const precoInput = row.querySelector('.pedidoItemPreco');
+    const qtdInput = row.querySelector('.pedidoItemQtd');
 
-    modal.querySelector('#adicionarItemBtn').addEventListener('click', () => {
-      const idx = itensWrapper.querySelectorAll('.form-row[data-item-index]').length;
-      const div = document.createElement('div');
-      div.className = 'form-row';
-      div.dataset.itemIndex = idx;
-      div.innerHTML = `
-        <div class="form-group"><label>Item</label><input type="text" class="pedidoItemNome" required></div>
-        <div class="form-group"><label>Qtd</label><input type="number" class="pedidoItemQtd" value="1" min="1" required></div>
-        <div class="form-group"><label>Preço</label><input type="number" class="pedidoItemPreco" value="0" step="0.01"></div>
-      `;
-      itensWrapper.appendChild(div);
-      div.querySelectorAll('.pedidoItemQtd, .pedidoItemPreco').forEach(el => el.addEventListener('input', atualizarTotal));
+    select.addEventListener('change', () => {
+      const opt = select.selectedOptions[0];
+      if (opt && opt.dataset.preco) {
+        precoInput.value = parseFloat(opt.dataset.preco).toFixed(2);
+      }
       atualizarTotal();
     });
 
-    modal.querySelector('#btnCancelarPedido').addEventListener('click', () => modal.remove());
+    [precoInput, qtdInput].forEach(el => el.addEventListener('input', atualizarTotal));
 
-    modal.querySelector('#formPedido').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const pedidoId = modal.querySelector('#pedidoId').value;
-      const cliente = modal.querySelector('#pedidoCliente').value;
-      const telefone = modal.querySelector('#pedidoTelefone').value;
-      const endereco = modal.querySelector('#pedidoEndereco').value;
-      const nomes = Array.from(modal.querySelectorAll('.pedidoItemNome')).map(i => i.value);
-      const qtds = Array.from(modal.querySelectorAll('.pedidoItemQtd')).map(i => parseInt(i.value) || 0);
-      const precos = Array.from(modal.querySelectorAll('.pedidoItemPreco')).map(i => parseFloat(i.value) || 0);
-      const itens = nomes.map((nome, i) => ({ nome, quantidade: qtds[i], preco: precos[i] })).filter(it => it.nome && it.quantidade > 0);
-      const total = itens.reduce((s, it) => s + (it.quantidade * (it.preco || 0)), 0);
-      const payload = { cliente, telefone, endereco, itens, total, status: pedido?.status || 'pendente' };
-
-      try {
-        const url = pedidoId ? `/api/orders/${pedidoId}` : '/api/orders';
-        const method = pedidoId ? 'PUT' : 'POST';
-        const res = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-        if (res.ok) {
-          await this.carregarDados();
-          this.renderPedidos();
-          document.querySelector('.modal-overlay')?.remove();
-          this.showToast('Pedido salvo', 'success');
-        } else {
-          const err = await res.json().catch(() => ({}));
-          this.showToast(err.error || 'Erro ao salvar pedido', 'error');
-        }
-      } catch (e) {
-        this.showToast('Erro de rede ao salvar pedido', 'error');
-      }
+    // botão remover item
+    const btnRemover = row.querySelector('.removerItemBtn');
+    btnRemover.addEventListener('click', () => {
+      row.remove();
+      atualizarTotal();
     });
-  }
+  };
+
+  // ==== Adicionar novo item ====
+  modal.querySelector('#adicionarItemBtn').addEventListener('click', () => {
+    const idx = itensWrapper.querySelectorAll('.item-row').length;
+    const div = document.createElement('div');
+    div.className = 'form-row item-row';
+    div.dataset.itemIndex = idx;
+    div.innerHTML = `
+      <div class="form-group">
+        <label>Item</label>
+        <select class="pedidoItemSelect" required>
+          <option value="">Selecione um produto...</option>
+          ${this.produtos.map(p => `
+            <option value="${p._id}" data-nome="${p.nome}" data-preco="${p.preco}">
+              ${p.nome} – R$ ${p.preco.toFixed(2)}
+            </option>`).join('')}
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Qtd</label>
+        <input type="number" class="pedidoItemQtd" value="1" min="1" required>
+      </div>
+      <div class="form-group">
+        <label>Preço</label>
+        <input type="number" class="pedidoItemPreco" value="0" step="0.01">
+      </div>
+      <button type="button" class="btn-excluir removerItemBtn" title="Remover">🗑️</button>
+    `;
+    itensWrapper.appendChild(div);
+    bindItemEvents(div);
+    atualizarTotal();
+  });
+
+  // ==== Aplica eventos nos itens existentes ====
+  itensWrapper.querySelectorAll('.item-row').forEach(row => bindItemEvents(row));
+
+  // ==== Cancelar ====
+  modal.querySelector('#btnCancelarPedido').addEventListener('click', () => modal.remove());
+
+  // ==== Submeter ====
+  modal.querySelector('#formPedido').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const pedidoId = modal.querySelector('#pedidoId').value;
+    const cliente = modal.querySelector('#pedidoCliente').value;
+    const telefone = modal.querySelector('#pedidoTelefone').value;
+    const endereco = modal.querySelector('#pedidoEndereco').value;
+
+    const itens = Array.from(itensWrapper.querySelectorAll('.item-row')).map(row => {
+      const opt = row.querySelector('.pedidoItemSelect').selectedOptions[0];
+      const nome = opt?.dataset?.nome || '';
+      const preco = parseFloat(row.querySelector('.pedidoItemPreco').value) || 0;
+      const quantidade = parseInt(row.querySelector('.pedidoItemQtd').value) || 0;
+      return { nome, quantidade, preco };
+    }).filter(it => it.nome && it.quantidade > 0);
+
+    const total = itens.reduce((sum, it) => sum + it.quantidade * it.preco, 0);
+    const payload = { cliente, telefone, endereco, itens, total, status: pedido?.status || 'pendente' };
+
+    try {
+      const url = pedidoId ? `/api/orders/${pedidoId}` : '/api/orders';
+      const method = pedidoId ? 'PUT' : 'POST';
+      const res = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      if (res.ok) {
+        await this.carregarDados();
+        this.renderPedidos();
+        modal.remove();
+        this.showToast('Pedido salvo com sucesso!', 'success');
+      } else {
+        this.showToast('Erro ao salvar pedido', 'error');
+      }
+    } catch (err) {
+      console.error('Erro ao salvar pedido', err);
+      this.showToast('Erro de rede', 'error');
+    }
+  });
+}
+
 
   renderPedidos() {
     const container = document.getElementById('pedidosContainer');
@@ -845,6 +916,7 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     }
   
+
 
 
 
