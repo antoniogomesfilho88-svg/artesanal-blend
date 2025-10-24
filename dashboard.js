@@ -18,6 +18,7 @@ if (!token) {
   }
 }
 
+// dashboard.js - versão separada
 class Dashboard {
   constructor() {
     this.produtos = [];
@@ -58,9 +59,8 @@ class Dashboard {
     }
   }
 
- /* ================= EVENTOS ================= */
   setupEventListeners() {
-    // ==== Tabs ====
+    // Tabs
     document.querySelectorAll('.tab-button').forEach(btn => {
       btn.addEventListener('click', () => {
         document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
@@ -70,33 +70,10 @@ class Dashboard {
       });
     });
 
-    // ==== Ver Cardápio ====
-    const btnCardapio = document.getElementById('visualizarCardapio');
-    if (btnCardapio) {
-      btnCardapio.addEventListener('click', () => {
-        window.open('/', '_blank');
-      });
-    }
-
-    // ==== Botão Logout ====
-    const btnLogout = document.getElementById('btnLogout');
-    if (btnLogout) {
-      btnLogout.addEventListener('click', () => {
-        if (confirm('Deseja realmente sair do sistema?')) {
-          // Remove o token e redireciona
-          localStorage.removeItem('token');
-          sessionStorage.clear();
-
-          // Feedback visual
-          this.showToast('Logout realizado com sucesso!', 'info');
-
-          // Redireciona após pequeno atraso
-          setTimeout(() => {
-            window.location.href = '/login';
-          }, 800);
-        }
-      });
-    }
+    // visualizar cardápio
+    document.getElementById('visualizarCardapio')?.addEventListener('click', () => {
+      window.open('/', '_blank');
+    });
   }
 
   /* ================= PRODUTOS ================= */
@@ -799,7 +776,7 @@ imprimirCupom(id) {
     janelaImpressao.close();
   }
 }
-     /* ================= FINANCEIRO ================= */
+  /* ================= FINANCEIRO ================= */
   async updateFinanceiro() {
     try {
       const res = await fetch('/api/stats');
@@ -818,8 +795,37 @@ imprimirCupom(id) {
     document.getElementById('lucro').textContent = `R$ ${Number(lucro).toFixed(2)}`;
   }
 
+  /* ================= UTILITÁRIOS ================= */
+  showToast(mensagem, tipo = 'success', timeout = 2500) {
+    const container = document.getElementById('toast-container');
+    const t = document.createElement('div');
+    t.className = `toast ${tipo === 'error' ? 'error' : tipo === 'info' ? 'info' : 'success'}`;
+    t.textContent = mensagem;
+    container.appendChild(t);
+    setTimeout(() => { t.style.opacity = '0'; setTimeout(() => t.remove(), 400); }, timeout);
+  }
 
-        // ==== Botão Logout ====
+  _formatImageSrc(src) {
+    // Se já for URL absoluta, retorna direto. Caso seja caminho relativo (ex: images/...), mantém relativo.
+    if (!src) return '';
+    try {
+      const u = new URL(src);
+      return src; // URL absoluta
+    } catch (e) {
+      // caminho relativo, torna relativo ao root (serve se você usa /images/ ou images/)
+      if (src.startsWith('/')) return src;
+      return src; // manter como veio (ex: images/...)
+    }
+  }
+}
+
+// inicia
+document.addEventListener('DOMContentLoaded', () => {
+  window.dashboard = new Dashboard();
+});
+
+
+ // ==== Botão Logout ====
     const btnLogout = document.getElementById('btnLogout');
     if (btnLogout) {
       btnLogout.addEventListener('click', () => {
@@ -838,49 +844,10 @@ imprimirCupom(id) {
         }
       });
     }
-  }  // 👈 fecha APENAS o setupEventListeners()
+  }  
 
-  /* ================= UTILITÁRIOS ================= */
-  showToast(mensagem, tipo = 'success', tempo = 2500) {
-    let container = document.getElementById('toast-container');
-    if (!container) {
-      container = document.createElement('div');
-      container.id = 'toast-container';
-      container.style.position = 'fixed';
-      container.style.bottom = '20px';
-      container.style.right = '20px';
-      container.style.zIndex = '9999';
-      document.body.appendChild(container);
-    }
 
-    const toast = document.createElement('div');
-    toast.textContent = mensagem;
-    toast.className = `toast toast-${tipo}`;
-    toast.style.background =
-      tipo === 'error' ? '#e74c3c' :
-      tipo === 'info' ? '#3498db' : '#2ecc71';
-    toast.style.color = 'white';
-    toast.style.padding = '10px 16px';
-    toast.style.marginTop = '8px';
-    toast.style.borderRadius = '6px';
-    toast.style.boxShadow = '0 2px 6px rgba(0,0,0,0.2)';
-    toast.style.fontSize = '14px';
-    toast.style.opacity = '1';
-    toast.style.transition = 'opacity 0.4s ease';
 
-    container.appendChild(toast);
 
-    setTimeout(() => {
-      toast.style.opacity = '0';
-      setTimeout(() => toast.remove(), 400);
-    }, tempo);
-  }
-} // ✅ fecha a classe Dashboard corretamente
 
-// ===============================
-// 🚀 INICIALIZA O DASHBOARD
-// ===============================
-document.addEventListener('DOMContentLoaded', () => {
-  window.dashboard = new Dashboard();
-});
 
