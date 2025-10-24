@@ -18,7 +18,7 @@
     </div>
   </header>
 
-  <div class="tabs">
+ <div class="tabs">
     <button class="tab-button active" data-tab="produtosTab">Produtos</button>
     <button class="tab-button" data-tab="pedidosTab">Pedidos</button>
     <button class="tab-button" data-tab="insumosTab">Insumos</button>
@@ -26,7 +26,7 @@
   </div>
 
   <main class="dashboard-content">
-    <!-- PRODUTOS -->
+    <!-- Produtos -->
     <section id="produtosTab" class="tab-content active">
       <div class="section-header">
         <h2>Gerenciar Produtos do Cardápio</h2>
@@ -57,18 +57,20 @@
       <div id="produtosContainer" class="produtos-grid"></div>
     </section>
 
-    <!-- PEDIDOS -->
+    <!-- Pedidos -->
     <section id="pedidosTab" class="tab-content">
       <div class="section-header">
         <h2>Pedidos Recebidos</h2>
         <div class="actions">
-          <button class="btn secondary" onclick="dashboard.updatePedidos()">🔄 Atualizar</button>
+          <button class="btn secondary" onclick="dashboard.atualizarPedidos()">🔄 Atualizar</button>
+          <button class="btn primary" onclick="dashboard.abrirModalPedido()">➕ Adicionar Pedido</button>
         </div>
       </div>
+
       <div id="pedidosContainer"></div>
     </section>
 
-    <!-- INSUMOS -->
+    <!-- Insumos -->
     <section id="insumosTab" class="tab-content">
       <div class="section-header">
         <h2>Gerenciar Insumos</h2>
@@ -76,69 +78,37 @@
           <button class="btn primary" onclick="dashboard.abrirModalInsumo()">➕ Novo Insumo</button>
         </div>
       </div>
+
       <div id="insumosContainer"></div>
     </section>
 
-    <!-- FINANCEIRO PRO -->
+    <!-- Financeiro -->
     <section id="financeiroTab" class="tab-content">
       <div class="section-header">
-        <h2>Relatório Financeiro Avançado</h2>
+        <h2>Relatório Financeiro</h2>
         <div class="actions">
           <button class="btn secondary" onclick="dashboard.updateFinanceiro()">🔄 Atualizar</button>
         </div>
       </div>
 
-      <!-- Cards principais -->
-      <div class="financeiro-grid">
-        <div class="finance-card vendas">
-          <i class="fa-solid fa-cash-register icon"></i>
-          <div>
-            <h3>Total de Vendas</h3>
-            <p id="totalVendas">R$ 0,00</p>
-          </div>
+      <div class="financeiro-cards">
+        <div class="finance-card">
+          <h3>Total Vendas</h3>
+          <p id="totalVendas">R$ 0,00</p>
         </div>
-        <div class="finance-card custos">
-          <i class="fa-solid fa-truck-ramp-box icon"></i>
-          <div>
-            <h3>Total de Custos</h3>
-            <p id="totalCustos">R$ 0,00</p>
-          </div>
+        <div class="finance-card">
+          <h3>Total Custos</h3>
+          <p id="totalCustos">R$ 0,00</p>
         </div>
-        <div class="finance-card lucro">
-          <i class="fa-solid fa-coins icon"></i>
-          <div>
-            <h3>Lucro</h3>
-            <p id="lucro">R$ 0,00</p>
-          </div>
-        </div>
-        <div class="finance-card margem">
-          <i class="fa-solid fa-percent icon"></i>
-          <div>
-            <h3>Margem de Lucro</h3>
-            <p id="margemLucro">0%</p>
-          </div>
-        </div>
-      </div>
-
-      <!-- Gráfico + Estatísticas -->
-      <div class="financeiro-extra">
-        <div class="grafico-card">
-          <h3>📈 Histórico de Vendas</h3>
-          <canvas id="graficoFinanceiro" height="120"></canvas>
-        </div>
-        <div class="stats-card">
-          <h3>📊 Estatísticas</h3>
-          <ul>
-            <li><strong>Ticket médio:</strong> <span id="ticketMedio">R$ 0,00</span></li>
-            <li><strong>Melhores produtos:</strong></li>
-            <ul id="topProdutos"></ul>
-          </ul>
+        <div class="finance-card">
+          <h3>Lucro</h3>
+          <p id="lucro">R$ 0,00</p>
         </div>
       </div>
     </section>
   </main>
 
   <div id="toast-container" aria-live="polite"></div>
+
   <script src="dashboard.js"></script>
 </body>
-</html>
