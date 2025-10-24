@@ -928,6 +928,43 @@ imprimirCupom(id) {
         }
       });
     }
+      /* ================= UTILITÁRIOS ================= */
+  showToast(mensagem, tipo = 'success', tempo = 2500) {
+    let container = document.getElementById('toast-container');
+    if (!container) {
+      container = document.createElement('div');
+      container.id = 'toast-container';
+      container.style.position = 'fixed';
+      container.style.bottom = '20px';
+      container.style.right = '20px';
+      container.style.zIndex = '9999';
+      document.body.appendChild(container);
+    }
+
+    const toast = document.createElement('div');
+    toast.textContent = mensagem;
+    toast.className = `toast toast-${tipo}`;
+    toast.style.background =
+      tipo === 'error' ? '#e74c3c' :
+      tipo === 'info' ? '#3498db' : '#2ecc71';
+    toast.style.color = 'white';
+    toast.style.padding = '10px 16px';
+    toast.style.marginTop = '8px';
+    toast.style.borderRadius = '6px';
+    toast.style.boxShadow = '0 2px 6px rgba(0,0,0,0.2)';
+    toast.style.fontSize = '14px';
+    toast.style.opacity = '1';
+    toast.style.transition = 'opacity 0.4s ease';
+
+    container.appendChild(toast);
+
+    // Remove o toast após o tempo configurado
+    setTimeout(() => {
+      toast.style.opacity = '0';
+      setTimeout(() => toast.remove(), 400);
+    }, tempo);
+  }
+
   } 
 } // ✅ Fecha a classe Dashboard
 
@@ -937,4 +974,5 @@ imprimirCupom(id) {
 document.addEventListener('DOMContentLoaded', () => {
   window.dashboard = new Dashboard();
 });
+
 
