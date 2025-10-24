@@ -553,11 +553,20 @@ abrirModalPedido(pedido = null) {
             <p><strong>Telefone:</strong> ${pedido.telefone || '-'}</p>
             <p><strong>Endereço:</strong> ${pedido.endereco || '-'}</p>
           </div>
-          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;text-align:right;min-width:130px;">
-          <div><strong>Total:</strong> R$ ${(pedido.total || 0).toFixed(2)}</div>
-          <div class="status" style="font-weight:bold;">${this.formatarStatus(pedido.status)}</div>
-        </div>
-      </div>
+          <div style="
+  display:flex;
+  flex-direction:column;
+  align-items:flex-end;
+  justify-content:flex-start;
+  text-align:right;
+  min-width:130px;
+">
+  <div style="font-weight:bold; margin-bottom:4px;">
+    Total: <span style="color:var(--success)">R$ ${(pedido.total || 0).toFixed(2)}</span>
+  </div>
+  <div class="status-badge">${this.formatarStatus(pedido.status)}</div>
+</div>
+
 
       <div style="margin:0.5rem 0;border-top:1px solid var(--border);padding-top:0.5rem">
         <strong>Itens:</strong>
@@ -930,6 +939,7 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     }
   
+
 
 
 
