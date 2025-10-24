@@ -543,7 +543,11 @@ abrirModalPedido(pedido = null) {
       container.innerHTML = '<div class="empty-state">Nenhum pedido recebido</div>';
       return;
     }
-
+     const pedidosOrdenados = [...this.pedidos].sort((a, b) => {
+    const dataA = new Date(a.createdAt || a.data || 0);
+    const dataB = new Date(b.createdAt || b.data || 0);
+    return dataB - dataA; // mais recentes primeiro
+  });
     container.innerHTML = pedidosOrdenados.map(pedido => `
   <article class="produto-card">
     <!-- Cabeçalho -->
@@ -588,7 +592,7 @@ abrirModalPedido(pedido = null) {
   </article>
 `).join('');
 }
-  formatarStatus(status) 
+    formatarStatus(status) {
     const map = { pendente: '⏳ Pendente', preparando: '👨‍🍳 Preparando', pronto: '✅ Pronto', entregue: '🚗 Entregue', cancelado: '❌ Cancelado' };
     return map[status] || status;
   }
@@ -938,6 +942,7 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     }
   
+
 
 
 
