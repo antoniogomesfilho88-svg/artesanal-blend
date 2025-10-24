@@ -544,49 +544,49 @@ abrirModalPedido(pedido = null) {
       return;
     }
 
-    container.innerHTML = this.pedidos.map(pedido => `
-      <article class="produto-card">
-        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:0.5rem">
-          <div>
-            <h3>Pedido #${pedido._id?.slice(-6) || 'N/A'}</h3>
-            <p><strong>Cliente:</strong> ${pedido.cliente || '-'}</p>
-            <p><strong>Telefone:</strong> ${pedido.telefone || '-'}</p>
-            <p><strong>Endereço:</strong> ${pedido.endereco || '-'}</p>
-          </div>
-          <div style="
-  display:flex;
-  flex-direction:column;
-  align-items:flex-end;
-  justify-content:flex-start;
-  text-align:right;
-  min-width:130px;
-">
-  <div style="font-weight:bold; margin-bottom:4px;">
-    Total: <span style="color:var(--success)">R$ ${(pedido.total || 0).toFixed(2)}</span>
-  </div>
-  <div class="status-badge ${pedido.status || ''}">${this.formatarStatus(pedido.status)}</div>
-</div>
-
-      <div style="margin:0.5rem 0;border-top:1px solid var(--border);padding-top:0.5rem">
-        <strong>Itens:</strong>
-        ${(pedido.itens || []).map(item => `
-          <div style="display:flex;justify-content:space-between;margin:.25rem 0">
-            <span>${item.quantidade}x ${item.nome}</span>
-            <span>R$ ${((item.preco || 0) * (item.quantidade || 1)).toFixed(2)}</span>
-          </div>
-        `).join('')}
+    container.innerHTML = pedidosOrdenados.map(pedido => `
+  <article class="produto-card">
+    <!-- Cabeçalho -->
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:0.75rem;">
+      <div>
+        <h3>Pedido #${pedido._id?.slice(-6) || 'N/A'}</h3>
+        <p><strong>Cliente:</strong> ${pedido.cliente || '-'}</p>
+        <p><strong>Telefone:</strong> ${pedido.telefone || '-'}</p>
+        <p><strong>Endereço:</strong> ${pedido.endereco || '-'}</p>
       </div>
-        <div class="card-actions" style="margin-top:.75rem">
-          <button class="btn-editar" onclick='dashboard.abrirModalPedido(${JSON.stringify(pedido).replace(/\"/g,'&quot;')})'>Editar</button>
-          <button class="btn secondary" onclick="dashboard.atualizarStatusPedido('${pedido._id}','preparando')">👨‍🍳 Preparando</button>
-          <button class="btn secondary" onclick="dashboard.atualizarStatusPedido('${pedido._id}','pronto')">✅ Pronto</button>
-          <button class="btn secondary" onclick="dashboard.atualizarStatusPedido('${pedido._id}','entregue')">🚗 Entregue</button>
-          <button class="btn" onclick="dashboard.imprimirCupom('${pedido._id}')">🖨️ Imprimir Cupom</button>
-          <button class="btn-excluir" onclick="dashboard.excluirPedido('${pedido._id}')">Excluir</button>
+
+      <div style="text-align:right;display:flex;flex-direction:column;align-items:flex-end;">
+        <div style="font-weight:bold;color:var(--success);margin-bottom:4px;">
+          Total: R$ ${(pedido.total || 0).toFixed(2)}
         </div>
-      </article>
-    `).join('');
-  }
+        <div class="status-badge ${pedido.status || ''}">
+          ${this.formatarStatus(pedido.status)}
+        </div>
+      </div>
+    </div>
+
+    <!-- Itens -->
+    <div style="margin:0.5rem 0;border-top:1px solid var(--border);padding-top:0.5rem">
+      <strong>Itens:</strong>
+      ${(pedido.itens || []).map(item => `
+        <div style="display:flex;justify-content:space-between;margin:.25rem 0;">
+          <span>${item.quantidade}x ${item.nome}</span>
+          <span>R$ ${((item.preco || 0) * (item.quantidade || 1)).toFixed(2)}</span>
+        </div>
+      `).join('')}
+    </div>
+
+    <!-- Botões -->
+    <div class="card-actions" style="margin-top:1rem;display:flex;flex-wrap:wrap;gap:.5rem;">
+      <button class="btn-editar" onclick='dashboard.abrirModalPedido(${JSON.stringify(pedido).replace(/\"/g,'&quot;')})'>Editar</button>
+      <button class="btn secondary" onclick="dashboard.atualizarStatusPedido('${pedido._id}','preparando')">👨‍🍳 Preparando</button>
+      <button class="btn secondary" onclick="dashboard.atualizarStatusPedido('${pedido._id}','pronto')">✅ Pronto</button>
+      <button class="btn secondary" onclick="dashboard.atualizarStatusPedido('${pedido._id}','entregue')">🚗 Entregue</button>
+      <button class="btn" onclick="dashboard.imprimirCupom('${pedido._id}')">🖨️ Imprimir Cupom</button>
+      <button class="btn-excluir" onclick="dashboard.excluirPedido('${pedido._id}')">Excluir</button>
+    </div>
+  </article>
+`).join('');
 
   formatarStatus(status) {
     const map = { pendente: '⏳ Pendente', preparando: '👨‍🍳 Preparando', pronto: '✅ Pronto', entregue: '🚗 Entregue', cancelado: '❌ Cancelado' };
@@ -938,6 +938,7 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     }
   
+
 
 
 
