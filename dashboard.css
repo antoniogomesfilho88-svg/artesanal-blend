@@ -287,6 +287,40 @@ body{font-family:Inter, 'Segoe UI', Roboto, system-ui, -apple-system, sans-serif
 .status-badge:has(:contains("cancelado")) {
   background: var(--danger);
 }
+/* ==== STATUS BADGE MODERNO ==== */
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-weight: 600;
+  padding: 4px 12px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  color: #fff;
+  text-transform: capitalize;
+  margin-top: 4px;
+  min-width: 120px;
+  box-shadow: var(--shadow);
+}
+
+/* Cores conforme o status */
+.status-badge.pendente {
+  background: var(--warning);
+}
+.status-badge.preparando {
+  background: #f1c40f;
+}
+.status-badge.pronto {
+  background: var(--success);
+}
+.status-badge.entregue {
+  background: #3498db;
+}
+.status-badge.cancelado {
+  background: var(--danger);
+}
+
 
 
 
