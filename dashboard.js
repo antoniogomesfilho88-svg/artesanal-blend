@@ -206,6 +206,244 @@ class Dashboard {
       this.showToast('Erro ao atualizar pedidos', 'error');
     }
   }
+  imprimirCupom(id) {
+  const pedido = this.pedidos.find(p => p._id === id);
+  if (!pedido) return this.showToast('Pedido não encontrado', 'error');
+
+  const janelaImpressao = window.open('', '_blank', 'width=380,height=700');
+  
+  if (!janelaImpressao) {
+    this.showToast('Permita pop-ups para imprimir o cupom', 'error');
+    return;
+  }
+
+  const css = `
+    <style>
+      @media print {
+        body { 
+          width: 80mm !important;
+          max-width: 80mm !important;
+          margin: 3mm !important;
+          padding: 0 !important;
+          font-size: 16px !important;
+          font-weight: bold !important;
+        }
+        .no-print { display: none !important; }
+      }
+      
+      body { 
+        width: 80mm;
+        max-width: 80mm;
+        font-family: 'Courier New', Courier, monospace; 
+        font-size: 13px;
+        font-weight: bold;
+        margin: 3mm;
+        padding: 0;
+        line-height: 1.2;
+        background: white;
+      }
+      .center { 
+        text-align: center;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+      }
+      .right { text-align: right; }
+      .left { text-align: left; }
+      .bold { 
+        font-weight: bold; 
+        font-size: 14px;
+      }
+      .line { 
+        border: none;
+        border-top: 2px dashed #000; 
+        margin: 5px 0;
+      }
+      table { 
+        width: 100%; 
+        border-collapse: collapse;
+      }
+      td { 
+        vertical-align: top; 
+        padding: 2px 0;
+        word-wrap: break-word;
+      }
+      .item-qty { width: 20%; text-align: center; font-weight: bold; }
+      .item-name { width: 50%; text-align: left; padding: 0 3px; font-weight: bold; }
+      .item-total { width: 30%; text-align: right; font-weight: bold; }
+      .logo-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        width: 100%;
+        margin: 0 auto 5px auto;
+      }
+      .logo { 
+        max-width: 120px; 
+        height: auto; 
+        display: block;
+        margin: 0 auto;
+      }
+      .header { 
+        margin-bottom: 5px;
+        width: 100%;
+      }
+      .footer { margin-top: 5px; }
+      .medium { font-size: 12px; }
+      .break-word { word-break: break-word; }
+      .total-section {
+        margin-top: 8px;
+        padding-top: 5px;
+        border-top: 2px solid #000;
+      }
+      .item-row {
+        margin: 3px 0;
+        padding: 2px 0;
+      }
+    </style>
+  `;
+
+  const qrPix = `https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=PIX:+5531992128891`;
+
+  // Processar itens e totais
+  let subtotal = 0;
+  const itensHtml = pedido.itens.map(item => {
+    const quantidade = parseInt(item.quantidade) || 1;
+    const preco = parseFloat(item.preco) || 0;
+    const totalItem = quantidade * preco;
+    subtotal += totalItem;
+    
+    // Limitar nome do item
+    let nomeItem = item.nome || '';
+    if (nomeItem.length > 20) {
+      nomeItem = nomeItem.substring(0, 20) + '...';
+    }
+    
+    return `
+      <tr class="item-row">
+        <td class="item-qty">${quantidade}x</td>
+        <td class="item-name break-word">${nomeItem}</td>
+        <td class="item-total">R$ ${totalItem.toFixed(2)}</td>
+      </tr>
+    `;
+  }).join('');
+
+  const totalPedido = parseFloat(pedido.total) || subtotal;
+
+  const html = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <title>Cupom #${pedido._id?.slice(-6) || 'N/A'}</title>
+      <meta charset="UTF-8">
+      ${css}
+    </head>
+    <body>
+      <!-- CABEÇALHO COM LOGO CENTRALIZADA -->
+      <div class="header center">
+        <div class="logo-container">
+          <img class="logo" src="${window.location.origin + '/images/logo.jpg'}" alt="Logo" onerror="this.style.display='none'">
+        </div>
+        <div class="bold" style="font-size: 16px; margin-bottom: 3px;">BURGUER ARTESANAL BLEND</div>
+        <div class="medium">CNPJ: 58.518.297/0001-61</div>
+        <div class="medium">Rua Coniston, 380 - Jd. Canadá</div>
+        <div class="medium">Nova Lima - MG</div>
+        <div class="medium">Tel: (31) 99212-8891</div>
+      </div>
+
+      <hr class="line">
+
+      <!-- DADOS DO PEDIDO -->
+      <div>
+        <div style="font-size: 14px;"><strong>PEDIDO #${pedido._id?.slice(-6) || 'N/A'}</strong></div>
+        <div class="medium">${new Date(pedido.data || pedido.createdAt || Date.now()).toLocaleString('pt-BR')}</div>
+        <div><strong>CLIENTE:</strong> ${pedido.cliente || 'CONSUMIDOR'}</div>
+        ${pedido.telefone ? `<div><strong>TEL:</strong> ${pedido.telefone}</div>` : ''}
+        ${pedido.endereco ? `<div class="break-word medium"><strong>END:</strong> ${pedido.endereco}</div>` : ''}
+      </div>
+
+      <hr class="line">
+
+      <!-- ITENS -->
+      <div style="margin: 5px 0;">
+        <div style="font-size: 14px; margin-bottom: 3px;"><strong>ITENS DO PEDIDO:</strong></div>
+        <table>
+          ${itensHtml}
+        </table>
+      </div>
+
+      <hr class="line">
+
+      <!-- TOTAIS -->
+       <div class="total-section">
+  <table>
+    <tr>
+      <td class="left"><strong>SUBTOTAL:</strong></td>
+      <td class="right"><strong>R$ ${subtotal.toFixed(2)}</strong></td>
+    </tr>
+    ${pedido.taxaEntrega > 0 ? `
+      <tr>
+        <td class="left"><strong>TAXA ENTREGA:</strong></td>
+        <td class="right"><strong>R$ ${pedido.taxaEntrega.toFixed(2)}</strong></td>
+      </tr>
+    ` : ''}
+    <tr>
+      <td class="left"><strong>TOTAL:</strong></td>
+      <td class="right" style="font-size: 14px;"><strong>R$ ${totalPedido.toFixed(2)}</strong></td>
+    </tr>
+    <tr>
+      <td class="left medium">Pagamento:</td>
+  <td class="right medium">${pedido.formaPagamento || pedido.pagamento || 'NÃO INFORMADO'}</td>
+    </tr>
+    <tr>
+      <td class="left medium">Status:</td>
+      <td class="right medium">${(pedido.status || 'PENDENTE').toUpperCase()}</td>
+    </tr>
+  </table>
+</div>
+      <hr class="line">
+
+      <!-- RODAPÉ -->
+      <div class="footer center">
+        <div class="bold" style="font-size: 14px; margin-bottom: 3px;">FORMA DE PAGAMENTO PIX</div>
+        <div class="medium">Chave: +55 31 99212-8891</div>
+        <div class="logo-container" style="margin: 5px auto;">
+          <img class="qr" src="${qrPix}" alt="QR Code PIX" onerror="this.style.display='none'" style="max-width: 80px; height: auto;">
+        </div>
+        <div class="medium"><strong>VALQUIRIA GOMES AROEIRA</strong></div>
+        <div class="medium">${new Date().toLocaleString('pt-BR')}</div>
+        <br>
+        <div class="bold" style="font-size: 14px;">*** OBRIGADO PELA PREFERÊNCIA! ***</div>
+      </div>
+
+      <script>
+        window.onload = function() {
+          setTimeout(function() {
+            window.print();
+          }, 800);
+        };
+
+        window.addEventListener('afterprint', function() {
+          setTimeout(function() {
+            window.close();
+          }, 500);
+        });
+      </script>
+    </body>
+    </html>
+  `;
+
+  try {
+    janelaImpressao.document.write(html);
+    janelaImpressao.document.close();
+    
+  } catch (error) {
+    console.error('Erro ao gerar cupom:', error);
+    this.showToast('Erro ao gerar cupom', 'error');
+    janelaImpressao.close();
+  }
+}
 
   // ===============================
   // 📦 INSUMOS
@@ -320,3 +558,4 @@ class Dashboard {
 
 // Inicia o dashboard
 window.dashboard = new Dashboard();
+
