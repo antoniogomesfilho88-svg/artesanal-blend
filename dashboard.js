@@ -94,30 +94,44 @@ class Dashboard {
   // ===============================
   // 🍔 PRODUTOS
   // ===============================
-  renderProdutos() {
-    const container = document.getElementById('produtosContainer');
-    if (!container) return;
-    if (!this.produtos.length) {
-      container.innerHTML = `<div class="empty-state">Nenhum produto cadastrado</div>`;
+ renderPedidos() {
+    const container = document.getElementById('pedidosContainer');
+    if (!this.pedidos || !this.pedidos.length) {
+      container.innerHTML = '<div class="empty-state">Nenhum pedido recebido</div>';
       return;
     }
 
-    container.innerHTML = this.produtos.map(prod => `
-      <article class="produto-card ${!prod.disponivel ? 'indisponivel' : ''}">
-        <span class="categoria">${prod.categoria}</span>
-        <h3>${prod.nome}</h3>
-        <div class="preco">R$ ${(prod.preco || 0).toFixed(2)}</div>
-        <div class="descricao">${prod.descricao || ''}</div>
-        ${prod.imagem ? `<img src="${prod.imagem}" alt="${prod.nome}" style="width:100%;border-radius:8px;margin:8px 0;">` : ''}
-        <div class="card-actions">
-          <button class="btn-editar" onclick='dashboard.abrirModalProduto(${JSON.stringify(prod).replace(/"/g, '&quot;')})'>Editar</button>
-          <button class="btn-toggle" onclick="dashboard.toggleDisponibilidade('${prod._id}')">${prod.disponivel ? 'Pausar' : 'Ativar'}</button>
-          <button class="btn-excluir" onclick="dashboard.excluirProduto('${prod._id}')">Excluir</button>
+    container.innerHTML = this.pedidos.map(pedido => `
+      <article class="produto-card">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:0.5rem">
+          <div>
+            <h3>Pedido #${pedido._id?.slice(-6) || 'N/A'}</h3>
+            <p><strong>Cliente:</strong> ${pedido.cliente || '-'}</p>
+            <p><strong>Telefone:</strong> ${pedido.telefone || '-'}</p>
+            <p><strong>Endereço:</strong> ${pedido.endereco || '-'}</p>
+          </div>
+          <div style="text-align:right">
+            <div style="margin-bottom:.5rem"><strong>Total:</strong> R$ ${(pedido.total || 0).toFixed(2)}</div>
+            <div class="status">${this.formatarStatus(pedido.status)}</div>
+          </div>
+        </div>
+
+        <div style="margin:0.5rem 0;border-top:1px solid var(--border);padding-top:0.5rem">
+          <strong>Itens:</strong>
+          ${(pedido.itens || []).map(item => `<div style="display:flex;justify-content:space-between;margin:.25rem 0"><span>${item.quantidade}x ${item.nome}</span><span>R$ ${((item.preco || 0) * (item.quantidade || 1)).toFixed(2)}</span></div>`).join('')}
+        </div>
+
+        <div class="card-actions" style="margin-top:.75rem">
+          <button class="btn-editar" onclick='dashboard.abrirModalPedido(${JSON.stringify(pedido).replace(/\"/g,'&quot;')})'>Editar</button>
+          <button class="btn secondary" onclick="dashboard.atualizarStatusPedido('${pedido._id}','preparando')">👨‍🍳 Preparando</button>
+          <button class="btn secondary" onclick="dashboard.atualizarStatusPedido('${pedido._id}','pronto')">✅ Pronto</button>
+          <button class="btn secondary" onclick="dashboard.atualizarStatusPedido('${pedido._id}','entregue')">🚗 Entregue</button>
+          <button class="btn" onclick="dashboard.imprimirCupom('${pedido._id}')">🖨️ Imprimir Cupom</button>
+          <button class="btn-excluir" onclick="dashboard.excluirPedido('${pedido._id}')">Excluir</button>
         </div>
       </article>
     `).join('');
   }
-
   async toggleDisponibilidade(id) {
     const p = this.produtos.find(x => x._id === id);
     if (!p) return;
@@ -558,4 +572,5 @@ class Dashboard {
 
 // Inicia o dashboard
 window.dashboard = new Dashboard();
+
 
