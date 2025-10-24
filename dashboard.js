@@ -58,8 +58,9 @@ class Dashboard {
     }
   }
 
+ /* ================= EVENTOS ================= */
   setupEventListeners() {
-    // Tabs
+    // ==== Tabs ====
     document.querySelectorAll('.tab-button').forEach(btn => {
       btn.addEventListener('click', () => {
         document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
@@ -69,10 +70,33 @@ class Dashboard {
       });
     });
 
-    // visualizar cardápio
-    document.getElementById('visualizarCardapio')?.addEventListener('click', () => {
-      window.open('/', '_blank');
-    });
+    // ==== Ver Cardápio ====
+    const btnCardapio = document.getElementById('visualizarCardapio');
+    if (btnCardapio) {
+      btnCardapio.addEventListener('click', () => {
+        window.open('/', '_blank');
+      });
+    }
+
+    // ==== Botão Logout ====
+    const btnLogout = document.getElementById('btnLogout');
+    if (btnLogout) {
+      btnLogout.addEventListener('click', () => {
+        if (confirm('Deseja realmente sair do sistema?')) {
+          // Remove o token e redireciona
+          localStorage.removeItem('token');
+          sessionStorage.clear();
+
+          // Feedback visual
+          this.showToast('Logout realizado com sucesso!', 'info');
+
+          // Redireciona após pequeno atraso
+          setTimeout(() => {
+            window.location.href = '/login';
+          }, 800);
+        }
+      });
+    }
   }
 
   /* ================= PRODUTOS ================= */
@@ -822,6 +846,7 @@ imprimirCupom(id) {
 document.addEventListener('DOMContentLoaded', () => {
   window.dashboard = new Dashboard();
 });
+
 
 
 
