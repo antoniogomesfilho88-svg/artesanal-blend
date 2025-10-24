@@ -318,19 +318,58 @@ app.delete('/api/orders/:id', async (req, res) => {
 });
 
 // ===============================
-// 💰 Financeiro
+// 💰 Financeiro PRO (com histórico, margem e estatísticas)
 // ===============================
 app.get('/api/stats', async (req, res) => {
   try {
-    const pedidos = await Pedido.find();
+    const pedidos = await Pedido.find().sort({ criadoEm: 1 });
     const insumos = await Insumo.find();
 
+    // Totais
     const vendas = pedidos.reduce((acc, p) => acc + (p.total || 0), 0);
     const gastos = insumos.reduce((acc, i) => acc + (i.preco * i.quantidade), 0);
     const lucro = vendas - gastos;
 
-    res.json({ vendas, gastos, lucro });
-  } catch {
+    // Margem e ticket médio
+    const margem = vendas > 0 ? (lucro / vendas) * 100 : 0;
+    const ticketMedio = pedidos.length > 0 ? vendas / pedidos.length : 0;
+
+    // Histórico diário de vendas
+    const historicoMap = {};
+    pedidos.forEach(p => {
+      const dia = new Date(p.criadoEm).toISOString().split('T')[0];
+      historicoMap[dia] = (historicoMap[dia] || 0) + (p.total || 0);
+    });
+
+    const historico = Object.entries(historicoMap).map(([data, vendas]) => ({
+      data,
+      vendas
+    }));
+
+    // Top 5 produtos mais vendidos
+    const produtosMap = {};
+    pedidos.forEach(p => {
+      p.itens.forEach(i => {
+        produtosMap[i.nome] = (produtosMap[i.nome] || 0) + i.quantidade;
+      });
+    });
+
+    const topProdutos = Object.entries(produtosMap)
+      .map(([nome, qtd]) => ({ nome, qtd }))
+      .sort((a, b) => b.qtd - a.qtd)
+      .slice(0, 5);
+
+    res.json({
+      vendas,
+      gastos,
+      lucro,
+      margem,
+      ticketMedio,
+      historico,
+      topProdutos
+    });
+  } catch (err) {
+    console.error('Erro ao calcular financeiro:', err);
     res.status(500).json({ error: 'Erro ao calcular financeiro.' });
   }
 });
@@ -343,5 +382,6 @@ app.listen(PORT, () => {
   console.log(`📱 Cardápio: https://artesanal-blend.onrender.com`);
   console.log(`📊 Dashboard: https://artesanal-blend.onrender.com/dashboard`);
 });
+
 
 
