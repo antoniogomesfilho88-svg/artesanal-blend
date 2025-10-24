@@ -588,7 +588,7 @@ abrirModalPedido(pedido = null) {
   </article>
 `).join('');
 
-  formatarStatus(status) {
+  formatarStatus(status) 
     const map = { pendente: '⏳ Pendente', preparando: '👨‍🍳 Preparando', pronto: '✅ Pronto', entregue: '🚗 Entregue', cancelado: '❌ Cancelado' };
     return map[status] || status;
   }
@@ -938,6 +938,7 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     }
   
+
 
 
 
