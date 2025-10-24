@@ -799,115 +799,25 @@ imprimirCupom(id) {
     janelaImpressao.close();
   }
 }
-    /* ================= FINANCEIRO ================= */
+     /* ================= FINANCEIRO ================= */
   async updateFinanceiro() {
     try {
-      this.showToast('Atualizando dados financeiros...', 'info', 1000);
-
       const res = await fetch('/api/stats');
       if (res.ok) {
         const financeiro = await res.json();
         this.atualizarUIFinanceiro(financeiro);
-      } else {
-        this.showToast('Erro ao buscar dados financeiros', 'error');
       }
     } catch (e) {
       console.error('Erro financeiro', e);
-      this.showToast('Erro de rede ao atualizar financeiro', 'error');
     }
   }
 
-  atualizarUIFinanceiro({ vendas = 0, gastos = 0, lucro = 0, meses = [] } = {}) {
-    // Atualiza os textos
+  atualizarUIFinanceiro({ vendas = 0, gastos = 0, lucro = 0 } = {}) {
     document.getElementById('totalVendas').textContent = `R$ ${Number(vendas).toFixed(2)}`;
     document.getElementById('totalCustos').textContent = `R$ ${Number(gastos).toFixed(2)}`;
     document.getElementById('lucro').textContent = `R$ ${Number(lucro).toFixed(2)}`;
-
-    // Garante que o Chart.js está pronto
-    if (!window.Chart) return;
-
-    // Destroi gráficos antigos se existirem
-    if (this.graficoBarras) this.graficoBarras.destroy();
-    if (this.graficoPizza) this.graficoPizza.destroy();
-
-    const ctxBarras = document.getElementById('graficoBarras')?.getContext('2d');
-    const ctxPizza = document.getElementById('graficoPizza')?.getContext('2d');
-    if (!ctxBarras || !ctxPizza) return; // Evita erro se o canvas ainda não existe
-
-    // ==== Gráfico de Barras: Vendas x Custos ====
-    this.graficoBarras = new Chart(ctxBarras, {
-      type: 'bar',
-      data: {
-        labels: meses.map(m => m.nome || 'Mês'),
-        datasets: [
-          {
-            label: 'Vendas (R$)',
-            data: meses.map(m => m.vendas || 0),
-            backgroundColor: 'rgba(46, 204, 113, 0.7)',
-            borderRadius: 4
-          },
-          {
-            label: 'Custos (R$)',
-            data: meses.map(m => m.gastos || 0),
-            backgroundColor: 'rgba(231, 76, 60, 0.7)',
-            borderRadius: 4
-          }
-        ]
-      },
-      options: {
-        responsive: true,
-        plugins: {
-          legend: { position: 'bottom' },
-          title: { display: true, text: 'Desempenho Mensal' }
-        },
-        scales: {
-          y: { beginAtZero: true, title: { display: true, text: 'R$' } }
-        }
-      }
-    });
-
-    // ==== Gráfico de Pizza: Distribuição ====
-    this.graficoPizza = new Chart(ctxPizza, {
-      type: 'doughnut',
-      data: {
-        labels: ['Lucro', 'Custos'],
-        datasets: [{
-          data: [lucro, gastos],
-          backgroundColor: ['#2ecc71', '#e74c3c'],
-        }]
-      },
-      options: {
-        responsive: true,
-        plugins: {
-          legend: { position: 'bottom' },
-          title: { display: true, text: 'Lucro x Custos' }
-        }
-      }
-    });
   }
 
-
-
-
-  /* ================= EVENTOS ================= */
-  setupEventListeners() {
-    // ==== Tabs ====
-    document.querySelectorAll('.tab-button').forEach(btn => {
-      btn.addEventListener('click', () => {
-        document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
-        document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
-        btn.classList.add('active');
-        document.getElementById(btn.dataset.tab).classList.add('active');
-      });
-    });
-
-    // ==== Ver Cardápio ====
-    const btnCardapio = document.getElementById('visualizarCardapio');
-    if (btnCardapio) {
-      btnCardapio.addEventListener('click', () => {
-        window.open('/', '_blank');
-      });
-    }
 
         // ==== Botão Logout ====
     const btnLogout = document.getElementById('btnLogout');
@@ -973,3 +883,4 @@ imprimirCupom(id) {
 document.addEventListener('DOMContentLoaded', () => {
   window.dashboard = new Dashboard();
 });
+
