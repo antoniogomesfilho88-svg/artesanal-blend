@@ -83,32 +83,50 @@
     </section>
 
     <!-- Financeiro -->
-    <section id="financeiroTab" class="tab-content">
-      <div class="section-header">
-        <h2>Relatório Financeiro</h2>
-        <div class="actions">
-          <button class="btn secondary" onclick="dashboard.updateFinanceiro()">🔄 Atualizar</button>
-        </div>
-      </div>
+<section id="financeiroTab" class="tab-content">
+  <div class="section-header">
+    <h2>📊 Relatório Financeiro</h2>
+    <div class="actions">
+      <button class="btn secondary" onclick="dashboard.updateFinanceiro()">🔄 Atualizar</button>
+    </div>
+  </div>
 
-      <div class="financeiro-cards">
-        <div class="finance-card">
-          <h3>Total Vendas</h3>
-          <p id="totalVendas">R$ 0,00</p>
-        </div>
-        <div class="finance-card">
-          <h3>Total Custos</h3>
-          <p id="totalCustos">R$ 0,00</p>
-        </div>
-        <div class="finance-card">
-          <h3>Lucro</h3>
-          <p id="lucro">R$ 0,00</p>
-        </div>
+  <div class="financeiro-cards">
+    <div class="finance-card verde">
+      <i class="fa-solid fa-sack-dollar"></i>
+      <div>
+        <h3>Total Vendas</h3>
+        <p id="totalVendas">R$ 0,00</p>
       </div>
-    </section>
+    </div>
+
+    <div class="finance-card vermelho">
+      <i class="fa-solid fa-coins"></i>
+      <div>
+        <h3>Total Custos</h3>
+        <p id="totalCustos">R$ 0,00</p>
+      </div>
+    </div>
+
+    <div class="finance-card azul">
+      <i class="fa-solid fa-chart-line"></i>
+      <div>
+        <h3>Lucro</h3>
+        <p id="lucro">R$ 0,00</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="financeiro-graficos">
+    <canvas id="graficoBarras" height="120"></canvas>
+    <canvas id="graficoPizza" height="120"></canvas>
+  </div>
+</section>
+
   </main>
 
   <div id="toast-container" aria-live="polite"></div>
 
   <script src="dashboard.js"></script>
 </body>
+
