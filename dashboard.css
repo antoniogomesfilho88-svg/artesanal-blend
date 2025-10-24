@@ -251,7 +251,7 @@ body{font-family:Inter, 'Segoe UI', Roboto, system-ui, -apple-system, sans-serif
 }
 
 /* ==== STATUS DOS PEDIDOS ==== */
-.status {
+.status-badge {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -262,25 +262,29 @@ body{font-family:Inter, 'Segoe UI', Roboto, system-ui, -apple-system, sans-serif
   font-size: 0.85rem;
   color: #fff;
   text-transform: uppercase;
-  min-width: 110px;
-  text-align: center;
   margin-top: 4px;
+  min-width: 110px;
 }
 
-/* Cores automáticas conforme o tipo de status */
-.status:contains("pendente") {
+/* Cores automáticas */
+.status-badge:has(:contains("⏳")),
+.status-badge:has(:contains("pendente")) {
   background: var(--warning);
 }
-.status:contains("preparando") {
-  background: #f39c12;
+.status-badge:has(:contains("👨‍🍳")),
+.status-badge:has(:contains("preparando")) {
+  background: #f1c40f;
 }
-.status:contains("pronto") {
+.status-badge:has(:contains("✅")),
+.status-badge:has(:contains("pronto")) {
   background: var(--success);
 }
-.status:contains("entregue") {
+.status-badge:has(:contains("🚗")),
+.status-badge:has(:contains("entregue")) {
   background: #3498db;
 }
-.status:contains("cancelado") {
+.status-badge:has(:contains("❌")),
+.status-badge:has(:contains("cancelado")) {
   background: var(--danger);
 }
 
