@@ -193,6 +193,20 @@ class Dashboard {
     }
   }
 
+  // 🔄 Atualizar pedidos manualmente
+  async updatePedidos() {
+    try {
+      const res = await fetch('/api/orders');
+      if (!res.ok) throw new Error('Erro ao atualizar pedidos');
+      this.pedidos = await res.json();
+      this.renderPedidos();
+      this.showToast('Pedidos atualizados', 'success');
+    } catch (err) {
+      console.error('Erro ao atualizar pedidos:', err);
+      this.showToast('Erro ao atualizar pedidos', 'error');
+    }
+  }
+
   // ===============================
   // 📦 INSUMOS
   // ===============================
@@ -229,12 +243,37 @@ class Dashboard {
   }
 
   renderFinanceiro() {
-    const { vendas = 0, gastos = 0, lucro = 0, margem = 0 } = this.financeiro;
+    const {
+      vendas = 0,
+      gastos = 0,
+      lucro = 0,
+      margem = 0,
+      ticketMedio = 0,
+      topProdutos = []
+    } = this.financeiro;
+
+    // Preenche valores principais
     document.getElementById('totalVendas').textContent = `R$ ${vendas.toFixed(2)}`;
     document.getElementById('totalCustos').textContent = `R$ ${gastos.toFixed(2)}`;
     document.getElementById('lucro').textContent = `R$ ${lucro.toFixed(2)}`;
     if (document.getElementById('margemLucro'))
       document.getElementById('margemLucro').textContent = `${margem.toFixed(1)}%`;
+
+    // Ticket médio
+    if (document.getElementById('ticketMedio'))
+      document.getElementById('ticketMedio').textContent = `R$ ${ticketMedio.toFixed(2)}`;
+
+    // Top produtos
+    const topList = document.getElementById('topProdutos');
+    if (topList) {
+      if (!topProdutos.length) {
+        topList.innerHTML = '<li>Nenhum dado disponível</li>';
+      } else {
+        topList.innerHTML = topProdutos
+          .map(p => `<li>${p.nome} — <strong>${p.qtd}</strong> vendidos</li>`)
+          .join('');
+      }
+    }
   }
 
   renderGrafico() {
@@ -260,7 +299,7 @@ class Dashboard {
       options: {
         responsive: true,
         plugins: {
-          title: { display: true, text: 'Desempenho de Vendas' }
+          title: { display: true, text: '📈 Histórico de Vendas Diárias' }
         }
       }
     });
@@ -279,5 +318,5 @@ class Dashboard {
   }
 }
 
-// Iniciar dashboard globalmente
+// Inicia o dashboard
 window.dashboard = new Dashboard();
