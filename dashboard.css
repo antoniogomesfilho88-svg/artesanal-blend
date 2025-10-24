@@ -108,4 +108,109 @@ body{font-family:Inter, 'Segoe UI', Roboto, system-ui, -apple-system, sans-serif
 .logout-btn:hover {
   background-color: #c0392b;
 }
+/* ===================== MODAL PRO ===================== */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+  padding: 1rem;
+  backdrop-filter: blur(3px);
+}
+
+.modal {
+  background: #fff;
+  padding: 1.5rem 1.75rem;
+  border-radius: 16px;
+  max-width: 700px;
+  width: 100%;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.15);
+  animation: fadeInScale 0.25s ease forwards;
+}
+
+@keyframes fadeInScale {
+  from { opacity: 0; transform: scale(0.9); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.modal h2 {
+  color: var(--primary);
+  margin-bottom: 1rem;
+  font-size: 1.3rem;
+  border-bottom: 2px solid var(--primary);
+  padding-bottom: 0.5rem;
+}
+
+.modal .form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.modal .form-group label {
+  display: block;
+  margin-bottom: 0.35rem;
+  color: var(--text);
+  font-weight: 600;
+}
+
+.modal .form-group input,
+.modal .form-group select,
+.modal .form-group textarea {
+  width: 100%;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: #fafafa;
+  font-size: 0.95rem;
+  transition: border-color 0.2s;
+}
+
+.modal .form-group input:focus,
+.modal .form-group select:focus,
+.modal .form-group textarea:focus {
+  outline: none;
+  border-color: var(--primary);
+  background: #fff;
+}
+
+.modal .actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  margin-top: 1.25rem;
+}
+
+.modal .btn.primary {
+  background: var(--primary);
+  color: #fff;
+  padding: 0.55rem 1rem;
+  border-radius: 8px;
+  transition: background 0.3s;
+}
+.modal .btn.primary:hover {
+  background: var(--primary-light);
+}
+
+.modal .btn.secondary {
+  background: #f0f0f0;
+  color: var(--text);
+  padding: 0.55rem 1rem;
+  border-radius: 8px;
+}
+.modal .btn.secondary:hover {
+  background: #e6e6e6;
+}
+
+/* Responsividade */
+@media (max-width: 600px) {
+  .modal .form-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+
 
