@@ -608,7 +608,17 @@ abrirModalPedido(pedido = null) {
       this.showToast('Erro de rede', 'error');
     }
   }
-
+   async atualizarPedidos() {
+    try {
+      this.showToast('Atualizando pedidos...', 'info');
+      await this.carregarDados();
+      this.renderPedidos();
+      this.showToast('Pedidos atualizados com sucesso!', 'success');
+    } catch (e) {
+      console.error('Erro ao atualizar pedidos:', e);
+      this.showToast('Erro ao atualizar pedidos', 'error');
+    }
+  }
 imprimirCupom(id) {
   const pedido = this.pedidos.find(p => p._id === id);
   if (!pedido) return this.showToast('Pedido não encontrado', 'error');
@@ -916,6 +926,7 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     }
   
+
 
 
 
