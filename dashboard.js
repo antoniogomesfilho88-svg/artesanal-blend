@@ -32,15 +32,15 @@ class Dashboard {
     document.addEventListener('DOMContentLoaded', () => this.init());
   }
 
-  async init() {
-    this.configurarAbas();
-    this.configurarLogout();
+ async init() {
     await this.carregarDados();
+    this.setupEventListeners();
     this.renderProdutos();
     this.renderInsumos();
     this.renderPedidos();
-    await this.updateFinanceiro();
+    this.updateFinanceiro();
   }
+
 
   // ===============================
   // 🔄 CARREGAMENTO DE DADOS
@@ -572,5 +572,6 @@ class Dashboard {
 
 // Inicia o dashboard
 window.dashboard = new Dashboard();
+
 
 
