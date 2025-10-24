@@ -909,7 +909,7 @@ imprimirCupom(id) {
       });
     }
 
-    // ==== Botão Logout ====
+        // ==== Botão Logout ====
     const btnLogout = document.getElementById('btnLogout');
     if (btnLogout) {
       btnLogout.addEventListener('click', () => {
@@ -928,7 +928,9 @@ imprimirCupom(id) {
         }
       });
     }
-      /* ================= UTILITÁRIOS ================= */
+  }  // 👈 fecha APENAS o setupEventListeners()
+
+  /* ================= UTILITÁRIOS ================= */
   showToast(mensagem, tipo = 'success', tempo = 2500) {
     let container = document.getElementById('toast-container');
     if (!container) {
@@ -958,15 +960,12 @@ imprimirCupom(id) {
 
     container.appendChild(toast);
 
-    // Remove o toast após o tempo configurado
     setTimeout(() => {
       toast.style.opacity = '0';
       setTimeout(() => toast.remove(), 400);
     }, tempo);
   }
-
-  } 
-} // ✅ Fecha a classe Dashboard
+} // ✅ fecha a classe Dashboard corretamente
 
 // ===============================
 // 🚀 INICIALIZA O DASHBOARD
@@ -974,5 +973,3 @@ imprimirCupom(id) {
 document.addEventListener('DOMContentLoaded', () => {
   window.dashboard = new Dashboard();
 });
-
-
