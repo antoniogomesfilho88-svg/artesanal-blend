@@ -250,6 +250,40 @@ body{font-family:Inter, 'Segoe UI', Roboto, system-ui, -apple-system, sans-serif
   gap: 2rem;
 }
 
+/* ==== STATUS DOS PEDIDOS ==== */
+.status {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  color: #fff;
+  text-transform: uppercase;
+  min-width: 110px;
+  text-align: center;
+  margin-top: 4px;
+}
+
+/* Cores automáticas conforme o tipo de status */
+.status:contains("pendente") {
+  background: var(--warning);
+}
+.status:contains("preparando") {
+  background: #f39c12;
+}
+.status:contains("pronto") {
+  background: var(--success);
+}
+.status:contains("entregue") {
+  background: #3498db;
+}
+.status:contains("cancelado") {
+  background: var(--danger);
+}
+
 
 
 
