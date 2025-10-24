@@ -559,11 +559,15 @@ abrirModalPedido(pedido = null) {
         </div>
       </div>
 
-        <div style="margin:0.5rem 0;border-top:1px solid var(--border);padding-top:0.5rem">
-          <strong>Itens:</strong>
-          ${(pedido.itens || []).map(item => `<div style="display:flex;justify-content:space-between;margin:.25rem 0"><span>${item.quantidade}x ${item.nome}</span><span>R$ ${((item.preco || 0) * (item.quantidade || 1)).toFixed(2)}</span></div>`).join('')}
-        </div>
-
+      <div style="margin:0.5rem 0;border-top:1px solid var(--border);padding-top:0.5rem">
+        <strong>Itens:</strong>
+        ${(pedido.itens || []).map(item => `
+          <div style="display:flex;justify-content:space-between;margin:.25rem 0">
+            <span>${item.quantidade}x ${item.nome}</span>
+            <span>R$ ${((item.preco || 0) * (item.quantidade || 1)).toFixed(2)}</span>
+          </div>
+        `).join('')}
+      </div>
         <div class="card-actions" style="margin-top:.75rem">
           <button class="btn-editar" onclick='dashboard.abrirModalPedido(${JSON.stringify(pedido).replace(/\"/g,'&quot;')})'>Editar</button>
           <button class="btn secondary" onclick="dashboard.atualizarStatusPedido('${pedido._id}','preparando')">👨‍🍳 Preparando</button>
@@ -926,6 +930,7 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     }
   
+
 
 
 
