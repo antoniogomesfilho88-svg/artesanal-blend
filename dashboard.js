@@ -918,7 +918,17 @@ atualizarUIFinanceiro({ vendas = 0, gastos = 0, lucro = 0, meses = [] } = {}) {
         }
       });
     }
-  }
+  } 
+  
+} // ✅ Fecha a classe Dashboard
+
+// ===============================
+// 🚀 INICIALIZA O DASHBOARD
+// ===============================
+document.addEventListener('DOMContentLoaded', () => {
+  window.dashboard = new Dashboard();
+});
+
 
 
 
