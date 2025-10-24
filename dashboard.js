@@ -799,56 +799,88 @@ imprimirCupom(id) {
     janelaImpressao.close();
   }
 }
-  /* ================= FINANCEIRO ================= */
-  async updateFinanceiro() {
-    try {
-      const res = await fetch('/api/stats');
-      if (res.ok) {
-        const financeiro = await res.json();
-        this.atualizarUIFinanceiro(financeiro);
-      }
-    } catch (e) {
-      console.error('Erro financeiro', e);
+  <!-- Financeiro -->
+<section id="financeiroTab" class="tab-content">
+  <div class="section-header">
+    <h2>📊 Relatório Financeiro</h2>
+    <div class="actions">
+      <button class="btn secondary" onclick="dashboard.updateFinanceiro()">🔄 Atualizar</button>
+    </div>
+  </div>
+
+  <div class="financeiro-cards">
+    <div class="finance-card verde">
+      <i class="fa-solid fa-sack-dollar"></i>
+      <div>
+        <h3>Total Vendas</h3>
+        <p id="totalVendas">R$ 0,00</p>
+      </div>
+    </div>
+
+    <div class="finance-card vermelho">
+      <i class="fa-solid fa-coins"></i>
+      <div>
+        <h3>Total Custos</h3>
+        <p id="totalCustos">R$ 0,00</p>
+      </div>
+    </div>
+
+    <div class="finance-card azul">
+      <i class="fa-solid fa-chart-line"></i>
+      <div>
+        <h3>Lucro</h3>
+        <p id="lucro">R$ 0,00</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="financeiro-graficos">
+    <canvas id="graficoBarras" height="120"></canvas>
+    <canvas id="graficoPizza" height="120"></canvas>
+  </div>
+</section>
+
+
+  /* ================= EVENTOS ================= */
+  setupEventListeners() {
+    // ==== Tabs ====
+    document.querySelectorAll('.tab-button').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById(btn.dataset.tab).classList.add('active');
+      });
+    });
+
+    // ==== Ver Cardápio ====
+    const btnCardapio = document.getElementById('visualizarCardapio');
+    if (btnCardapio) {
+      btnCardapio.addEventListener('click', () => {
+        window.open('/', '_blank');
+      });
+    }
+
+    // ==== Botão Logout ====
+    const btnLogout = document.getElementById('btnLogout');
+    if (btnLogout) {
+      btnLogout.addEventListener('click', () => {
+        if (confirm('Deseja realmente sair do sistema?')) {
+          // Remove o token e redireciona
+          localStorage.removeItem('token');
+          sessionStorage.clear();
+
+          // Feedback visual
+          this.showToast('Logout realizado com sucesso!', 'info');
+
+          // Redireciona após pequeno atraso
+          setTimeout(() => {
+            window.location.href = '/login';
+          }, 800);
+        }
+      });
     }
   }
-
-  atualizarUIFinanceiro({ vendas = 0, gastos = 0, lucro = 0 } = {}) {
-    document.getElementById('totalVendas').textContent = `R$ ${Number(vendas).toFixed(2)}`;
-    document.getElementById('totalCustos').textContent = `R$ ${Number(gastos).toFixed(2)}`;
-    document.getElementById('lucro').textContent = `R$ ${Number(lucro).toFixed(2)}`;
-  }
-
-  /* ================= UTILITÁRIOS ================= */
-  showToast(mensagem, tipo = 'success', timeout = 2500) {
-    const container = document.getElementById('toast-container');
-    const t = document.createElement('div');
-    t.className = `toast ${tipo === 'error' ? 'error' : tipo === 'info' ? 'info' : 'success'}`;
-    t.textContent = mensagem;
-    container.appendChild(t);
-    setTimeout(() => { t.style.opacity = '0'; setTimeout(() => t.remove(), 400); }, timeout);
-  }
-
-  _formatImageSrc(src) {
-    // Se já for URL absoluta, retorna direto. Caso seja caminho relativo (ex: images/...), mantém relativo.
-    if (!src) return '';
-    try {
-      const u = new URL(src);
-      return src; // URL absoluta
-    } catch (e) {
-      // caminho relativo, torna relativo ao root (serve se você usa /images/ ou images/)
-      if (src.startsWith('/')) return src;
-      return src; // manter como veio (ex: images/...)
-    }
-  }
-}
-
-// inicia
-document.addEventListener('DOMContentLoaded', () => {
-  window.dashboard = new Dashboard();
-});
-
-
-
 
 
 
