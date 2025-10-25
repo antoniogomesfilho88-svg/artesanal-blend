@@ -1054,14 +1054,17 @@ imprimirCupom(id) {
   }
 
   function updateDashboardCards() {
-    const hoje = new Date().toISOString().split('T')[0];
-    let receitas = 0, despesas = 0;
-    state.contasReceber.forEach(c => { if (c.status === 'pago') receitas += c.valor; });
-    state.contasPagar.forEach(c => { if (c.status === 'pago') despesas += c.valor; });
-    document.getElementById('totalVendas').textContent = formatCurrency(receitas);
-    document.getElementById('totalCustos')?.textContent = formatCurrency(despesas);
-    document.getElementById('lucro')?.textContent = formatCurrency(receitas - despesas);
-  }
+  const hoje = new Date().toISOString().split('T')[0];
+  let receitas = 0, despesas = 0;
+
+  state.contasReceber.forEach(c => { if (c.status === 'pago') receitas += c.valor; });
+  state.contasPagar.forEach(c => { if (c.status === 'pago') despesas += c.valor; });
+
+  document.getElementById('totalVendas').textContent = formatCurrency(receitas);
+  document.getElementById('totalCustos').textContent = formatCurrency(despesas);
+  document.getElementById('lucro').textContent = formatCurrency(receitas - despesas);
+}
+
 
   // =========================================================================
   // === CHARTS (Gráficos Financeiros) =======================================
@@ -1119,6 +1122,7 @@ imprimirCupom(id) {
     initializeCharts();
   });
 })();
+
 
 
 
