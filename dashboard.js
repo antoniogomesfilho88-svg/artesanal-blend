@@ -863,169 +863,99 @@ imprimirCupom(id) {
     </html>
   `;
 
-   try {
+  try {
     janelaImpressao.document.write(html);
     janelaImpressao.document.close();
+    
   } catch (error) {
     console.error('Erro ao gerar cupom:', error);
     this.showToast('Erro ao gerar cupom', 'error');
     janelaImpressao.close();
   }
-} // fecha imprimirCupom
-} // fecha a classe Dashboard
+}
+  /* ================= FINANCEIRO ================= */
+  async updateFinanceiro() {
+    try {
+      const res = await fetch('/api/stats');
+      if (res.ok) {
+        const financeiro = await res.json();
+        this.atualizarUIFinanceiro(financeiro);
+      }
+    } catch (e) {
+      console.error('Erro financeiro', e);
+    }
+  }
 
-// ===============================
-// 🚀 INICIALIZA O DASHBOARD E ABAS
-// ===============================
-window.addEventListener('DOMContentLoaded', () => {
+  atualizarUIFinanceiro({ vendas = 0, gastos = 0, lucro = 0 } = {}) {
+    document.getElementById('totalVendas').textContent = `R$ ${Number(vendas).toFixed(2)}`;
+    document.getElementById('totalCustos').textContent = `R$ ${Number(gastos).toFixed(2)}`;
+    document.getElementById('lucro').textContent = `R$ ${Number(lucro).toFixed(2)}`;
+  }
+
+  /* ================= UTILITÁRIOS ================= */
+  showToast(mensagem, tipo = 'success', timeout = 2500) {
+    const container = document.getElementById('toast-container');
+    const t = document.createElement('div');
+    t.className = `toast ${tipo === 'error' ? 'error' : tipo === 'info' ? 'info' : 'success'}`;
+    t.textContent = mensagem;
+    container.appendChild(t);
+    setTimeout(() => { t.style.opacity = '0'; setTimeout(() => t.remove(), 400); }, timeout);
+  }
+
+  _formatImageSrc(src) {
+    // Se já for URL absoluta, retorna direto. Caso seja caminho relativo (ex: images/...), mantém relativo.
+    if (!src) return '';
+    try {
+      const u = new URL(src);
+      return src; // URL absoluta
+    } catch (e) {
+      // caminho relativo, torna relativo ao root (serve se você usa /images/ ou images/)
+      if (src.startsWith('/')) return src;
+      return src; // manter como veio (ex: images/...)
+    }
+  }
+}
+
+// inicia
+document.addEventListener('DOMContentLoaded', () => {
   window.dashboard = new Dashboard();
-
-  // Sistema de abas
-  document.querySelectorAll('.tab-button').forEach(btn => {
-    btn.addEventListener('click', () => {
-      // Remove "active" de todas as abas
-      document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
-      document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
-
-      // Ativa a aba clicada
-      btn.classList.add('active');
-      const tabId = btn.dataset.tab;
-      const tabContent = document.getElementById(tabId);
-      if (tabContent) tabContent.classList.add('active');
-    });
-  });
 });
 
-// ===============================
-// 💰 MÓDULO FINANCEIRO COMPLETO (Contas, Gráficos, DRE)
-// ===============================
-(() => {
-  let state = {
-    contasPagar: [],
-    contasReceber: [],
-    vendas: [],
-  };
 
-  // =========================================================================
-  // === CONTAS A PAGAR ======================================================
-  // =========================================================================
-  function loadContasPagar() {
-    const tbody = document.getElementById('contasPagarTable')?.querySelector('tbody');
-    if (!tbody) return;
-    tbody.innerHTML = state.contasPagar.map(c => {
-      const isLate = c.status === 'previsto' && new Date(c.vencimento) < new Date();
-      return `
-        <tr style="${isLate ? 'background-color:#ffebeb;' : ''}">
-          <td>${c.id}</td>
-          <td>${c.descricao}</td>
-          <td>${c.fornecedor || '-'}</td>
-          <td>${formatCurrency(c.valor)}</td>
-          <td>${formatDate(c.vencimento)}</td>
-          <td><span class="status-badge status-${c.status}">${statusTextMap(c.status)}</span></td>
-          <td>${c.categoria}</td>
-          <td class="action-btns">
-            <button class="btn btn-info" onclick="toggleContaStatus(${c.id}, 'contasPagar')" title="Marcar como Pago/Previsto"><i class="fas fa-${c.status === 'pago' ? 'undo' : 'check'}"></i></button>
-            <button class="btn btn-warning" onclick="openContaPagarModal(${c.id})" title="Editar Conta"><i class="fas fa-edit"></i></button>
-            <button class="btn btn-danger" onclick="deleteConta(${c.id}, 'contasPagar')" title="Excluir Conta"><i class="fas fa-trash"></i></button>
-          </td>
-        </tr>
-      `;
-    }).join('');
-  }
+ // ==== Botão Logout ====
+    const btnLogout = document.getElementById('btnLogout');
+    if (btnLogout) {
+      btnLogout.addEventListener('click', () => {
+        if (confirm('Deseja realmente sair do sistema?')) {
+          // Remove o token e redireciona
+          localStorage.removeItem('token');
+          sessionStorage.clear();
 
-  // =========================================================================
-  // === CONTAS A RECEBER ====================================================
-  // =========================================================================
-  function loadContasReceber() {
-    const tbody = document.getElementById('contasReceberTable')?.querySelector('tbody');
-    if (!tbody) return;
-    tbody.innerHTML = state.contasReceber.map(c => {
-      const isLate = c.status === 'pendente' && new Date(c.vencimento) < new Date();
-      return `
-        <tr style="${isLate ? 'background-color:#ffebeb;' : ''}">
-          <td>${c.id}</td>
-          <td>${c.descricao}</td>
-          <td>${c.cliente || '-'}</td>
-          <td>${formatCurrency(c.valor)}</td>
-          <td>${formatDate(c.vencimento)}</td>
-          <td><span class="status-badge status-${c.status}">${statusTextMap(c.status)}</span></td>
-          <td>${c.categoria}</td>
-          <td class="action-btns">
-            <button class="btn btn-info" onclick="toggleContaStatus(${c.id}, 'contasReceber')" title="Marcar como Recebido/Pendente"><i class="fas fa-${c.status === 'pago' ? 'undo' : 'check'}"></i></button>
-            <button class="btn btn-warning" onclick="openContaReceberModal(${c.id})" title="Editar Conta"><i class="fas fa-edit"></i></button>
-            <button class="btn btn-danger" onclick="deleteConta(${c.id}, 'contasReceber')" title="Excluir Conta"><i class="fas fa-trash"></i></button>
-          </td>
-        </tr>
-      `;
-    }).join('');
-  }
+          // Feedback visual
+          this.showToast('Logout realizado com sucesso!', 'info');
 
-  // =========================================================================
-  // === FUNÇÕES GERAIS ======================================================
-  // =========================================================================
-  function deleteConta(id, arrayName) {
-    if (!confirm('Excluir esta conta?')) return;
-    state[arrayName] = state[arrayName].filter(c => c.id !== id);
-    saveState();
-    if (arrayName === 'contasPagar') loadContasPagar();
-    if (arrayName === 'contasReceber') loadContasReceber();
-    updateDashboardCards();
-  }
+          // Redireciona após pequeno atraso
+          setTimeout(() => {
+            window.location.href = '/login';
+          }, 800);
+        }
+      });
+    }
+  
 
-  function toggleContaStatus(id, arrayName) {
-    const item = state[arrayName].find(c => c.id == id);
-    if (!item) return;
-    item.status = item.status === 'pago' ? 'previsto' : 'pago';
-    saveState();
-    if (arrayName === 'contasPagar') loadContasPagar();
-    if (arrayName === 'contasReceber') loadContasReceber();
-    updateDashboardCards();
-  }
 
-  function updateDashboardCards() {
-    let receitas = 0, despesas = 0;
-    state.contasReceber.forEach(c => { if (c.status === 'pago') receitas += c.valor; });
-    state.contasPagar.forEach(c => { if (c.status === 'pago') despesas += c.valor; });
-    document.getElementById('totalVendas').textContent = formatCurrency(receitas);
-    document.getElementById('totalCustos').textContent = formatCurrency(despesas);
-    document.getElementById('lucro').textContent = formatCurrency(receitas - despesas);
-  }
 
-  // =========================================================================
-  // === UTILITÁRIOS =========================================================
-  // =========================================================================
-  function formatCurrency(v) {
-    return v?.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) || 'R$ 0,00';
-  }
 
-  function formatDate(v) {
-    return v ? new Date(v).toLocaleDateString('pt-BR') : '-';
-  }
 
-  function statusTextMap(status) {
-    return { pago: 'Pago', previsto: 'Previsto', pendente: 'Pendente', cancelado: 'Cancelado' }[status] || status;
-  }
 
-  function saveState() {
-    localStorage.setItem('financeiroState', JSON.stringify(state));
-  }
 
-  function openModal(id) {
-    document.getElementById(`${id}Modal`)?.classList.add('active');
-  }
 
-  function closeModal(id) {
-    document.getElementById(`${id}Modal`)?.classList.remove('active');
-  }
 
-  // Carrega do storage e inicializa
-  const saved = localStorage.getItem('financeiroState');
-  if (saved) state = JSON.parse(saved);
 
-  window.addEventListener('DOMContentLoaded', () => {
-    loadContasPagar();
-    loadContasReceber();
-    updateDashboardCards();
-  });
-})();
+
+
+
+
+
+
 
