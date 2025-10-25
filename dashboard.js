@@ -873,89 +873,246 @@ imprimirCupom(id) {
     janelaImpressao.close();
   }
 }
-  /* ================= FINANCEIRO ================= */
-  async updateFinanceiro() {
-    try {
-      const res = await fetch('/api/stats');
-      if (res.ok) {
-        const financeiro = await res.json();
-        this.atualizarUIFinanceiro(financeiro);
+  // ===============================
+// 💰 MÓDULO FINANCEIRO COMPLETO (Contas, Gráficos, DRE)
+// ===============================
+(() => {
+  // Estado inicial
+  let state = {
+    contasPagar: [],
+    contasReceber: [],
+    vendas: [],
+  };
+
+  // =========================================================================
+  // === CONTAS A PAGAR ======================================================
+  // =========================================================================
+  function loadContasPagar() {
+    const tbody = document.getElementById('contasPagarTable')?.querySelector('tbody');
+    if (!tbody) return;
+    tbody.innerHTML = state.contasPagar.map(c => {
+      const isLate = c.status === 'previsto' && new Date(c.vencimento) < new Date();
+      return `
+        <tr style="${isLate ? 'background-color:#ffebeb;' : ''}">
+          <td>${c.id}</td>
+          <td>${c.descricao}</td>
+          <td>${c.fornecedor || '-'}</td>
+          <td>${formatCurrency(c.valor)}</td>
+          <td>${formatDate(c.vencimento)}</td>
+          <td><span class="status-badge status-${c.status}">${statusTextMap(c.status)}</span></td>
+          <td>${c.categoria}</td>
+          <td class="action-btns">
+            <button class="btn btn-info" onclick="toggleContaStatus(${c.id}, 'contasPagar')"><i class="fas fa-${c.status === 'pago' ? 'undo' : 'check'}"></i></button>
+            <button class="btn btn-warning" onclick="openContaPagarModal(${c.id})"><i class="fas fa-edit"></i></button>
+            <button class="btn btn-danger" onclick="deleteConta(${c.id}, 'contasPagar')"><i class="fas fa-trash"></i></button>
+          </td>
+        </tr>
+      `;
+    }).join('');
+  }
+
+  function openContaPagarModal(id = null) {
+    document.getElementById('contaPagarForm').reset();
+    document.getElementById('contaPagarId').value = '';
+    document.getElementById('contaPagarEmissao').value = new Date().toISOString().slice(0,10);
+    document.getElementById('contaPagarVencimento').value = new Date().toISOString().slice(0,10);
+    document.getElementById('contaPagarModalTitle').textContent = id ? 'Editar Conta a Pagar' : 'Nova Conta a Pagar';
+    if (id) {
+      const c = state.contasPagar.find(x => x.id == id);
+      if (c) {
+        document.getElementById('contaPagarId').value = c.id;
+        document.getElementById('contaPagarDescricao').value = c.descricao;
+        document.getElementById('contaPagarFornecedor').value = c.fornecedor;
+        document.getElementById('contaPagarCategoria').value = c.categoria;
+        document.getElementById('contaPagarValor').value = c.valor.toFixed(2);
+        document.getElementById('contaPagarEmissao').value = c.emissao;
+        document.getElementById('contaPagarVencimento').value = c.vencimento;
+        document.getElementById('contaPagarStatus').value = c.status;
       }
-    } catch (e) {
-      console.error('Erro financeiro', e);
     }
+    openModal('contaPagar');
   }
 
-  atualizarUIFinanceiro({ vendas = 0, gastos = 0, lucro = 0 } = {}) {
-    document.getElementById('totalVendas').textContent = `R$ ${Number(vendas).toFixed(2)}`;
-    document.getElementById('totalCustos').textContent = `R$ ${Number(gastos).toFixed(2)}`;
-    document.getElementById('lucro').textContent = `R$ ${Number(lucro).toFixed(2)}`;
+  document.getElementById('contaPagarForm')?.addEventListener('submit', function(e) {
+    e.preventDefault();
+    const id = document.getElementById('contaPagarId').value || Date.now();
+    const valor = Number(document.getElementById('contaPagarValor').value);
+    const novaConta = {
+      id,
+      descricao: document.getElementById('contaPagarDescricao').value,
+      fornecedor: document.getElementById('contaPagarFornecedor').value,
+      categoria: document.getElementById('contaPagarCategoria').value,
+      valor,
+      emissao: document.getElementById('contaPagarEmissao').value,
+      vencimento: document.getElementById('contaPagarVencimento').value,
+      status: document.getElementById('contaPagarStatus').value
+    };
+    const existente = state.contasPagar.find(c => c.id == id);
+    if (existente) Object.assign(existente, novaConta);
+    else state.contasPagar.push(novaConta);
+    saveState();
+    loadContasPagar();
+    updateDashboardCards();
+    closeModal('contaPagar');
+  });
+
+  // =========================================================================
+  // === CONTAS A RECEBER ====================================================
+  // =========================================================================
+  function loadContasReceber() {
+    const tbody = document.getElementById('contasReceberTable')?.querySelector('tbody');
+    if (!tbody) return;
+    tbody.innerHTML = state.contasReceber.map(c => {
+      const isLate = c.status === 'pendente' && new Date(c.vencimento) < new Date();
+      return `
+        <tr style="${isLate ? 'background-color:#ffebeb;' : ''}">
+          <td>${c.id}</td>
+          <td>${c.descricao}</td>
+          <td>${c.cliente || '-'}</td>
+          <td>${formatCurrency(c.valor)}</td>
+          <td>${formatDate(c.vencimento)}</td>
+          <td><span class="status-badge status-${c.status}">${statusTextMap(c.status)}</span></td>
+          <td>${c.categoria}</td>
+          <td class="action-btns">
+            <button class="btn btn-info" onclick="toggleContaStatus(${c.id}, 'contasReceber')"><i class="fas fa-${c.status === 'pago' ? 'undo' : 'check'}"></i></button>
+            <button class="btn btn-warning" onclick="openContaReceberModal(${c.id})"><i class="fas fa-edit"></i></button>
+            <button class="btn btn-danger" onclick="deleteConta(${c.id}, 'contasReceber')"><i class="fas fa-trash"></i></button>
+          </td>
+        </tr>
+      `;
+    }).join('');
   }
 
-  /* ================= UTILITÁRIOS ================= */
-  showToast(mensagem, tipo = 'success', timeout = 2500) {
-    const container = document.getElementById('toast-container');
-    const t = document.createElement('div');
-    t.className = `toast ${tipo === 'error' ? 'error' : tipo === 'info' ? 'info' : 'success'}`;
-    t.textContent = mensagem;
-    container.appendChild(t);
-    setTimeout(() => { t.style.opacity = '0'; setTimeout(() => t.remove(), 400); }, timeout);
-  }
-
-  _formatImageSrc(src) {
-    // Se já for URL absoluta, retorna direto. Caso seja caminho relativo (ex: images/...), mantém relativo.
-    if (!src) return '';
-    try {
-      const u = new URL(src);
-      return src; // URL absoluta
-    } catch (e) {
-      // caminho relativo, torna relativo ao root (serve se você usa /images/ ou images/)
-      if (src.startsWith('/')) return src;
-      return src; // manter como veio (ex: images/...)
+  function openContaReceberModal(id = null) {
+    document.getElementById('contaReceberForm').reset();
+    document.getElementById('contaReceberId').value = '';
+    document.getElementById('contaReceberEmissao').value = new Date().toISOString().slice(0,10);
+    document.getElementById('contaReceberVencimento').value = new Date().toISOString().slice(0,10);
+    document.getElementById('contaReceberModalTitle').textContent = id ? 'Editar Conta a Receber' : 'Nova Conta a Receber';
+    if (id) {
+      const c = state.contasReceber.find(x => x.id == id);
+      if (c) {
+        document.getElementById('contaReceberId').value = c.id;
+        document.getElementById('contaReceberDescricao').value = c.descricao;
+        document.getElementById('contaReceberCliente').value = c.cliente;
+        document.getElementById('contaReceberCategoria').value = c.categoria;
+        document.getElementById('contaReceberValor').value = c.valor.toFixed(2);
+        document.getElementById('contaReceberEmissao').value = c.emissao;
+        document.getElementById('contaReceberVencimento').value = c.vencimento;
+        document.getElementById('contaReceberStatus').value = c.status;
+      }
     }
+    openModal('contaReceber');
   }
-}
 
-// inicia
-document.addEventListener('DOMContentLoaded', () => {
-  window.dashboard = new Dashboard();
-});
+  document.getElementById('contaReceberForm')?.addEventListener('submit', function(e) {
+    e.preventDefault();
+    const id = document.getElementById('contaReceberId').value || Date.now();
+    const valor = Number(document.getElementById('contaReceberValor').value);
+    const novaConta = {
+      id,
+      descricao: document.getElementById('contaReceberDescricao').value,
+      cliente: document.getElementById('contaReceberCliente').value,
+      categoria: document.getElementById('contaReceberCategoria').value,
+      valor,
+      emissao: document.getElementById('contaReceberEmissao').value,
+      vencimento: document.getElementById('contaReceberVencimento').value,
+      status: document.getElementById('contaReceberStatus').value
+    };
+    const existente = state.contasReceber.find(c => c.id == id);
+    if (existente) Object.assign(existente, novaConta);
+    else state.contasReceber.push(novaConta);
+    saveState();
+    loadContasReceber();
+    updateDashboardCards();
+    closeModal('contaReceber');
+  });
 
+  // =========================================================================
+  // === FUNÇÕES GERAIS E DASHBOARD ==========================================
+  // =========================================================================
+  function deleteConta(id, arrayName) {
+    if (!confirm('Excluir esta conta?')) return;
+    state[arrayName] = state[arrayName].filter(c => c.id !== id);
+    saveState();
+    if (arrayName === 'contasPagar') loadContasPagar();
+    if (arrayName === 'contasReceber') loadContasReceber();
+    updateDashboardCards();
+  }
 
- // ==== Botão Logout ====
-    const btnLogout = document.getElementById('btnLogout');
-    if (btnLogout) {
-      btnLogout.addEventListener('click', () => {
-        if (confirm('Deseja realmente sair do sistema?')) {
-          // Remove o token e redireciona
-          localStorage.removeItem('token');
-          sessionStorage.clear();
+  function toggleContaStatus(id, arrayName) {
+    const item = state[arrayName].find(c => c.id == id);
+    if (!item) return;
+    item.status = item.status === 'pago' ? 'previsto' : 'pago';
+    saveState();
+    if (arrayName === 'contasPagar') loadContasPagar();
+    if (arrayName === 'contasReceber') loadContasReceber();
+    updateDashboardCards();
+  }
 
-          // Feedback visual
-          this.showToast('Logout realizado com sucesso!', 'info');
+  function updateDashboardCards() {
+    const hoje = new Date().toISOString().split('T')[0];
+    let receitas = 0, despesas = 0;
+    state.contasReceber.forEach(c => { if (c.status === 'pago') receitas += c.valor; });
+    state.contasPagar.forEach(c => { if (c.status === 'pago') despesas += c.valor; });
+    document.getElementById('totalVendas')?.textContent = formatCurrency(receitas);
+    document.getElementById('totalCustos')?.textContent = formatCurrency(despesas);
+    document.getElementById('lucro')?.textContent = formatCurrency(receitas - despesas);
+  }
 
-          // Redireciona após pequeno atraso
-          setTimeout(() => {
-            window.location.href = '/login';
-          }, 800);
-        }
-      });
-    }
-  
+  // =========================================================================
+  // === CHARTS (Gráficos Financeiros) =======================================
+  // =========================================================================
+  let cashFlowChart, projectionChart;
+  function initializeCharts() {
+    const ctx = document.getElementById('cashFlowChart')?.getContext('2d');
+    if (!ctx) return;
+    const receitas = state.contasReceber.filter(c => c.status === 'pago').reduce((sum, c) => sum + c.valor, 0);
+    const despesas = state.contasPagar.filter(c => c.status === 'pago').reduce((sum, c) => sum + c.valor, 0);
+    if (cashFlowChart) cashFlowChart.destroy();
+    cashFlowChart = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: ['Receitas', 'Despesas'],
+        datasets: [{
+          data: [receitas, despesas],
+          backgroundColor: ['#2ecc71', '#e74c3c']
+        }]
+      }
+    });
+  }
 
+  // =========================================================================
+  // === UTILITÁRIOS =========================================================
+  // =========================================================================
+  function formatCurrency(v) {
+    return v?.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) || 'R$ 0,00';
+  }
+  function formatDate(v) {
+    return v ? new Date(v).toLocaleDateString('pt-BR') : '-';
+  }
+  function statusTextMap(status) {
+    return { pago: 'Pago', previsto: 'Previsto', pendente: 'Pendente', cancelado: 'Cancelado' }[status] || status;
+  }
+  function saveState() {
+    localStorage.setItem('financeiroState', JSON.stringify(state));
+  }
+  function openModal(id) {
+    document.getElementById(`${id}Modal`)?.classList.add('active');
+  }
+  function closeModal(id) {
+    document.getElementById(`${id}Modal`)?.classList.remove('active');
+  }
 
+  // Carrega do storage
+  const saved = localStorage.getItem('financeiroState');
+  if (saved) state = JSON.parse(saved);
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+  // Inicializa
+  window.addEventListener('DOMContentLoaded', () => {
+    loadContasPagar();
+    loadContasReceber();
+    updateDashboardCards();
+    initializeCharts();
+  });
+})();
