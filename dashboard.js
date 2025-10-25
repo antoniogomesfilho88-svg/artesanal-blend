@@ -871,8 +871,8 @@ imprimirCupom(id) {
     console.error('Erro ao gerar cupom:', error);
     this.showToast('Erro ao gerar cupom', 'error');
     janelaImpressao.close();
-  }
-}
+  } //
+} //
   // ===============================
 // 💰 MÓDULO FINANCEIRO COMPLETO (Contas, Gráficos, DRE)
 // ===============================
@@ -1116,3 +1116,4 @@ imprimirCupom(id) {
     initializeCharts();
   });
 })();
+
