@@ -863,29 +863,48 @@ imprimirCupom(id) {
     </html>
   `;
 
-  try {
+   try {
     janelaImpressao.document.write(html);
     janelaImpressao.document.close();
-    
-   } catch (error) {
+  } catch (error) {
     console.error('Erro ao gerar cupom:', error);
     this.showToast('Erro ao gerar cupom', 'error');
     janelaImpressao.close();
   }
-} // <-- fecha o método imprimirCupom
-} // <-- fecha a classe Dashboard corretamente aqui
+} // fecha imprimirCupom
+} // fecha a classe Dashboard
+
+// ===============================
+// 🚀 INICIALIZA O DASHBOARD E ABAS
+// ===============================
+window.addEventListener('DOMContentLoaded', () => {
+  window.dashboard = new Dashboard();
+
+  // Sistema de abas
+  document.querySelectorAll('.tab-button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      // Remove "active" de todas as abas
+      document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+
+      // Ativa a aba clicada
+      btn.classList.add('active');
+      const tabId = btn.dataset.tab;
+      const tabContent = document.getElementById(tabId);
+      if (tabContent) tabContent.classList.add('active');
+    });
+  });
+});
 
 // ===============================
 // 💰 MÓDULO FINANCEIRO COMPLETO (Contas, Gráficos, DRE)
 // ===============================
 (() => {
-  // Estado inicial
   let state = {
     contasPagar: [],
     contasReceber: [],
     vendas: [],
   };
-
 
   // =========================================================================
   // === CONTAS A PAGAR ======================================================
@@ -905,59 +924,14 @@ imprimirCupom(id) {
           <td><span class="status-badge status-${c.status}">${statusTextMap(c.status)}</span></td>
           <td>${c.categoria}</td>
           <td class="action-btns">
-            <button class="btn btn-info" onclick="toggleContaStatus(${c.id}, 'contasPagar')"><i class="fas fa-${c.status === 'pago' ? 'undo' : 'check'}"></i></button>
-            <button class="btn btn-warning" onclick="openContaPagarModal(${c.id})"><i class="fas fa-edit"></i></button>
-            <button class="btn btn-danger" onclick="deleteConta(${c.id}, 'contasPagar')"><i class="fas fa-trash"></i></button>
+            <button class="btn btn-info" onclick="toggleContaStatus(${c.id}, 'contasPagar')" title="Marcar como Pago/Previsto"><i class="fas fa-${c.status === 'pago' ? 'undo' : 'check'}"></i></button>
+            <button class="btn btn-warning" onclick="openContaPagarModal(${c.id})" title="Editar Conta"><i class="fas fa-edit"></i></button>
+            <button class="btn btn-danger" onclick="deleteConta(${c.id}, 'contasPagar')" title="Excluir Conta"><i class="fas fa-trash"></i></button>
           </td>
         </tr>
       `;
     }).join('');
   }
-
-  function openContaPagarModal(id = null) {
-    document.getElementById('contaPagarForm').reset();
-    document.getElementById('contaPagarId').value = '';
-    document.getElementById('contaPagarEmissao').value = new Date().toISOString().slice(0,10);
-    document.getElementById('contaPagarVencimento').value = new Date().toISOString().slice(0,10);
-    document.getElementById('contaPagarModalTitle').textContent = id ? 'Editar Conta a Pagar' : 'Nova Conta a Pagar';
-    if (id) {
-      const c = state.contasPagar.find(x => x.id == id);
-      if (c) {
-        document.getElementById('contaPagarId').value = c.id;
-        document.getElementById('contaPagarDescricao').value = c.descricao;
-        document.getElementById('contaPagarFornecedor').value = c.fornecedor;
-        document.getElementById('contaPagarCategoria').value = c.categoria;
-        document.getElementById('contaPagarValor').value = c.valor.toFixed(2);
-        document.getElementById('contaPagarEmissao').value = c.emissao;
-        document.getElementById('contaPagarVencimento').value = c.vencimento;
-        document.getElementById('contaPagarStatus').value = c.status;
-      }
-    }
-    openModal('contaPagar');
-  }
-
-  document.getElementById('contaPagarForm')?.addEventListener('submit', function(e) {
-    e.preventDefault();
-    const id = document.getElementById('contaPagarId').value || Date.now();
-    const valor = Number(document.getElementById('contaPagarValor').value);
-    const novaConta = {
-      id,
-      descricao: document.getElementById('contaPagarDescricao').value,
-      fornecedor: document.getElementById('contaPagarFornecedor').value,
-      categoria: document.getElementById('contaPagarCategoria').value,
-      valor,
-      emissao: document.getElementById('contaPagarEmissao').value,
-      vencimento: document.getElementById('contaPagarVencimento').value,
-      status: document.getElementById('contaPagarStatus').value
-    };
-    const existente = state.contasPagar.find(c => c.id == id);
-    if (existente) Object.assign(existente, novaConta);
-    else state.contasPagar.push(novaConta);
-    saveState();
-    loadContasPagar();
-    updateDashboardCards();
-    closeModal('contaPagar');
-  });
 
   // =========================================================================
   // === CONTAS A RECEBER ====================================================
@@ -977,62 +951,17 @@ imprimirCupom(id) {
           <td><span class="status-badge status-${c.status}">${statusTextMap(c.status)}</span></td>
           <td>${c.categoria}</td>
           <td class="action-btns">
-            <button class="btn btn-info" onclick="toggleContaStatus(${c.id}, 'contasReceber')"><i class="fas fa-${c.status === 'pago' ? 'undo' : 'check'}"></i></button>
-            <button class="btn btn-warning" onclick="openContaReceberModal(${c.id})"><i class="fas fa-edit"></i></button>
-            <button class="btn btn-danger" onclick="deleteConta(${c.id}, 'contasReceber')"><i class="fas fa-trash"></i></button>
+            <button class="btn btn-info" onclick="toggleContaStatus(${c.id}, 'contasReceber')" title="Marcar como Recebido/Pendente"><i class="fas fa-${c.status === 'pago' ? 'undo' : 'check'}"></i></button>
+            <button class="btn btn-warning" onclick="openContaReceberModal(${c.id})" title="Editar Conta"><i class="fas fa-edit"></i></button>
+            <button class="btn btn-danger" onclick="deleteConta(${c.id}, 'contasReceber')" title="Excluir Conta"><i class="fas fa-trash"></i></button>
           </td>
         </tr>
       `;
     }).join('');
   }
 
-  function openContaReceberModal(id = null) {
-    document.getElementById('contaReceberForm').reset();
-    document.getElementById('contaReceberId').value = '';
-    document.getElementById('contaReceberEmissao').value = new Date().toISOString().slice(0,10);
-    document.getElementById('contaReceberVencimento').value = new Date().toISOString().slice(0,10);
-    document.getElementById('contaReceberModalTitle').textContent = id ? 'Editar Conta a Receber' : 'Nova Conta a Receber';
-    if (id) {
-      const c = state.contasReceber.find(x => x.id == id);
-      if (c) {
-        document.getElementById('contaReceberId').value = c.id;
-        document.getElementById('contaReceberDescricao').value = c.descricao;
-        document.getElementById('contaReceberCliente').value = c.cliente;
-        document.getElementById('contaReceberCategoria').value = c.categoria;
-        document.getElementById('contaReceberValor').value = c.valor.toFixed(2);
-        document.getElementById('contaReceberEmissao').value = c.emissao;
-        document.getElementById('contaReceberVencimento').value = c.vencimento;
-        document.getElementById('contaReceberStatus').value = c.status;
-      }
-    }
-    openModal('contaReceber');
-  }
-
-  document.getElementById('contaReceberForm')?.addEventListener('submit', function(e) {
-    e.preventDefault();
-    const id = document.getElementById('contaReceberId').value || Date.now();
-    const valor = Number(document.getElementById('contaReceberValor').value);
-    const novaConta = {
-      id,
-      descricao: document.getElementById('contaReceberDescricao').value,
-      cliente: document.getElementById('contaReceberCliente').value,
-      categoria: document.getElementById('contaReceberCategoria').value,
-      valor,
-      emissao: document.getElementById('contaReceberEmissao').value,
-      vencimento: document.getElementById('contaReceberVencimento').value,
-      status: document.getElementById('contaReceberStatus').value
-    };
-    const existente = state.contasReceber.find(c => c.id == id);
-    if (existente) Object.assign(existente, novaConta);
-    else state.contasReceber.push(novaConta);
-    saveState();
-    loadContasReceber();
-    updateDashboardCards();
-    closeModal('contaReceber');
-  });
-
   // =========================================================================
-  // === FUNÇÕES GERAIS E DASHBOARD ==========================================
+  // === FUNÇÕES GERAIS ======================================================
   // =========================================================================
   function deleteConta(id, arrayName) {
     if (!confirm('Excluir esta conta?')) return;
@@ -1054,38 +983,12 @@ imprimirCupom(id) {
   }
 
   function updateDashboardCards() {
-  const hoje = new Date().toISOString().split('T')[0];
-  let receitas = 0, despesas = 0;
-
-  state.contasReceber.forEach(c => { if (c.status === 'pago') receitas += c.valor; });
-  state.contasPagar.forEach(c => { if (c.status === 'pago') despesas += c.valor; });
-
-  document.getElementById('totalVendas').textContent = formatCurrency(receitas);
-  document.getElementById('totalCustos').textContent = formatCurrency(despesas);
-  document.getElementById('lucro').textContent = formatCurrency(receitas - despesas);
-}
-
-
-  // =========================================================================
-  // === CHARTS (Gráficos Financeiros) =======================================
-  // =========================================================================
-  let cashFlowChart, projectionChart;
-  function initializeCharts() {
-    const ctx = document.getElementById('cashFlowChart')?.getContext('2d');
-    if (!ctx) return;
-    const receitas = state.contasReceber.filter(c => c.status === 'pago').reduce((sum, c) => sum + c.valor, 0);
-    const despesas = state.contasPagar.filter(c => c.status === 'pago').reduce((sum, c) => sum + c.valor, 0);
-    if (cashFlowChart) cashFlowChart.destroy();
-    cashFlowChart = new Chart(ctx, {
-      type: 'bar',
-      data: {
-        labels: ['Receitas', 'Despesas'],
-        datasets: [{
-          data: [receitas, despesas],
-          backgroundColor: ['#2ecc71', '#e74c3c']
-        }]
-      }
-    });
+    let receitas = 0, despesas = 0;
+    state.contasReceber.forEach(c => { if (c.status === 'pago') receitas += c.valor; });
+    state.contasPagar.forEach(c => { if (c.status === 'pago') despesas += c.valor; });
+    document.getElementById('totalVendas').textContent = formatCurrency(receitas);
+    document.getElementById('totalCustos').textContent = formatCurrency(despesas);
+    document.getElementById('lucro').textContent = formatCurrency(receitas - despesas);
   }
 
   // =========================================================================
@@ -1094,35 +997,35 @@ imprimirCupom(id) {
   function formatCurrency(v) {
     return v?.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) || 'R$ 0,00';
   }
+
   function formatDate(v) {
     return v ? new Date(v).toLocaleDateString('pt-BR') : '-';
   }
+
   function statusTextMap(status) {
     return { pago: 'Pago', previsto: 'Previsto', pendente: 'Pendente', cancelado: 'Cancelado' }[status] || status;
   }
+
   function saveState() {
     localStorage.setItem('financeiroState', JSON.stringify(state));
   }
+
   function openModal(id) {
     document.getElementById(`${id}Modal`)?.classList.add('active');
   }
+
   function closeModal(id) {
     document.getElementById(`${id}Modal`)?.classList.remove('active');
   }
 
-  // Carrega do storage
+  // Carrega do storage e inicializa
   const saved = localStorage.getItem('financeiroState');
   if (saved) state = JSON.parse(saved);
 
-  // Inicializa
   window.addEventListener('DOMContentLoaded', () => {
     loadContasPagar();
     loadContasReceber();
     updateDashboardCards();
-    initializeCharts();
   });
 })();
-
-
-
 
