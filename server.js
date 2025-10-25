@@ -313,22 +313,127 @@ app.delete('/api/orders/:id', async (req, res) => { // Renomeada de /api/pedidos
     }
 });
 
-// ===== Financeiro (Stats) Route - UNIFICADA com o Dashboard =====
-app.get('/api/stats', async (req, res) => { // Renomeada de /api/financeiro
-    try {
-        const pedidos = await Pedido.find();
-        const insumos = await Insumo.find();
+// ===============================
+// 💰 Rota Financeiro Avançado
+// ===============================
+app.get("/api/stats/financeiro", async (req, res) => {
+  try {
+    const pedidos = await Pedido.find({ status: "entregue" });
+    const insumos = await Insumo.find();
 
-        const vendas = pedidos.reduce((acc, p) => acc + (p.total || 0), 0);
-        // Assumindo que o gasto é o custo total dos insumos atuais (preco * quantidade)
-        const gastos = insumos.reduce((acc, i) => acc + (i.preco * i.quantidade), 0); 
-        const lucro = vendas - gastos;
+    const vendas = pedidos.reduce((acc, p) => acc + (p.total || 0), 0);
+    const gastosInsumos = insumos.reduce((acc, i) => acc + (i.preco * (i.quantidade || 0)), 0);
+    const lucro = vendas - gastosInsumos;
 
-        res.json({ vendas, gastos, lucro });
-    } catch (error) {
-        res.status(500).json({ error: 'Erro ao calcular financeiro/stats.' });
-    }
+    res.json({ vendas, gastos: gastosInsumos, lucro });
+  } catch (err) {
+    console.error("Erro financeiro:", err);
+    res.status(500).json({ error: "Erro ao calcular financeiro." });
+  }
 });
+
+// ===============================
+// 📈 Lucro por Produto (com insumos)
+// ===============================
+app.get("/api/stats/produtos", async (req, res) => {
+  try {
+    const pedidos = await Pedido.find({ status: "entregue" });
+    const produtos = await Produto.find();
+    const insumos = await Insumo.find();
+
+    // Mapa de custo por produto
+    const custoPorProduto = {};
+    produtos.forEach((p) => {
+      let custo = 0;
+      (p.ingredientes || []).forEach((ing) => {
+        const insumo = insumos.find((i) => i.nome.toLowerCase() === ing.toLowerCase());
+        if (insumo) custo += insumo.preco; // valor simples — pode evoluir com qtd por produto
+      });
+      custoPorProduto[p.nome] = custo;
+    });
+
+    // Agrupa vendas e calcula lucro
+    const mapa = {};
+    pedidos.forEach((p) => {
+      (p.itens || []).forEach((item) => {
+        const nome = item.nome;
+        if (!mapa[nome]) mapa[nome] = { qtd: 0, receita: 0, custo: 0 };
+        mapa[nome].qtd += item.quantidade;
+        mapa[nome].receita += item.preco * item.quantidade;
+        mapa[nome].custo += (custoPorProduto[nome] || 0) * item.quantidade;
+      });
+    });
+
+    const produtosLucro = Object.entries(mapa).map(([nome, d]) => ({
+      nome,
+      quantidade: d.qtd,
+      receita: d.receita,
+      custo: d.custo,
+      lucro: d.receita - d.custo,
+      margem: d.receita ? (((d.receita - d.custo) / d.receita) * 100).toFixed(1) : 0
+    }));
+
+    produtosLucro.sort((a, b) => b.lucro - a.lucro);
+
+    res.json(produtosLucro);
+  } catch (err) {
+    console.error("Erro lucro produto:", err);
+    res.status(500).json({ error: "Erro ao calcular lucro por produto." });
+  }
+});
+
+// ===============================
+// ⚙️ Atualização de pedido + controle de estoque
+// ===============================
+app.put("/api/orders/:id/status", async (req, res) => {
+  try {
+    const { status } = req.body;
+    const pedido = await Pedido.findById(req.params.id);
+    if (!pedido) return res.status(404).json({ error: "Pedido não encontrado." });
+
+    pedido.status = status;
+    await pedido.save();
+
+    // Se foi entregue, desconta os insumos automaticamente
+    if (status === "entregue") {
+      const insumos = await Insumo.find();
+      const produtos = await Produto.find();
+
+      for (const item of pedido.itens) {
+        const produto = produtos.find(p => p.nome === item.nome);
+        if (!produto) continue;
+
+        (produto.ingredientes || []).forEach(async (nomeIng) => {
+          const insumo = insumos.find(i => i.nome.toLowerCase() === nomeIng.toLowerCase());
+          if (insumo) {
+            insumo.quantidade -= item.quantidade;
+            if (insumo.quantidade < 0) insumo.quantidade = 0;
+            await insumo.save();
+          }
+        });
+      }
+    }
+
+    res.json({ success: true, status });
+  } catch (err) {
+    console.error("Erro ao atualizar status:", err);
+    res.status(500).json({ error: "Erro ao atualizar status do pedido." });
+  }
+});
+
+// ===============================
+// ⚠️ Alerta de estoque baixo
+// ===============================
+app.get("/api/insumos/alertas", async (req, res) => {
+  try {
+    const insumos = await Insumo.find();
+    const baixos = insumos.filter(i => i.minimo && i.quantidade <= i.minimo);
+    res.json(baixos);
+  } catch (err) {
+    res.status(500).json({ error: "Erro ao verificar estoque." });
+  }
+});
+
 
 
 // ===== Servidor =====
@@ -338,3 +443,4 @@ app.listen(PORT, () => {
     console.log(`📱 Cardápio: https://artesanal-blend.onrender.com`);
     console.log(`📊 Dashboard: https://artesanal-blend.onrender.com/dashboard`);
 });
+
