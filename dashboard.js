@@ -867,13 +867,15 @@ imprimirCupom(id) {
     janelaImpressao.document.write(html);
     janelaImpressao.document.close();
     
-  } catch (error) {
+   } catch (error) {
     console.error('Erro ao gerar cupom:', error);
     this.showToast('Erro ao gerar cupom', 'error');
     janelaImpressao.close();
-  } //
-} //
-  // ===============================
+  }
+} // <-- fecha o método imprimirCupom
+} // <-- fecha a classe Dashboard corretamente aqui
+
+// ===============================
 // 💰 MÓDULO FINANCEIRO COMPLETO (Contas, Gráficos, DRE)
 // ===============================
 (() => {
@@ -883,6 +885,7 @@ imprimirCupom(id) {
     contasReceber: [],
     vendas: [],
   };
+
 
   // =========================================================================
   // === CONTAS A PAGAR ======================================================
@@ -1116,4 +1119,5 @@ imprimirCupom(id) {
     initializeCharts();
   });
 })();
+
 
