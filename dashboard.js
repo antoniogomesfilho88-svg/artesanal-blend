@@ -19,16 +19,14 @@ if (!token) {
 }
 
 // ===============================
-// 🎛️ DASHBOARD PRINCIPAL
+// 🧭 DASHBOARD PRINCIPAL
 // ===============================
 class Dashboard {
   constructor() {
     this.produtos = [];
-    this.insumos = [];
     this.pedidos = [];
-    this._graficoFinanceiro = null;
-    this.ultimoPedidoId = null;
-
+    this.insumos = [];
+    this.grafico = null;
     this.init();
   }
 
@@ -43,6 +41,7 @@ class Dashboard {
 
   async carregarDados() {
     try {
+      this.showToast('Carregando dados...', 'info', 800);
       const [produtosRes, pedidosRes, insumosRes] = await Promise.all([
         fetch('/api/menu').then(r => r.ok ? r.json() : []),
         fetch('/api/orders').then(r => r.ok ? r.json() : []),
@@ -58,13 +57,13 @@ class Dashboard {
   }
 
   setupEventListeners() {
-    // Navegação lateral
-    document.querySelectorAll('.sidebar li').forEach(tab => {
-      tab.addEventListener('click', () => {
-        document.querySelectorAll('.sidebar li').forEach(t => t.classList.remove('active'));
-        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-        tab.classList.add('active');
-        document.getElementById(tab.dataset.tab).classList.add('active');
+    // Tabs laterais
+    document.querySelectorAll('.sidebar li').forEach(li => {
+      li.addEventListener('click', () => {
+        document.querySelectorAll('.sidebar li').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+        li.classList.add('active');
+        document.getElementById(li.dataset.tab).classList.add('active');
       });
     });
 
@@ -74,7 +73,7 @@ class Dashboard {
     });
   }
 
-  /* ================= PRODUTOS ================= */
+  // =================== PRODUTOS ===================
   abrirModalProduto(produto = null) {
     const modal = document.createElement('div');
     modal.className = 'modal-overlay';
@@ -112,45 +111,99 @@ class Dashboard {
             <label>Descrição</label>
             <textarea id="produtoDescricao" rows="3">${produto?.descricao || ''}</textarea>
           </div>
-          <label><input type="checkbox" id="produtoDisponivel" ${produto?.disponivel !== false ? 'checked' : ''}> Disponível</label>
-          <div class="form-actions">
+          <div class="form-group">
+            <label><input type="checkbox" id="produtoDisponivel" ${produto?.disponivel !== false ? 'checked' : ''}> Disponível</label>
+          </div>
+          <div class="actions">
             <button type="submit" class="btn primary">Salvar</button>
-            <button type="button" class="btn secondary" id="btnCancelarProduto">Cancelar</button>
+            <button type="button" class="btn secondary" id="cancelarProduto">Cancelar</button>
           </div>
         </form>
-      </div>
-    `;
+      </div>`;
     document.body.appendChild(modal);
 
-    modal.querySelector('#btnCancelarProduto').addEventListener('click', () => modal.remove());
-    modal.querySelector('#formProduto').addEventListener('submit', async (e) => {
+    modal.querySelector('#cancelarProduto').addEventListener('click', () => modal.remove());
+    modal.querySelector('#formProduto').addEventListener('submit', async e => {
       e.preventDefault();
       await this.salvarProduto();
+      modal.remove();
     });
   }
 
   async salvarProduto() {
-    const formData = {
+    const id = document.getElementById('produtoId').value;
+    const data = {
       nome: document.getElementById('produtoNome').value,
       categoria: document.getElementById('produtoCategoria').value,
-      preco: parseFloat(document.getElementById('produtoPreco').value) || 0,
-      descricao: document.getElementById('produtoDescricao').value,
+      preco: parseFloat(document.getElementById('produtoPreco').value),
       imagem: document.getElementById('produtoImagem').value,
+      descricao: document.getElementById('produtoDescricao').value,
       disponivel: document.getElementById('produtoDisponivel').checked
     };
-
-    const id = document.getElementById('produtoId').value;
     const url = id ? `/api/menu/item/${id}` : '/api/menu/item';
     const method = id ? 'PUT' : 'POST';
-
     try {
-      const res = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(formData) });
+      const res = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
       if (res.ok) {
+        this.showToast('Produto salvo', 'success');
         await this.carregarDados();
         this.renderProdutos();
-        document.querySelector('.modal-overlay')?.remove();
-        this.showToast('Produto salvo', 'success');
       } else this.showToast('Erro ao salvar produto', 'error');
+    } catch {
+      this.showToast('Erro de rede', 'error');
+    }
+  }
+
+  renderProdutos() {
+    const container = document.getElementById('produtosContainer');
+    const categoria = document.getElementById('filtroCategoria')?.value || '';
+    const status = document.getElementById('filtroStatus')?.value || '';
+    const busca = document.getElementById('buscaProdutos')?.value?.toLowerCase() || '';
+    let produtos = [...this.produtos];
+
+    if (categoria) produtos = produtos.filter(p => p.categoria === categoria);
+    if (status === 'disponivel') produtos = produtos.filter(p => p.disponivel);
+    if (status === 'indisponivel') produtos = produtos.filter(p => !p.disponivel);
+    if (busca) produtos = produtos.filter(p => p.nome.toLowerCase().includes(busca));
+
+    if (!produtos.length) {
+      container.innerHTML = '<div class="empty-state">Nenhum produto encontrado</div>';
+      return;
+    }
+
+    container.innerHTML = produtos.map(p => `
+      <div class="produto-card ${!p.disponivel ? 'indisponivel' : ''}">
+        <h3>${p.nome}</h3>
+        <div class="preco">R$ ${(p.preco || 0).toFixed(2)}</div>
+        ${p.imagem ? `<img src="${p.imagem}" style="width:100%;height:140px;object-fit:cover;border-radius:8px;">` : ''}
+        <div class="descricao">${p.descricao || ''}</div>
+        <div class="card-actions">
+          <button class="btn-editar" onclick="dashboard.abrirModalProduto(${JSON.stringify(p).replace(/"/g, '&quot;')})">Editar</button>
+          <button class="btn-toggle" onclick="dashboard.toggleDisponibilidade('${p._id}')">${p.disponivel ? 'Pausar' : 'Ativar'}</button>
+          <button class="btn-excluir" onclick="dashboard.excluirProduto('${p._id}')">Excluir</button>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  async toggleDisponibilidade(id) {
+    const produto = this.produtos.find(p => p._id === id);
+    if (!produto) return;
+    try {
+      const res = await fetch(`/api/menu/item/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ disponivel: !produto.disponivel })
+      });
+      if (res.ok) {
+        produto.disponivel = !produto.disponivel;
+        this.renderProdutos();
+        this.showToast('Status atualizado', 'success');
+      } else this.showToast('Erro ao atualizar', 'error');
     } catch {
       this.showToast('Erro de rede', 'error');
     }
@@ -164,53 +217,13 @@ class Dashboard {
         this.produtos = this.produtos.filter(p => p._id !== id);
         this.renderProdutos();
         this.showToast('Produto excluído', 'success');
-      }
+      } else this.showToast('Erro ao excluir', 'error');
     } catch {
       this.showToast('Erro de rede', 'error');
     }
   }
 
-  async toggleDisponibilidade(id) {
-    const p = this.produtos.find(x => x._id === id);
-    if (!p) return;
-    try {
-      const res = await fetch(`/api/menu/item/${id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ disponivel: !p.disponivel })
-      });
-      if (res.ok) {
-        p.disponivel = !p.disponivel;
-        this.renderProdutos();
-        this.showToast('Status atualizado', 'success');
-      }
-    } catch {
-      this.showToast('Erro de rede', 'error');
-    }
-  }
-
-  renderProdutos() {
-    const c = document.getElementById('produtosContainer');
-    if (!this.produtos.length) {
-      c.innerHTML = '<div class="empty-state">Nenhum produto</div>';
-      return;
-    }
-    c.innerHTML = this.produtos.map(p => `
-      <article class="produto-card ${!p.disponivel ? 'indisponivel' : ''}">
-        <h3>${p.nome}</h3>
-        <div class="preco">R$ ${(p.preco || 0).toFixed(2)}</div>
-        <p>${p.descricao || ''}</p>
-        ${p.imagem ? `<img src="${p.imagem}" style="width:100%;height:140px;object-fit:cover;border-radius:6px;margin:.4rem 0;">` : ''}
-        <div class="card-actions">
-          <button class="btn-editar" onclick='dashboard.abrirModalProduto(${JSON.stringify(p).replace(/\"/g,"&quot;")})'>Editar</button>
-          <button class="btn secondary" onclick="dashboard.toggleDisponibilidade('${p._id}')">${p.disponivel ? 'Pausar' : 'Ativar'}</button>
-          <button class="btn-excluir" onclick="dashboard.excluirProduto('${p._id}')">Excluir</button>
-        </div>
-      </article>
-    `).join('');
-  }
-
-  /* ================= INSUMOS ================= */
+  // =================== INSUMOS ===================
   abrirModalInsumo(insumo = null) {
     const modal = document.createElement('div');
     modal.className = 'modal-overlay';
@@ -220,60 +233,76 @@ class Dashboard {
         <form id="formInsumo">
           <input type="hidden" id="insumoId" value="${insumo?._id || ''}">
           <div class="form-row">
-            <div class="form-group"><label>Nome</label>
-              <input type="text" id="insumoNome" value="${insumo?.nome || ''}" required></div>
-            <div class="form-group"><label>Quantidade</label>
-              <input type="number" id="insumoQuantidade" value="${insumo?.quantidade || 0}" required></div>
+            <div class="form-group"><label>Nome</label><input type="text" id="insumoNome" value="${insumo?.nome || ''}" required></div>
+            <div class="form-group"><label>Qtd</label><input type="number" id="insumoQuantidade" value="${insumo?.quantidade || 0}" required></div>
           </div>
           <div class="form-row">
             <div class="form-group"><label>Unidade</label>
               <select id="insumoUnidade">
-                <option value="un" ${insumo?.unidade === 'un' ? 'selected' : ''}>un</option>
                 <option value="g" ${insumo?.unidade === 'g' ? 'selected' : ''}>g</option>
-                <option value="kg" ${insumo?.unidade === 'kg' ? 'selected' : ''}>kg</option>
                 <option value="ml" ${insumo?.unidade === 'ml' ? 'selected' : ''}>ml</option>
-                <option value="l" ${insumo?.unidade === 'l' ? 'selected' : ''}>l</option>
-              </select></div>
-            <div class="form-group"><label>Preço Unitário (R$)</label>
-              <input type="number" id="insumoPreco" step="0.01" value="${insumo?.preco || 0}" required></div>
+                <option value="un" ${insumo?.unidade === 'un' ? 'selected' : ''}>un</option>
+              </select>
+            </div>
+            <div class="form-group"><label>Preço Unitário (R$)</label><input type="number" id="insumoPreco" step="0.01" value="${insumo?.preco || 0}" required></div>
           </div>
-          <div class="form-actions">
-            <button type="submit" class="btn primary">Salvar</button>
-            <button type="button" class="btn secondary" id="btnCancelarInsumo">Cancelar</button>
+          <div class="actions">
+            <button class="btn primary" type="submit">Salvar</button>
+            <button class="btn secondary" type="button" id="cancelarInsumo">Cancelar</button>
           </div>
         </form>
-      </div>
-    `;
+      </div>`;
     document.body.appendChild(modal);
-    modal.querySelector('#btnCancelarInsumo').addEventListener('click', () => modal.remove());
+
+    modal.querySelector('#cancelarInsumo').addEventListener('click', () => modal.remove());
     modal.querySelector('#formInsumo').addEventListener('submit', async e => {
       e.preventDefault();
       await this.salvarInsumo();
+      modal.remove();
     });
   }
 
   async salvarInsumo() {
-    const formData = {
-      nome: document.getElementById('insumoNome').value,
-      quantidade: parseFloat(document.getElementById('insumoQuantidade').value) || 0,
-      unidade: document.getElementById('insumoUnidade').value,
-      preco: parseFloat(document.getElementById('insumoPreco').value) || 0
-    };
     const id = document.getElementById('insumoId').value;
+    const data = {
+      nome: document.getElementById('insumoNome').value,
+      quantidade: parseFloat(document.getElementById('insumoQuantidade').value),
+      unidade: document.getElementById('insumoUnidade').value,
+      preco: parseFloat(document.getElementById('insumoPreco').value)
+    };
     const url = id ? `/api/insumos/${id}` : '/api/insumos';
     const method = id ? 'PUT' : 'POST';
-
     try {
-      const res = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(formData) });
+      const res = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
       if (res.ok) {
+        this.showToast('Insumo salvo', 'success');
         await this.carregarDados();
         this.renderInsumos();
-        document.querySelector('.modal-overlay')?.remove();
-        this.showToast('Insumo salvo', 'success');
-      } else this.showToast('Erro ao salvar insumo', 'error');
+      } else this.showToast('Erro ao salvar', 'error');
     } catch {
       this.showToast('Erro de rede', 'error');
     }
+  }
+
+  renderInsumos() {
+    const container = document.getElementById('insumosContainer');
+    if (!this.insumos.length) {
+      container.innerHTML = '<div class="empty-state">Nenhum insumo cadastrado</div>';
+      return;
+    }
+    container.innerHTML = this.insumos.map(i => `
+      <div class="produto-card">
+        <h3>${i.nome}</h3>
+        <div>${i.quantidade} ${i.unidade} - R$ ${(i.preco || 0).toFixed(2)}/${i.unidade}</div>
+        <div class="card-actions">
+          <button class="btn-editar" onclick="dashboard.abrirModalInsumo(${JSON.stringify(i).replace(/"/g, '&quot;')})">Editar</button>
+          <button class="btn-excluir" onclick="dashboard.excluirInsumo('${i._id}')">Excluir</button>
+        </div>
+      </div>`).join('');
   }
 
   async excluirInsumo(id) {
@@ -281,353 +310,39 @@ class Dashboard {
     try {
       const res = await fetch(`/api/insumos/${id}`, { method: 'DELETE' });
       if (res.ok) {
-        this.insumos = this.insumos.filter(i => i._id !== id);
+        this.insumos = this.insumos.filter(x => x._id !== id);
         this.renderInsumos();
         this.showToast('Insumo excluído', 'success');
-      }
+      } else this.showToast('Erro ao excluir', 'error');
     } catch {
       this.showToast('Erro de rede', 'error');
     }
   }
 
-  renderInsumos() {
-    const c = document.getElementById('insumosContainer');
-    if (!this.insumos.length) {
-      c.innerHTML = '<div class="empty-state">Nenhum insumo</div>';
-      return;
-    }
-    c.innerHTML = this.insumos.map(i => `
-      <div class="produto-card">
-        <h3>${i.nome}</h3>
-        <div class="info">Qtd: ${i.quantidade} ${i.unidade}</div>
-        <div class="preco">R$ ${(i.preco || 0).toFixed(2)}/${i.unidade}</div>
-        <div class="card-actions">
-          <button class="btn-editar" onclick='dashboard.abrirModalInsumo(${JSON.stringify(i).replace(/\"/g,"&quot;")})'>Editar</button>
-          <button class="btn-excluir" onclick="dashboard.excluirInsumo('${i._id}')">Excluir</button>
-        </div>
-      </div>
-    `).join('');
-  }
-
-  // Toast reutilizável
-  showToast(msg, tipo = 'success', timeout = 2500) {
-    const cont = document.getElementById('toast-container');
-    const el = document.createElement('div');
-    el.className = `toast ${tipo}`;
-    el.textContent = msg;
-    cont.appendChild(el);
+  // =================== UTILITÁRIOS ===================
+  showToast(msg, tipo = 'success', tempo = 2500) {
+    const box = document.getElementById('toast-container');
+    const t = document.createElement('div');
+    t.className = `toast ${tipo}`;
+    t.textContent = msg;
+    box.appendChild(t);
     setTimeout(() => {
-      el.style.opacity = '0';
-      setTimeout(() => el.remove(), 400);
-    }, timeout);
-  }
-}
-  /* ================= PEDIDOS ================= */
-  abrirModalPedido(pedido = null) {
-    const modal = document.createElement('div');
-    modal.className = 'modal-overlay';
-
-    const itens = pedido?.itens || [];
-    modal.innerHTML = `
-      <div class="modal">
-        <h3>${pedido ? 'Editar' : 'Novo'} Pedido</h3>
-        <form id="formPedido">
-          <input type="hidden" id="pedidoId" value="${pedido?._id || ''}">
-          <div class="form-row">
-            <div class="form-group">
-              <label>Cliente</label>
-              <input type="text" id="pedidoCliente" value="${pedido?.cliente || ''}" required>
-            </div>
-            <div class="form-group">
-              <label>Telefone</label>
-              <input type="text" id="pedidoTelefone" value="${pedido?.telefone || ''}">
-            </div>
-          </div>
-          <div class="form-group">
-            <label>Endereço</label>
-            <input type="text" id="pedidoEndereco" value="${pedido?.endereco || ''}">
-          </div>
-
-          <div id="itensWrapper">
-            ${itens.map((it, idx) => `
-              <div class="form-row item-row" data-item-index="${idx}">
-                <div class="form-group">
-                  <label>Item</label>
-                  <select class="pedidoItemSelect" required>
-                    <option value="">Selecione...</option>
-                    ${this.produtos.map(p => `
-                      <option value="${p._id}" data-nome="${p.nome}" data-preco="${p.preco}" ${p.nome === it.nome ? 'selected' : ''}>
-                        ${p.nome} – R$ ${p.preco.toFixed(2)}
-                      </option>`).join('')}
-                  </select>
-                </div>
-                <div class="form-group">
-                  <label>Qtd</label>
-                  <input type="number" class="pedidoItemQtd" value="${it.quantidade || 1}" min="1" required>
-                </div>
-                <div class="form-group">
-                  <label>Preço</label>
-                  <input type="number" class="pedidoItemPreco" value="${it.preco || 0}" step="0.01">
-                </div>
-                <button type="button" class="btn-excluir removerItemBtn">🗑️</button>
-              </div>
-            `).join('')}
-          </div>
-
-          <button type="button" class="btn secondary" id="adicionarItemBtn">➕ Adicionar Item</button>
-
-          <div class="footer-row">
-            <div><strong>Total: R$ <span id="pedidoTotal">${(pedido?.total || 0).toFixed(2)}</span></strong></div>
-            <div>
-              <button type="submit" class="btn primary">Salvar</button>
-              <button type="button" class="btn secondary" id="btnCancelarPedido">Cancelar</button>
-            </div>
-          </div>
-        </form>
-      </div>
-    `;
-
-    document.body.appendChild(modal);
-
-    const itensWrapper = modal.querySelector('#itensWrapper');
-    const atualizarTotal = () => {
-      const qtds = [...itensWrapper.querySelectorAll('.pedidoItemQtd')].map(i => parseFloat(i.value) || 0);
-      const precos = [...itensWrapper.querySelectorAll('.pedidoItemPreco')].map(i => parseFloat(i.value) || 0);
-      const total = qtds.reduce((s, q, i) => s + q * (precos[i] || 0), 0);
-      modal.querySelector('#pedidoTotal').textContent = total.toFixed(2);
-    };
-
-    const bindItemEvents = (row) => {
-      const select = row.querySelector('.pedidoItemSelect');
-      const precoInput = row.querySelector('.pedidoItemPreco');
-      const qtdInput = row.querySelector('.pedidoItemQtd');
-      select.addEventListener('change', () => {
-        const opt = select.selectedOptions[0];
-        if (opt && opt.dataset.preco) precoInput.value = parseFloat(opt.dataset.preco).toFixed(2);
-        atualizarTotal();
-      });
-      [precoInput, qtdInput].forEach(el => el.addEventListener('input', atualizarTotal));
-      row.querySelector('.removerItemBtn').addEventListener('click', () => { row.remove(); atualizarTotal(); });
-    };
-
-    modal.querySelectorAll('.item-row').forEach(r => bindItemEvents(r));
-    modal.querySelector('#adicionarItemBtn').addEventListener('click', () => {
-      const div = document.createElement('div');
-      div.className = 'form-row item-row';
-      div.innerHTML = `
-        <div class="form-group">
-          <label>Item</label>
-          <select class="pedidoItemSelect" required>
-            <option value="">Selecione...</option>
-            ${this.produtos.map(p => `
-              <option value="${p._id}" data-nome="${p.nome}" data-preco="${p.preco}">${p.nome} – R$ ${p.preco.toFixed(2)}</option>`).join('')}
-          </select>
-        </div>
-        <div class="form-group">
-          <label>Qtd</label>
-          <input type="number" class="pedidoItemQtd" value="1" min="1" required>
-        </div>
-        <div class="form-group">
-          <label>Preço</label>
-          <input type="number" class="pedidoItemPreco" value="0" step="0.01">
-        </div>
-        <button type="button" class="btn-excluir removerItemBtn">🗑️</button>`;
-      itensWrapper.appendChild(div);
-      bindItemEvents(div);
-    });
-
-    modal.querySelector('#btnCancelarPedido').addEventListener('click', () => modal.remove());
-
-    modal.querySelector('#formPedido').addEventListener('submit', async e => {
-      e.preventDefault();
-      const id = modal.querySelector('#pedidoId').value;
-      const cliente = modal.querySelector('#pedidoCliente').value;
-      const telefone = modal.querySelector('#pedidoTelefone').value;
-      const endereco = modal.querySelector('#pedidoEndereco').value;
-      const itens = [...itensWrapper.querySelectorAll('.item-row')].map(r => {
-        const opt = r.querySelector('.pedidoItemSelect').selectedOptions[0];
-        const nome = opt?.dataset?.nome || '';
-        const preco = parseFloat(r.querySelector('.pedidoItemPreco').value) || 0;
-        const quantidade = parseInt(r.querySelector('.pedidoItemQtd').value) || 1;
-        return { nome, quantidade, preco };
-      }).filter(it => it.nome && it.quantidade > 0);
-      const total = itens.reduce((s, it) => s + it.quantidade * it.preco, 0);
-
-      const payload = { cliente, telefone, endereco, itens, total, status: pedido?.status || 'pendente' };
-      const url = id ? `/api/orders/${id}` : '/api/orders';
-      const method = id ? 'PUT' : 'POST';
-
-      try {
-        const res = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-        if (res.ok) {
-          await this.carregarDados();
-          this.renderPedidos();
-          modal.remove();
-          this.showToast('Pedido salvo', 'success');
-        } else this.showToast('Erro ao salvar pedido', 'error');
-      } catch {
-        this.showToast('Erro de rede', 'error');
-      }
-    });
-  }
-
-  renderPedidos() {
-    const c = document.getElementById('pedidosContainer');
-    if (!this.pedidos.length) {
-      c.innerHTML = '<div class="empty-state">Nenhum pedido</div>';
-      return;
-    }
-    const pedidosOrdenados = [...this.pedidos].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-    c.innerHTML = pedidosOrdenados.map(p => `
-      <article class="produto-card">
-        <div class="header">
-          <h3>Pedido #${p._id?.slice(-6) || 'N/A'}</h3>
-          <p><strong>${p.cliente || '-'}</strong> — R$ ${(p.total || 0).toFixed(2)}</p>
-          <div class="status">${this.formatarStatus(p.status)}</div>
-        </div>
-        <div class="itens">
-          ${(p.itens || []).map(it => `<div>${it.quantidade}x ${it.nome} — R$ ${(it.preco * it.quantidade).toFixed(2)}</div>`).join('')}
-        </div>
-        <div class="card-actions">
-          <button class="btn-editar" onclick='dashboard.abrirModalPedido(${JSON.stringify(p).replace(/\"/g,"&quot;")})'>Editar</button>
-          <button class="btn secondary" onclick="dashboard.atualizarStatusPedido('${p._id}','preparando')">👨‍🍳</button>
-          <button class="btn secondary" onclick="dashboard.atualizarStatusPedido('${p._id}','entregue')">🚗</button>
-          <button class="btn" onclick="dashboard.imprimirCupom('${p._id}')">🖨️</button>
-          <button class="btn-excluir" onclick="dashboard.excluirPedido('${p._id}')">Excluir</button>
-        </div>
-      </article>
-    `).join('');
-  }
-
-  formatarStatus(s) {
-    const map = { pendente: '⏳ Pendente', preparando: '👨‍🍳 Preparando', entregue: '🚗 Entregue' };
-    return map[s] || s;
-  }
-
-  async atualizarStatusPedido(id, novo) {
-    try {
-      const res = await fetch(`/api/orders/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status: novo }) });
-      if (res.ok) {
-        const p = this.pedidos.find(x => x._id === id);
-        if (p) p.status = novo;
-        this.renderPedidos();
-        this.showToast('Status atualizado', 'success');
-      }
-    } catch {
-      this.showToast('Erro de rede', 'error');
-    }
-  }
-
-  async excluirPedido(id) {
-    if (!confirm('Excluir este pedido?')) return;
-    try {
-      const res = await fetch(`/api/orders/${id}`, { method: 'DELETE' });
-      if (res.ok) {
-        this.pedidos = this.pedidos.filter(p => p._id !== id);
-        this.renderPedidos();
-        this.showToast('Pedido excluído', 'success');
-      }
-    } catch {
-      this.showToast('Erro de rede', 'error');
-    }
-  }
-
-  /* ===================== ATUALIZAÇÃO AUTOMÁTICA ===================== */
-  async verificarNovosPedidos() {
-    try {
-      const res = await fetch('/api/orders');
-      if (!res.ok) return;
-      const novos = await res.json();
-      if (novos.length > this.pedidos.length) {
-        const novosPedidos = novos.filter(p => !this.pedidos.some(x => x._id === p._id));
-        novosPedidos.forEach(p => this.notificarNovoPedido(p));
-        this.pedidos = novos;
-        this.renderPedidos();
-        this.updateFinanceiro();
-      }
-    } catch (e) {
-      console.error(e);
-    }
-  }
-
-  notificarNovoPedido(pedido) {
-    this.showToast(`Novo pedido de ${pedido.cliente || 'Cliente'}`, 'info');
-    const audio = new Audio('https://actions.google.com/sounds/v1/alarms/beep_short.ogg');
-    audio.volume = 0.4;
-    audio.play().catch(() => {});
-    this.enviarWhatsApp(pedido);
-  }
-
-  enviarWhatsApp(pedido) {
-    const itens = pedido.itens.map(i => `${i.quantidade}x ${i.nome} - R$ ${(i.preco * i.quantidade).toFixed(2)}`).join('%0A');
-    const texto = `🍔 *Novo Pedido* %0A%0A${itens}%0A%0ATotal: R$ ${pedido.total.toFixed(2)}%0ACliente: ${pedido.cliente || '-'}%0ATel: ${pedido.telefone || '-'}%0AEnd: ${pedido.endereco || '-'}`;
-    window.open(`https://wa.me/5531992128891?text=${texto}`, '_blank');
-  }
-
-  /* ===================== FINANCEIRO ===================== */
-  async updateFinanceiro() {
-    try {
-      const res = await fetch('/api/stats');
-      if (res.ok) {
-        const f = await res.json();
-        document.getElementById('totalVendas').textContent = `R$ ${Number(f.vendas || 0).toFixed(2)}`;
-        document.getElementById('totalCustos').textContent = `R$ ${Number(f.gastos || 0).toFixed(2)}`;
-        document.getElementById('lucro').textContent = `R$ ${Number(f.lucro || 0).toFixed(2)}`;
-        this.renderGraficoFinanceiro(f.historico || []);
-      }
-    } catch (e) {
-      console.error('Erro financeiro:', e);
-    }
-  }
-
-  renderGraficoFinanceiro(historico = []) {
-    const canvas = document.getElementById('graficoFinanceiro');
-    if (!canvas) return;
-    if (this._graficoFinanceiro) this._graficoFinanceiro.destroy();
-    const labels = historico.map(h => new Date(h.data).toLocaleDateString('pt-BR'));
-    const lucros = historico.map(h => h.lucro);
-    this._graficoFinanceiro = new Chart(canvas, {
-      type: 'line',
-      data: {
-        labels,
-        datasets: [{
-          label: 'Lucro (R$)',
-          data: lucros,
-          borderColor: '#007bff',
-          backgroundColor: 'rgba(0,123,255,0.15)',
-          tension: 0.3
-        }]
-      },
-      options: {
-        plugins: { legend: { display: false } },
-        scales: {
-          x: { ticks: { color: '#ccc' } },
-          y: { ticks: { color: '#ccc', callback: v => `R$ ${v}` } }
-        }
-      }
-    });
+      t.style.opacity = '0';
+      setTimeout(() => t.remove(), 500);
+    }, tempo);
   }
 }
 
-// ===============================
-// 🚀 INICIALIZAÇÃO FINAL
-// ===============================
+// inicia
 document.addEventListener('DOMContentLoaded', () => {
   window.dashboard = new Dashboard();
-
-  // Atualização automática a cada 30 segundos
-  setInterval(() => dashboard.verificarNovosPedidos(), 30000);
-
-  const btnLogout = document.getElementById('btnLogout');
-  if (btnLogout) {
-    btnLogout.addEventListener('click', () => {
-      if (confirm('Deseja realmente sair?')) {
-        localStorage.removeItem('token');
-        sessionStorage.clear();
-        dashboard.showToast('Logout realizado', 'info');
-        setTimeout(() => (window.location.href = '/login'), 1000);
-      }
-    });
-  }
 });
 
+// logout
+document.getElementById('btnLogout')?.addEventListener('click', () => {
+  if (confirm('Deseja realmente sair do sistema?')) {
+    localStorage.removeItem('token');
+    sessionStorage.clear();
+    window.location.href = '/login';
+  }
+});
