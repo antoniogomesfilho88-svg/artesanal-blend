@@ -1,290 +1,632 @@
-/* ===============================
-   🌑 DASHBOARD ARTESANAL BLEND 2.0
-   Tema: Preto, Cinza, Branco e Azul
-   =============================== */
-
-/* ======= BASE ======= */
-:root {
-  --bg-dark: #0d0d0d;
-  --bg-light: #1a1a1a;
-  --text-primary: #ffffff;
-  --text-secondary: #d1d1d1;
-  --accent-blue: #007bff;
-  --accent-gray: #2b2b2b;
-  --card-bg: #121212;
-  --border-color: #2f2f2f;
-  --success: #00c853;
-  --error: #e53935;
-  --info: #1e88e5;
-}
-
-body {
-  margin: 0;
-  font-family: 'Poppins', 'Segoe UI', sans-serif;
-  background-color: var(--bg-dark);
-  color: var(--text-primary);
-}
-
-/* ======= CABEÇALHO ======= */
-.dashboard-header {
-  background: var(--bg-light);
-  border-bottom: 1px solid var(--border-color);
-  padding: 0.8rem 1.5rem;
-  position: sticky;
-  top: 0;
-  z-index: 10;
-}
-
-.header-content {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.logo-area {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.logo {
-  height: 48px;
-  border-radius: 8px;
-}
-
-.header-actions {
-  display: flex;
-  gap: 0.8rem;
-}
-
-.btn {
-  border: none;
-  padding: 0.6rem 1.2rem;
-  border-radius: 8px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: 0.2s;
-}
-
-.btn.primary {
-  background-color: var(--accent-blue);
-  color: #fff;
-}
-
-.btn.secondary {
-  background-color: var(--accent-gray);
-  color: var(--text-primary);
-}
-
-.btn:hover {
-  opacity: 0.85;
-  transform: translateY(-1px);
-}
-
-/* ======= LAYOUT ======= */
-.dashboard-layout {
-  display: flex;
-  min-height: calc(100vh - 70px);
-}
-
-.sidebar {
-  width: 230px;
-  background: var(--bg-light);
-  border-right: 1px solid var(--border-color);
-  padding-top: 1rem;
-  position: sticky;
-  top: 70px;
-  height: calc(100vh - 70px);
-}
-
-.sidebar ul {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-
-.sidebar li {
-  padding: 0.9rem 1.2rem;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  color: var(--text-secondary);
-  transition: 0.2s;
-}
-
-.sidebar li.active,
-.sidebar li:hover {
-  background: var(--accent-blue);
-  color: #fff;
-}
-
-/* ======= CONTEÚDO ======= */
-.dashboard-content {
-  flex: 1;
-  padding: 1.5rem;
-  background-color: var(--bg-dark);
-  overflow-y: auto;
-}
-
-.section-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1.2rem;
-  border-bottom: 1px solid var(--border-color);
-  padding-bottom: 0.6rem;
-}
-
-.section-header h2 {
-  color: var(--accent-blue);
-  font-weight: 600;
-}
-
-.actions {
-  display: flex;
-  gap: 0.5rem;
-}
-
-/* ======= PRODUTOS / INSUMOS ======= */
-.produtos-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  gap: 1rem;
-}
-
-.produto-card {
-  background: var(--card-bg);
-  border: 1px solid var(--border-color);
-  border-radius: 10px;
-  padding: 1rem;
-  color: var(--text-primary);
-  position: relative;
-  transition: 0.2s;
-}
-
-.produto-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 3px 10px rgba(0,0,0,0.3);
-}
-
-.produto-card.indisponivel {
-  opacity: 0.6;
-  filter: grayscale(70%);
-}
-
-.produto-card h3 {
-  margin: 0.3rem 0;
-}
-
-.preco {
-  color: var(--accent-blue);
-  font-weight: bold;
-}
-
-.card-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  margin-top: 0.8rem;
-}
-
-.btn-editar {
-  background-color: var(--accent-blue);
-  color: #fff;
-  border: none;
-  border-radius: 5px;
-  padding: 0.4rem 0.8rem;
-  cursor: pointer;
-  font-size: 0.9rem;
-}
-
-.btn-excluir {
-  background-color: var(--error);
-  color: #fff;
-  border: none;
-  border-radius: 5px;
-  padding: 0.4rem 0.8rem;
-  cursor: pointer;
-  font-size: 0.9rem;
-}
-
-/* ======= FINANCEIRO ======= */
-.financeiro-cards {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 1rem;
-  margin-top: 1rem;
-}
-
-.financeiro-cards .card {
-  flex: 1;
-  min-width: 220px;
-  background: var(--card-bg);
-  border-radius: 12px;
-  padding: 1rem;
-  text-align: center;
-  border-top: 4px solid var(--accent-blue);
-}
-
-.financeiro-cards .card h4 {
-  color: var(--text-secondary);
-  margin-bottom: 0.4rem;
-}
-
-.financeiro-cards .card div {
-  font-size: 1.5rem;
-  font-weight: bold;
-  color: #fff;
-}
-
-.financeiro-grafico-card {
-  background: var(--card-bg);
-  border-radius: 12px;
-  padding: 1rem;
-  margin-top: 2rem;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
-}
-
-/* ======= TOAST ======= */
-#toast-container {
-  position: fixed;
-  bottom: 20px;
-  right: 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  z-index: 999;
-}
-
-.toast {
-  background: var(--accent-blue);
-  color: #fff;
-  padding: 0.8rem 1rem;
-  border-radius: 8px;
-  font-weight: 600;
-  animation: fadeIn 0.3s ease;
-}
-
-.toast.error {
-  background: var(--error);
-}
-
-.toast.info {
-  background: var(--info);
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-/* ======= RESPONSIVO ======= */
-@media (max-width: 768px) {
-  .sidebar {
-    display: none;
-  }
-  .dashboard-content {
-    padding: 1rem;
+// ===============================
+// 🔐 AUTENTICAÇÃO COM JWT
+// ===============================
+const token = localStorage.getItem('token');
+if (!token) {
+  window.location.href = '/login';
+} else {
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    const exp = payload.exp * 1000;
+    if (Date.now() > exp) {
+      localStorage.removeItem('token');
+      window.location.href = '/login';
+    }
+  } catch {
+    localStorage.removeItem('token');
+    window.location.href = '/login';
   }
 }
+
+// ===============================
+// 🎛️ DASHBOARD PRINCIPAL
+// ===============================
+class Dashboard {
+  constructor() {
+    this.produtos = [];
+    this.insumos = [];
+    this.pedidos = [];
+    this._graficoFinanceiro = null;
+    this.ultimoPedidoId = null;
+
+    this.init();
+  }
+
+  async init() {
+    await this.carregarDados();
+    this.setupEventListeners();
+    this.renderProdutos();
+    this.renderInsumos();
+    this.renderPedidos();
+    this.updateFinanceiro();
+  }
+
+  async carregarDados() {
+    try {
+      const [produtosRes, pedidosRes, insumosRes] = await Promise.all([
+        fetch('/api/menu').then(r => r.ok ? r.json() : []),
+        fetch('/api/orders').then(r => r.ok ? r.json() : []),
+        fetch('/api/insumos').then(r => r.ok ? r.json() : [])
+      ]);
+      this.produtos = produtosRes || [];
+      this.pedidos = pedidosRes || [];
+      this.insumos = insumosRes || [];
+    } catch (err) {
+      console.error('Erro ao carregar dados', err);
+      this.showToast('Erro ao carregar dados', 'error');
+    }
+  }
+
+  setupEventListeners() {
+    // Navegação lateral
+    document.querySelectorAll('.sidebar li').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.sidebar li').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        tab.classList.add('active');
+        document.getElementById(tab.dataset.tab).classList.add('active');
+      });
+    });
+
+    // Botão ver cardápio
+    document.getElementById('visualizarCardapio')?.addEventListener('click', () => {
+      window.open('/', '_blank');
+    });
+  }
+
+  /* ================= PRODUTOS ================= */
+  abrirModalProduto(produto = null) {
+    const modal = document.createElement('div');
+    modal.className = 'modal-overlay';
+    modal.innerHTML = `
+      <div class="modal">
+        <h3>${produto ? 'Editar' : 'Novo'} Produto</h3>
+        <form id="formProduto">
+          <input type="hidden" id="produtoId" value="${produto?._id || ''}">
+          <div class="form-group">
+            <label>Nome</label>
+            <input type="text" id="produtoNome" value="${produto?.nome || ''}" required>
+          </div>
+          <div class="form-group">
+            <label>Categoria</label>
+            <select id="produtoCategoria" required>
+              <option value="">Selecione...</option>
+              <option value="Hambúrgueres" ${produto?.categoria === 'Hambúrgueres' ? 'selected' : ''}>Hambúrgueres</option>
+              <option value="Combos" ${produto?.categoria === 'Combos' ? 'selected' : ''}>Combos</option>
+              <option value="Acompanhamentos" ${produto?.categoria === 'Acompanhamentos' ? 'selected' : ''}>Acompanhamentos</option>
+              <option value="Adicionais" ${produto?.categoria === 'Adicionais' ? 'selected' : ''}>Adicionais</option>
+              <option value="Bebidas" ${produto?.categoria === 'Bebidas' ? 'selected' : ''}>Bebidas</option>
+            </select>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Preço (R$)</label>
+              <input type="number" id="produtoPreco" step="0.01" value="${produto?.preco ?? ''}" required>
+            </div>
+            <div class="form-group">
+              <label>Imagem (URL)</label>
+              <input type="text" id="produtoImagem" value="${produto?.imagem || ''}">
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Descrição</label>
+            <textarea id="produtoDescricao" rows="3">${produto?.descricao || ''}</textarea>
+          </div>
+          <label><input type="checkbox" id="produtoDisponivel" ${produto?.disponivel !== false ? 'checked' : ''}> Disponível</label>
+          <div class="form-actions">
+            <button type="submit" class="btn primary">Salvar</button>
+            <button type="button" class="btn secondary" id="btnCancelarProduto">Cancelar</button>
+          </div>
+        </form>
+      </div>
+    `;
+    document.body.appendChild(modal);
+
+    modal.querySelector('#btnCancelarProduto').addEventListener('click', () => modal.remove());
+    modal.querySelector('#formProduto').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      await this.salvarProduto();
+    });
+  }
+
+  async salvarProduto() {
+    const formData = {
+      nome: document.getElementById('produtoNome').value,
+      categoria: document.getElementById('produtoCategoria').value,
+      preco: parseFloat(document.getElementById('produtoPreco').value) || 0,
+      descricao: document.getElementById('produtoDescricao').value,
+      imagem: document.getElementById('produtoImagem').value,
+      disponivel: document.getElementById('produtoDisponivel').checked
+    };
+
+    const id = document.getElementById('produtoId').value;
+    const url = id ? `/api/menu/item/${id}` : '/api/menu/item';
+    const method = id ? 'PUT' : 'POST';
+
+    try {
+      const res = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(formData) });
+      if (res.ok) {
+        await this.carregarDados();
+        this.renderProdutos();
+        document.querySelector('.modal-overlay')?.remove();
+        this.showToast('Produto salvo', 'success');
+      } else this.showToast('Erro ao salvar produto', 'error');
+    } catch {
+      this.showToast('Erro de rede', 'error');
+    }
+  }
+
+  async excluirProduto(id) {
+    if (!confirm('Excluir este produto?')) return;
+    try {
+      const res = await fetch(`/api/menu/item/${id}`, { method: 'DELETE' });
+      if (res.ok) {
+        this.produtos = this.produtos.filter(p => p._id !== id);
+        this.renderProdutos();
+        this.showToast('Produto excluído', 'success');
+      }
+    } catch {
+      this.showToast('Erro de rede', 'error');
+    }
+  }
+
+  async toggleDisponibilidade(id) {
+    const p = this.produtos.find(x => x._id === id);
+    if (!p) return;
+    try {
+      const res = await fetch(`/api/menu/item/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ disponivel: !p.disponivel })
+      });
+      if (res.ok) {
+        p.disponivel = !p.disponivel;
+        this.renderProdutos();
+        this.showToast('Status atualizado', 'success');
+      }
+    } catch {
+      this.showToast('Erro de rede', 'error');
+    }
+  }
+
+  renderProdutos() {
+    const c = document.getElementById('produtosContainer');
+    if (!this.produtos.length) {
+      c.innerHTML = '<div class="empty-state">Nenhum produto</div>';
+      return;
+    }
+    c.innerHTML = this.produtos.map(p => `
+      <article class="produto-card ${!p.disponivel ? 'indisponivel' : ''}">
+        <h3>${p.nome}</h3>
+        <div class="preco">R$ ${(p.preco || 0).toFixed(2)}</div>
+        <p>${p.descricao || ''}</p>
+        ${p.imagem ? `<img src="${p.imagem}" style="width:100%;height:140px;object-fit:cover;border-radius:6px;margin:.4rem 0;">` : ''}
+        <div class="card-actions">
+          <button class="btn-editar" onclick='dashboard.abrirModalProduto(${JSON.stringify(p).replace(/\"/g,"&quot;")})'>Editar</button>
+          <button class="btn secondary" onclick="dashboard.toggleDisponibilidade('${p._id}')">${p.disponivel ? 'Pausar' : 'Ativar'}</button>
+          <button class="btn-excluir" onclick="dashboard.excluirProduto('${p._id}')">Excluir</button>
+        </div>
+      </article>
+    `).join('');
+  }
+
+  /* ================= INSUMOS ================= */
+  abrirModalInsumo(insumo = null) {
+    const modal = document.createElement('div');
+    modal.className = 'modal-overlay';
+    modal.innerHTML = `
+      <div class="modal">
+        <h3>${insumo ? 'Editar' : 'Novo'} Insumo</h3>
+        <form id="formInsumo">
+          <input type="hidden" id="insumoId" value="${insumo?._id || ''}">
+          <div class="form-row">
+            <div class="form-group"><label>Nome</label>
+              <input type="text" id="insumoNome" value="${insumo?.nome || ''}" required></div>
+            <div class="form-group"><label>Quantidade</label>
+              <input type="number" id="insumoQuantidade" value="${insumo?.quantidade || 0}" required></div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label>Unidade</label>
+              <select id="insumoUnidade">
+                <option value="un" ${insumo?.unidade === 'un' ? 'selected' : ''}>un</option>
+                <option value="g" ${insumo?.unidade === 'g' ? 'selected' : ''}>g</option>
+                <option value="kg" ${insumo?.unidade === 'kg' ? 'selected' : ''}>kg</option>
+                <option value="ml" ${insumo?.unidade === 'ml' ? 'selected' : ''}>ml</option>
+                <option value="l" ${insumo?.unidade === 'l' ? 'selected' : ''}>l</option>
+              </select></div>
+            <div class="form-group"><label>Preço Unitário (R$)</label>
+              <input type="number" id="insumoPreco" step="0.01" value="${insumo?.preco || 0}" required></div>
+          </div>
+          <div class="form-actions">
+            <button type="submit" class="btn primary">Salvar</button>
+            <button type="button" class="btn secondary" id="btnCancelarInsumo">Cancelar</button>
+          </div>
+        </form>
+      </div>
+    `;
+    document.body.appendChild(modal);
+    modal.querySelector('#btnCancelarInsumo').addEventListener('click', () => modal.remove());
+    modal.querySelector('#formInsumo').addEventListener('submit', async e => {
+      e.preventDefault();
+      await this.salvarInsumo();
+    });
+  }
+
+  async salvarInsumo() {
+    const formData = {
+      nome: document.getElementById('insumoNome').value,
+      quantidade: parseFloat(document.getElementById('insumoQuantidade').value) || 0,
+      unidade: document.getElementById('insumoUnidade').value,
+      preco: parseFloat(document.getElementById('insumoPreco').value) || 0
+    };
+    const id = document.getElementById('insumoId').value;
+    const url = id ? `/api/insumos/${id}` : '/api/insumos';
+    const method = id ? 'PUT' : 'POST';
+
+    try {
+      const res = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(formData) });
+      if (res.ok) {
+        await this.carregarDados();
+        this.renderInsumos();
+        document.querySelector('.modal-overlay')?.remove();
+        this.showToast('Insumo salvo', 'success');
+      } else this.showToast('Erro ao salvar insumo', 'error');
+    } catch {
+      this.showToast('Erro de rede', 'error');
+    }
+  }
+
+  async excluirInsumo(id) {
+    if (!confirm('Excluir este insumo?')) return;
+    try {
+      const res = await fetch(`/api/insumos/${id}`, { method: 'DELETE' });
+      if (res.ok) {
+        this.insumos = this.insumos.filter(i => i._id !== id);
+        this.renderInsumos();
+        this.showToast('Insumo excluído', 'success');
+      }
+    } catch {
+      this.showToast('Erro de rede', 'error');
+    }
+  }
+
+  renderInsumos() {
+    const c = document.getElementById('insumosContainer');
+    if (!this.insumos.length) {
+      c.innerHTML = '<div class="empty-state">Nenhum insumo</div>';
+      return;
+    }
+    c.innerHTML = this.insumos.map(i => `
+      <div class="produto-card">
+        <h3>${i.nome}</h3>
+        <div class="info">Qtd: ${i.quantidade} ${i.unidade}</div>
+        <div class="preco">R$ ${(i.preco || 0).toFixed(2)}/${i.unidade}</div>
+        <div class="card-actions">
+          <button class="btn-editar" onclick='dashboard.abrirModalInsumo(${JSON.stringify(i).replace(/\"/g,"&quot;")})'>Editar</button>
+          <button class="btn-excluir" onclick="dashboard.excluirInsumo('${i._id}')">Excluir</button>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  // Toast reutilizável
+  showToast(msg, tipo = 'success', timeout = 2500) {
+    const cont = document.getElementById('toast-container');
+    const el = document.createElement('div');
+    el.className = `toast ${tipo}`;
+    el.textContent = msg;
+    cont.appendChild(el);
+    setTimeout(() => {
+      el.style.opacity = '0';
+      setTimeout(() => el.remove(), 400);
+    }, timeout);
+  }
+}
+  /* ================= PEDIDOS ================= */
+  abrirModalPedido(pedido = null) {
+    const modal = document.createElement('div');
+    modal.className = 'modal-overlay';
+
+    const itens = pedido?.itens || [];
+    modal.innerHTML = `
+      <div class="modal">
+        <h3>${pedido ? 'Editar' : 'Novo'} Pedido</h3>
+        <form id="formPedido">
+          <input type="hidden" id="pedidoId" value="${pedido?._id || ''}">
+          <div class="form-row">
+            <div class="form-group">
+              <label>Cliente</label>
+              <input type="text" id="pedidoCliente" value="${pedido?.cliente || ''}" required>
+            </div>
+            <div class="form-group">
+              <label>Telefone</label>
+              <input type="text" id="pedidoTelefone" value="${pedido?.telefone || ''}">
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Endereço</label>
+            <input type="text" id="pedidoEndereco" value="${pedido?.endereco || ''}">
+          </div>
+
+          <div id="itensWrapper">
+            ${itens.map((it, idx) => `
+              <div class="form-row item-row" data-item-index="${idx}">
+                <div class="form-group">
+                  <label>Item</label>
+                  <select class="pedidoItemSelect" required>
+                    <option value="">Selecione...</option>
+                    ${this.produtos.map(p => `
+                      <option value="${p._id}" data-nome="${p.nome}" data-preco="${p.preco}" ${p.nome === it.nome ? 'selected' : ''}>
+                        ${p.nome} – R$ ${p.preco.toFixed(2)}
+                      </option>`).join('')}
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label>Qtd</label>
+                  <input type="number" class="pedidoItemQtd" value="${it.quantidade || 1}" min="1" required>
+                </div>
+                <div class="form-group">
+                  <label>Preço</label>
+                  <input type="number" class="pedidoItemPreco" value="${it.preco || 0}" step="0.01">
+                </div>
+                <button type="button" class="btn-excluir removerItemBtn">🗑️</button>
+              </div>
+            `).join('')}
+          </div>
+
+          <button type="button" class="btn secondary" id="adicionarItemBtn">➕ Adicionar Item</button>
+
+          <div class="footer-row">
+            <div><strong>Total: R$ <span id="pedidoTotal">${(pedido?.total || 0).toFixed(2)}</span></strong></div>
+            <div>
+              <button type="submit" class="btn primary">Salvar</button>
+              <button type="button" class="btn secondary" id="btnCancelarPedido">Cancelar</button>
+            </div>
+          </div>
+        </form>
+      </div>
+    `;
+
+    document.body.appendChild(modal);
+
+    const itensWrapper = modal.querySelector('#itensWrapper');
+    const atualizarTotal = () => {
+      const qtds = [...itensWrapper.querySelectorAll('.pedidoItemQtd')].map(i => parseFloat(i.value) || 0);
+      const precos = [...itensWrapper.querySelectorAll('.pedidoItemPreco')].map(i => parseFloat(i.value) || 0);
+      const total = qtds.reduce((s, q, i) => s + q * (precos[i] || 0), 0);
+      modal.querySelector('#pedidoTotal').textContent = total.toFixed(2);
+    };
+
+    const bindItemEvents = (row) => {
+      const select = row.querySelector('.pedidoItemSelect');
+      const precoInput = row.querySelector('.pedidoItemPreco');
+      const qtdInput = row.querySelector('.pedidoItemQtd');
+      select.addEventListener('change', () => {
+        const opt = select.selectedOptions[0];
+        if (opt && opt.dataset.preco) precoInput.value = parseFloat(opt.dataset.preco).toFixed(2);
+        atualizarTotal();
+      });
+      [precoInput, qtdInput].forEach(el => el.addEventListener('input', atualizarTotal));
+      row.querySelector('.removerItemBtn').addEventListener('click', () => { row.remove(); atualizarTotal(); });
+    };
+
+    modal.querySelectorAll('.item-row').forEach(r => bindItemEvents(r));
+    modal.querySelector('#adicionarItemBtn').addEventListener('click', () => {
+      const div = document.createElement('div');
+      div.className = 'form-row item-row';
+      div.innerHTML = `
+        <div class="form-group">
+          <label>Item</label>
+          <select class="pedidoItemSelect" required>
+            <option value="">Selecione...</option>
+            ${this.produtos.map(p => `
+              <option value="${p._id}" data-nome="${p.nome}" data-preco="${p.preco}">${p.nome} – R$ ${p.preco.toFixed(2)}</option>`).join('')}
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Qtd</label>
+          <input type="number" class="pedidoItemQtd" value="1" min="1" required>
+        </div>
+        <div class="form-group">
+          <label>Preço</label>
+          <input type="number" class="pedidoItemPreco" value="0" step="0.01">
+        </div>
+        <button type="button" class="btn-excluir removerItemBtn">🗑️</button>`;
+      itensWrapper.appendChild(div);
+      bindItemEvents(div);
+    });
+
+    modal.querySelector('#btnCancelarPedido').addEventListener('click', () => modal.remove());
+
+    modal.querySelector('#formPedido').addEventListener('submit', async e => {
+      e.preventDefault();
+      const id = modal.querySelector('#pedidoId').value;
+      const cliente = modal.querySelector('#pedidoCliente').value;
+      const telefone = modal.querySelector('#pedidoTelefone').value;
+      const endereco = modal.querySelector('#pedidoEndereco').value;
+      const itens = [...itensWrapper.querySelectorAll('.item-row')].map(r => {
+        const opt = r.querySelector('.pedidoItemSelect').selectedOptions[0];
+        const nome = opt?.dataset?.nome || '';
+        const preco = parseFloat(r.querySelector('.pedidoItemPreco').value) || 0;
+        const quantidade = parseInt(r.querySelector('.pedidoItemQtd').value) || 1;
+        return { nome, quantidade, preco };
+      }).filter(it => it.nome && it.quantidade > 0);
+      const total = itens.reduce((s, it) => s + it.quantidade * it.preco, 0);
+
+      const payload = { cliente, telefone, endereco, itens, total, status: pedido?.status || 'pendente' };
+      const url = id ? `/api/orders/${id}` : '/api/orders';
+      const method = id ? 'PUT' : 'POST';
+
+      try {
+        const res = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+        if (res.ok) {
+          await this.carregarDados();
+          this.renderPedidos();
+          modal.remove();
+          this.showToast('Pedido salvo', 'success');
+        } else this.showToast('Erro ao salvar pedido', 'error');
+      } catch {
+        this.showToast('Erro de rede', 'error');
+      }
+    });
+  }
+
+  renderPedidos() {
+    const c = document.getElementById('pedidosContainer');
+    if (!this.pedidos.length) {
+      c.innerHTML = '<div class="empty-state">Nenhum pedido</div>';
+      return;
+    }
+    const pedidosOrdenados = [...this.pedidos].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    c.innerHTML = pedidosOrdenados.map(p => `
+      <article class="produto-card">
+        <div class="header">
+          <h3>Pedido #${p._id?.slice(-6) || 'N/A'}</h3>
+          <p><strong>${p.cliente || '-'}</strong> — R$ ${(p.total || 0).toFixed(2)}</p>
+          <div class="status">${this.formatarStatus(p.status)}</div>
+        </div>
+        <div class="itens">
+          ${(p.itens || []).map(it => `<div>${it.quantidade}x ${it.nome} — R$ ${(it.preco * it.quantidade).toFixed(2)}</div>`).join('')}
+        </div>
+        <div class="card-actions">
+          <button class="btn-editar" onclick='dashboard.abrirModalPedido(${JSON.stringify(p).replace(/\"/g,"&quot;")})'>Editar</button>
+          <button class="btn secondary" onclick="dashboard.atualizarStatusPedido('${p._id}','preparando')">👨‍🍳</button>
+          <button class="btn secondary" onclick="dashboard.atualizarStatusPedido('${p._id}','entregue')">🚗</button>
+          <button class="btn" onclick="dashboard.imprimirCupom('${p._id}')">🖨️</button>
+          <button class="btn-excluir" onclick="dashboard.excluirPedido('${p._id}')">Excluir</button>
+        </div>
+      </article>
+    `).join('');
+  }
+
+  formatarStatus(s) {
+    const map = { pendente: '⏳ Pendente', preparando: '👨‍🍳 Preparando', entregue: '🚗 Entregue' };
+    return map[s] || s;
+  }
+
+  async atualizarStatusPedido(id, novo) {
+    try {
+      const res = await fetch(`/api/orders/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status: novo }) });
+      if (res.ok) {
+        const p = this.pedidos.find(x => x._id === id);
+        if (p) p.status = novo;
+        this.renderPedidos();
+        this.showToast('Status atualizado', 'success');
+      }
+    } catch {
+      this.showToast('Erro de rede', 'error');
+    }
+  }
+
+  async excluirPedido(id) {
+    if (!confirm('Excluir este pedido?')) return;
+    try {
+      const res = await fetch(`/api/orders/${id}`, { method: 'DELETE' });
+      if (res.ok) {
+        this.pedidos = this.pedidos.filter(p => p._id !== id);
+        this.renderPedidos();
+        this.showToast('Pedido excluído', 'success');
+      }
+    } catch {
+      this.showToast('Erro de rede', 'error');
+    }
+  }
+
+  /* ===================== ATUALIZAÇÃO AUTOMÁTICA ===================== */
+  async verificarNovosPedidos() {
+    try {
+      const res = await fetch('/api/orders');
+      if (!res.ok) return;
+      const novos = await res.json();
+      if (novos.length > this.pedidos.length) {
+        const novosPedidos = novos.filter(p => !this.pedidos.some(x => x._id === p._id));
+        novosPedidos.forEach(p => this.notificarNovoPedido(p));
+        this.pedidos = novos;
+        this.renderPedidos();
+        this.updateFinanceiro();
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
+  notificarNovoPedido(pedido) {
+    this.showToast(`Novo pedido de ${pedido.cliente || 'Cliente'}`, 'info');
+    const audio = new Audio('https://actions.google.com/sounds/v1/alarms/beep_short.ogg');
+    audio.volume = 0.4;
+    audio.play().catch(() => {});
+    this.enviarWhatsApp(pedido);
+  }
+
+  enviarWhatsApp(pedido) {
+    const itens = pedido.itens.map(i => `${i.quantidade}x ${i.nome} - R$ ${(i.preco * i.quantidade).toFixed(2)}`).join('%0A');
+    const texto = `🍔 *Novo Pedido* %0A%0A${itens}%0A%0ATotal: R$ ${pedido.total.toFixed(2)}%0ACliente: ${pedido.cliente || '-'}%0ATel: ${pedido.telefone || '-'}%0AEnd: ${pedido.endereco || '-'}`;
+    window.open(`https://wa.me/5531992128891?text=${texto}`, '_blank');
+  }
+
+  /* ===================== FINANCEIRO ===================== */
+  async updateFinanceiro() {
+    try {
+      const res = await fetch('/api/stats');
+      if (res.ok) {
+        const f = await res.json();
+        document.getElementById('totalVendas').textContent = `R$ ${Number(f.vendas || 0).toFixed(2)}`;
+        document.getElementById('totalCustos').textContent = `R$ ${Number(f.gastos || 0).toFixed(2)}`;
+        document.getElementById('lucro').textContent = `R$ ${Number(f.lucro || 0).toFixed(2)}`;
+        this.renderGraficoFinanceiro(f.historico || []);
+      }
+    } catch (e) {
+      console.error('Erro financeiro:', e);
+    }
+  }
+
+  renderGraficoFinanceiro(historico = []) {
+    const canvas = document.getElementById('graficoFinanceiro');
+    if (!canvas) return;
+    if (this._graficoFinanceiro) this._graficoFinanceiro.destroy();
+    const labels = historico.map(h => new Date(h.data).toLocaleDateString('pt-BR'));
+    const lucros = historico.map(h => h.lucro);
+    this._graficoFinanceiro = new Chart(canvas, {
+      type: 'line',
+      data: {
+        labels,
+        datasets: [{
+          label: 'Lucro (R$)',
+          data: lucros,
+          borderColor: '#007bff',
+          backgroundColor: 'rgba(0,123,255,0.15)',
+          tension: 0.3
+        }]
+      },
+      options: {
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { ticks: { color: '#ccc' } },
+          y: { ticks: { color: '#ccc', callback: v => `R$ ${v}` } }
+        }
+      }
+    });
+  }
+}
+
+// ===============================
+// 🚀 INICIALIZAÇÃO FINAL
+// ===============================
+document.addEventListener('DOMContentLoaded', () => {
+  window.dashboard = new Dashboard();
+
+  // Atualização automática a cada 30 segundos
+  setInterval(() => dashboard.verificarNovosPedidos(), 30000);
+
+  const btnLogout = document.getElementById('btnLogout');
+  if (btnLogout) {
+    btnLogout.addEventListener('click', () => {
+      if (confirm('Deseja realmente sair?')) {
+        localStorage.removeItem('token');
+        sessionStorage.clear();
+        dashboard.showToast('Logout realizado', 'info');
+        setTimeout(() => (window.location.href = '/login'), 1000);
+      }
+    });
+  }
+});
