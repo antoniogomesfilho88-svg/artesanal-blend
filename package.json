@@ -14,20 +14,7 @@
     "cors": "^2.8.5"
   }
 }
-{
-  "vendas": 12345.67,
-  "gastos": 3456.78,
-  "lucro": 8888.89,
-  "variacao": {
-    "vendas": 5.3,
-    "gastos": -2.1,
-    "lucro": 7.4
-  },
-  "historico": [
-    { "data": "2025-10-20", "lucro": 450 },
-    { "data": "2025-10-21", "lucro": 500 },
-    { "data": "2025-10-22", "lucro": 600 }
-  ]
-}
+
+
 
 
