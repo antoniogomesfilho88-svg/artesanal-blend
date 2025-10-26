@@ -5,16 +5,16 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Dashboard - Artesanal Blend</title>
 
-  <!-- Estilos -->
+  <!-- ===== Estilos ===== -->
   <link rel="stylesheet" href="dashboard.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
-  <!-- Chart.js -->
+  <!-- ===== Gráficos ===== -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
-<body>
 
-  <!-- ======= CABEÇALHO ======= -->
+<body>
+  <!-- ===== CABEÇALHO ===== -->
   <header class="dashboard-header">
     <div class="header-content">
       <img src="images/logo.jpg" alt="Logo" class="logo" />
@@ -26,10 +26,9 @@
     </div>
   </header>
 
-  <!-- ======= LAYOUT ======= -->
+  <!-- ===== LAYOUT PRINCIPAL ===== -->
   <div class="dashboard-layout">
-
-    <!-- ======= SIDEBAR ======= -->
+    <!-- ===== SIDEBAR ===== -->
     <aside class="sidebar">
       <ul>
         <li class="active" data-tab="produtosTab"><i class="fa-solid fa-burger"></i> Produtos</li>
@@ -39,7 +38,7 @@
       </ul>
     </aside>
 
-    <!-- ======= CONTEÚDO ======= -->
+    <!-- ===== CONTEÚDO ===== -->
     <main class="dashboard-content">
 
       <!-- =================== PRODUTOS =================== -->
@@ -96,39 +95,95 @@
         <div id="insumosContainer"></div>
       </section>
 
-      <!-- =================== FINANCEIRO =================== -->
+      <!-- =================== FINANCEIRO (PROFISSIONAL) =================== -->
       <section id="financeiroTab" class="tab-content">
-        <div class="section-header">
+        <div class="financeiro-header">
           <h2><i class="fa-solid fa-chart-line"></i> Painel Financeiro</h2>
-        </div>
-
-        <div class="financeiro-cards">
-          <div class="card">
-            <h4>💰 Vendas</h4>
-            <div id="totalVendas">R$ 0,00</div>
-          </div>
-          <div class="card">
-            <h4>💸 Custos</h4>
-            <div id="totalCustos">R$ 0,00</div>
-          </div>
-          <div class="card">
-            <h4>📈 Lucro</h4>
-            <div id="lucro">R$ 0,00</div>
+          <div class="financeiro-filtros">
+            <button class="btn small active" data-periodo="7d">Últimos 7 dias</button>
+            <button class="btn small" data-periodo="30d">Último mês</button>
+            <button class="btn small" data-periodo="1y">Ano atual</button>
           </div>
         </div>
 
-        <div class="financeiro-grafico-card">
-          <h3 style="text-align:center;color:#007bff;margin-bottom:1rem;">📊 Lucro dos Últimos Dias</h3>
+        <div class="financeiro-overview">
+          <div class="financeiro-card vendas">
+            <div class="icon"><i class="fa-solid fa-money-bill-trend-up"></i></div>
+            <div class="info">
+              <h4>Vendas</h4>
+              <p id="totalVendas">R$ 0,00</p>
+              <small id="vendasComparativo">+0% em relação ao mês anterior</small>
+            </div>
+          </div>
+
+          <div class="financeiro-card custos">
+            <div class="icon"><i class="fa-solid fa-sack-dollar"></i></div>
+            <div class="info">
+              <h4>Custos</h4>
+              <p id="totalCustos">R$ 0,00</p>
+              <small id="custosComparativo">+0% em relação ao mês anterior</small>
+            </div>
+          </div>
+
+          <div class="financeiro-card lucro">
+            <div class="icon"><i class="fa-solid fa-arrow-trend-up"></i></div>
+            <div class="info">
+              <h4>Lucro</h4>
+              <p id="lucro">R$ 0,00</p>
+              <small id="lucroMargem">Margem: 0%</small>
+            </div>
+          </div>
+
+          <div class="financeiro-card pedidos">
+            <div class="icon"><i class="fa-solid fa-receipt"></i></div>
+            <div class="info">
+              <h4>Pedidos</h4>
+              <p id="totalPedidos">0</p>
+              <small id="ticketMedio">Ticket médio: R$ 0,00</small>
+            </div>
+          </div>
+        </div>
+
+        <div class="financeiro-grafico-container">
+          <h3>📊 Desempenho Financeiro</h3>
           <canvas id="graficoFinanceiro"></canvas>
+        </div>
+
+        <div class="financeiro-resumo">
+          <h3>Resumo Financeiro</h3>
+          <div class="resumo-grid">
+            <div class="resumo-item">
+              <h4>Meta de Lucro</h4>
+              <div class="progress-bar">
+                <div id="metaLucroBar" class="progress"></div>
+              </div>
+              <span id="metaLucroTexto">0% da meta atingida</span>
+            </div>
+
+            <div class="resumo-item">
+              <h4>Melhor Dia de Vendas</h4>
+              <p id="melhorDia">--</p>
+            </div>
+
+            <div class="resumo-item">
+              <h4>Média de Vendas Diárias</h4>
+              <p id="mediaVendas">R$ 0,00</p>
+            </div>
+
+            <div class="resumo-item">
+              <h4>Pedidos Pendentes</h4>
+              <p id="pedidosPendentes">0</p>
+            </div>
+          </div>
         </div>
       </section>
     </main>
   </div>
 
-  <!-- Toast container -->
+  <!-- TOASTS -->
   <div id="toast-container"></div>
 
-  <!-- Scripts -->
-  <script src="dashboard.js"></script>
+  <!-- SCRIPTS -->
+  <script src="dashboard.js" defer></script>
 </body>
 </html>
